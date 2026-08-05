@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BaZi × Zodiac — Prototype</title>
+<style>
+  :root {
+    --ink:#ECEEF8; --muted:#96A0B8; --soft:#C3C9DB;
+    --gold:#D9B96C; --gold-dim:rgba(217,185,108,.40); --hairline:rgba(217,185,108,.24);
+    --seal:#C64B33;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:
+      radial-gradient(1000px 620px at 78% -6%, rgba(96,74,168,.36), transparent 62%),
+      radial-gradient(900px 700px at 10% 22%, rgba(32,94,126,.30), transparent 65%),
+      radial-gradient(1200px 900px at 50% 115%, rgba(146,104,44,.15), transparent 60%),
+      linear-gradient(180deg,#0a0d22 0%,#0c1130 48%,#090e24 100%);
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;
+    padding:44px 16px 64px;
+    font-family:-apple-system,"SF Pro Text","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--ink)}
+  #sky{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .star{position:absolute;border-radius:50%;background:#fff;
+    animation:tw var(--d,3s) ease-in-out var(--dl,0s) infinite alternate}
+  .star.g{background:#EBDCA9}
+  .star.big{box-shadow:0 0 6px 1px rgba(255,255,255,.55)}
+  @keyframes tw{from{opacity:.12}to{opacity:.95}}
+  .mist{position:fixed;pointer-events:none;filter:blur(34px);z-index:0}
+  .m1{width:900px;height:340px;left:-220px;top:11%;
+    background:radial-gradient(closest-side,rgba(122,152,214,.15),transparent);
+    animation:drift1 90s ease-in-out infinite alternate}
+  .m2{width:820px;height:300px;right:-260px;top:44%;
+    background:radial-gradient(closest-side,rgba(140,196,206,.11),transparent);
+    animation:drift2 115s ease-in-out infinite alternate}
+  .m3{width:1000px;height:380px;left:-120px;bottom:-8%;
+    background:radial-gradient(closest-side,rgba(196,164,92,.09),transparent);
+    animation:drift1 135s ease-in-out infinite alternate}
+  @keyframes drift1{to{transform:translateX(150px)}}
+  @keyframes drift2{to{transform:translateX(-170px)}}
+  .csea1{animation:seadrift1 46s ease-in-out infinite alternate}
+  .csea2{animation:seadrift2 60s ease-in-out infinite alternate}
+  @keyframes seadrift1{to{transform:translateX(64px)}}
+  @keyframes seadrift2{to{transform:translateX(-84px)}}
+  .flyers{animation:fly 80s linear infinite}
+  @keyframes fly{0%{transform:translate(-180px,40px)}55%{transform:translate(800px,-6px)}100%{transform:translate(1650px,26px)}}
+  .bell{transform-box:fill-box;transform-origin:top center;animation:sway 4.5s ease-in-out infinite alternate}
+  .b2{animation-duration:3.6s}
+  @keyframes sway{from{transform:rotate(-8deg)}to{transform:rotate(8deg)}}
+  .fall line{stroke-dasharray:9 13;animation:fallmove 1.5s linear infinite}
+  @keyframes fallmove{to{stroke-dashoffset:-22}}
+  .moonpulse{animation:mpulse 9s ease-in-out infinite alternate}
+  @keyframes mpulse{from{opacity:.8}to{opacity:1}}
+  @media (prefers-reduced-motion: reduce){.star,.mist,.csea1,.csea2,.flyers,.bell,.fall line,.moonpulse{animation:none}}
+  #scene{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+  #bgimg{position:fixed;inset:-3%;background:center 30%/cover no-repeat;opacity:0;z-index:0}
+  #bgimg::before{content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,rgba(7,9,20,.60) 0%,rgba(7,9,20,.22) 20%,rgba(9,11,24,.18) 52%,rgba(7,9,22,.72) 100%)}
+  @keyframes kenburns{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.09) translate(-16px,-12px)}}
+  body.photo #bgimg{opacity:1;animation:kenburns 70s ease-in-out infinite alternate}
+  body.photo #sky,body.photo #scene{display:none}
+  body.photo .mist{opacity:.7}
+  @media (prefers-reduced-motion: reduce){body.photo #bgimg{animation:none}}
+  /* photo 模式: <body class="photo"> + 给 #bgimg 设 background-image (建议自己生成的画作, 勿用他人版权图上线) */
+  body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(130% 95% at 50% 38%, transparent 52%, rgba(4,6,16,.6) 100%)}
+  .serif{font-family:Georgia,"Times New Roman","Songti SC","STSong","SimSun",serif}
+  .label{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  body.zh .label{letter-spacing:.34em;font-weight:500}
+  .gold{color:var(--gold)}
+  .i-zh{display:none} body.zh .i-zh{display:inline} body.zh .i-en{display:none}
+
+  /* 语言切换 */
+  .lang{position:fixed;top:16px;right:18px;z-index:9;display:flex;border:1px solid var(--gold-dim);
+    border-radius:30px;overflow:hidden;background:rgba(14,19,44,.85);
+    box-shadow:0 4px 18px rgba(2,4,12,.5);backdrop-filter:blur(6px)}
+  .lang button{border:none;background:transparent;padding:7px 15px;font-size:12px;cursor:pointer;
+    color:var(--muted);font-family:inherit;letter-spacing:.05em}
+  .lang button.on{background:var(--gold);color:#1A1408;font-weight:700}
+
+  /* 卡片外壳: 琉璃夜盘 */
+  .panel{position:relative;width:500px;max-width:100%;z-index:1;
+    background:linear-gradient(160deg,rgba(27,33,66,.90) 0%,rgba(13,17,38,.94) 70%);
+    border:1px solid var(--gold-dim);border-radius:20px;padding:34px 36px 28px;
+    box-shadow:0 0 0 1px rgba(126,142,220,.07), 0 30px 90px rgba(3,5,15,.7),
+      0 0 70px rgba(118,108,220,.12);
+    backdrop-filter:blur(6px);overflow:hidden}
+  .panel::after{content:"";position:absolute;inset:9px;border:1px solid var(--hairline);
+    border-radius:13px;pointer-events:none}
+  .topbar{display:flex;justify-content:space-between;align-items:baseline;
+    padding-bottom:15px;border-bottom:1px solid var(--hairline);position:relative;z-index:1}
+  .watermark{position:absolute;top:14px;right:-16px;font-size:185px;line-height:1;opacity:.055;
+    color:var(--gold);font-family:"Songti SC","STSong","SimSun",serif;pointer-events:none;user-select:none;
+    text-shadow:0 0 40px rgba(217,185,108,.35)}
+  .seal{position:absolute;right:36px;top:74px;width:34px;height:34px;background:var(--seal);
+    color:#FFF2E6;display:flex;align-items:center;justify-content:center;border-radius:5px;
+    font-size:20px;transform:rotate(-3deg);
+    box-shadow:0 0 20px rgba(198,75,51,.5), 0 2px 6px rgba(0,0,0,.4);
+    font-family:"Songti SC","SimSun",serif;z-index:2}
+  .vquote{position:absolute;right:16px;top:400px;z-index:1;width:14px;text-align:center;
+    font-family:"Songti SC","STSong","SimSun",serif;font-size:11.5px;line-height:1.8;
+    color:rgba(217,185,108,.6);text-shadow:0 0 12px rgba(217,185,108,.3)}
+  .hquote{font-size:11px;font-style:italic;color:var(--muted);margin-top:9px;letter-spacing:.05em}
+  .constellation{position:absolute;top:88px;right:80px;opacity:.55;pointer-events:none;z-index:0}
+
+  /* 输入页 */
+  .in-hero{text-align:center;padding:12px 0 24px;border-bottom:1px solid var(--hairline);margin-bottom:24px}
+  .in-hero .glyphs{font-size:34px;letter-spacing:.18em;margin-bottom:13px;color:var(--gold);
+    text-shadow:0 0 24px rgba(217,185,108,.45)}
+  .in-hero h1{font-size:27px;font-weight:500;margin-bottom:9px}
+  body.zh .in-hero h1{letter-spacing:.14em}
+  .in-hero p{font-size:12.5px;color:var(--soft);line-height:1.75}
+  .field{margin-bottom:16px;position:relative;z-index:1}
+  .field .f-label{display:block;margin-bottom:7px}
+  input[type=date],input[type=time],select{
+    width:100%;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.15);
+    border-radius:10px;color:var(--ink);padding:10px 12px;font-size:15px;font-family:inherit;
+    color-scheme:dark}
+  input:focus,select:focus{outline:none;border-color:var(--gold)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .seg{display:flex;border:1px solid rgba(255,255,255,.15);border-radius:10px;overflow:hidden;
+    background:rgba(255,255,255,.04)}
+  .seg button{flex:1;background:transparent;border:none;color:var(--muted);padding:10px 0;
+    font-size:14px;cursor:pointer;font-family:inherit}
+  .seg button.on{background:rgba(217,185,108,.16);color:var(--gold);font-weight:700}
+  .chk{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--soft);
+    margin:2px 0 18px;cursor:pointer;user-select:none;position:relative;z-index:1}
+  .chk input{accent-color:var(--gold)}
+  .go{width:100%;background:linear-gradient(135deg,#E4C57E,#B98F45);border:none;border-radius:12px;
+    padding:14px 0;font-size:15px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+    color:#1C1508;cursor:pointer;font-family:inherit;position:relative;z-index:1;
+    box-shadow:0 0 26px rgba(217,185,108,.28)}
+  body.zh .go{letter-spacing:.4em;text-transform:none}
+  .go:hover{filter:brightness(1.07)}
+  .fine{font-size:10px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.8;letter-spacing:.03em}
+
+  /* 卡片 */
+  .hero{padding:22px 0 18px;position:relative;z-index:1}
+  .hero h1{font-size:35px;font-weight:500;margin:9px 0 10px;
+    text-shadow:0 0 30px rgba(160,175,255,.25)}
+  body.zh .hero h1{font-size:31px;letter-spacing:.12em}
+  .hero .pair{font-size:12.5px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase;font-weight:600}
+  body.zh .hero .pair{letter-spacing:.3em}
+  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 6px;position:relative;z-index:1}
+  .pillar{border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:9px 4px 8px;text-align:center;
+    background:rgba(255,255,255,.035)}
+  .pillar.dm{border-color:var(--gold);box-shadow:0 0 0 1px rgba(217,185,108,.5) inset, 0 0 22px rgba(217,185,108,.14);
+    background:rgba(217,185,108,.07)}
+  .pillar.ghost{border-style:dashed;opacity:.55;background:transparent}
+  .pillar .p-label{font-size:8.5px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  .pillar .tgline{font-size:9px;letter-spacing:.04em;color:var(--gold);margin-top:5px;min-height:12px;font-weight:600}
+  .pillar .tgline.dmx{color:#E89B7E}
+  .pillar .gz{font-size:26px;margin:2px 0 1px;letter-spacing:.03em}
+  .pillar .gloss{font-size:9px;color:var(--muted);margin-bottom:5px}
+  .cg{display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
+  .cg span{font-size:10.5px;border:1px solid;border-radius:5px;padding:0px 4px 1px;
+    font-family:"Songti SC","SimSun",serif;background:rgba(8,12,28,.55)}
+  .pillars-note{font-size:10px;color:var(--muted);margin:6px 0 14px;position:relative;z-index:1}
+  .elements{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px;position:relative;z-index:1}
+  .pill{border:1.5px solid;border-radius:30px;font-size:11.5px;padding:4px 12px;letter-spacing:.04em;
+    background:rgba(255,255,255,.03)}
+  .elements-note{font-size:11.5px;color:var(--soft);margin-bottom:16px;line-height:1.6}
+  .voice{margin:13px 0;position:relative;z-index:1}
+  .voice .label{display:block;margin-bottom:5px}
+  .voice p{font-size:13.5px;line-height:1.7;color:var(--soft)}
+  body.zh .voice p{font-size:13.5px;line-height:1.85}
+  .agree{border-left:3px solid var(--gold);padding:11px 15px;margin:16px 0 12px;
+    background:rgba(217,185,108,.09);border-radius:0 10px 10px 0;position:relative;z-index:1}
+  .agree .label{color:var(--gold)}
+  .agree p,.clash p{font-size:14px;line-height:1.7;margin-top:5px;color:var(--ink)}
+  .clash{border-left:3px solid var(--seal);padding:11px 15px;margin-bottom:18px;
+    background:rgba(198,75,51,.10);border-radius:0 10px 10px 0;position:relative;z-index:1}
+  .clash .label{color:#E89B7E}
+  .deeper{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);
+    border-radius:14px;padding:15px 18px 11px;margin-bottom:16px;position:relative;z-index:1}
+  .deeper .d-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .deeper .unlock{font-size:9px;color:var(--muted);letter-spacing:.08em}
+  .drow{display:flex;gap:10px;margin:8px 0}
+  .drow .d-label{flex:0 0 96px;font-size:9.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--gold);font-weight:700;padding-top:2px}
+  body.zh .drow .d-label{font-size:10.5px;letter-spacing:.2em}
+  .drow p{font-size:12.5px;line-height:1.65;color:var(--soft)}
+  .locked{text-align:center;padding:15px 10px;font-size:12.5px;color:var(--soft);line-height:1.8}
+  .footer{border-top:1px solid var(--hairline);padding-top:12px;display:flex;
+    justify-content:space-between;gap:10px;position:relative;z-index:1}
+  .footer .meta{font-size:9.5px;color:var(--muted);line-height:1.7;letter-spacing:.03em}
+  .back{margin-top:18px;background:rgba(14,19,44,.7);border:1px solid rgba(255,255,255,.16);color:var(--soft);
+    border-radius:30px;padding:9px 24px;font-size:12px;letter-spacing:.08em;cursor:pointer;font-family:inherit;
+    position:relative;z-index:1;backdrop-filter:blur(4px)}
+  .back:hover{border-color:var(--gold);color:var(--gold)}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<div id="bgimg"></div>
+<svg id="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <defs>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#F2E3B8" stop-opacity=".5"/>
+      <stop offset="38%" stop-color="#F2E3B8" stop-opacity=".16"/>
+      <stop offset="100%" stop-color="#F2E3B8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="shaft" x1="1" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#F2E3B8" stop-opacity=".13"/>
+      <stop offset=".55" stop-color="#F2E3B8" stop-opacity=".04"/>
+      <stop offset="1" stop-color="#F2E3B8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mA" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B4874"/><stop offset="1" stop-color="#3B4874" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mB" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2C3760"/><stop offset="1" stop-color="#2C3760" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="mC" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1F284C"/><stop offset="1" stop-color="#1F284C" stop-opacity=".06"/>
+    </linearGradient>
+    <linearGradient id="mD" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#151C3A"/><stop offset="1" stop-color="#0C1126"/>
+    </linearGradient>
+    <linearGradient id="glaze" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2E5468"/><stop offset="1" stop-color="#122334"/>
+    </linearGradient>
+    <linearGradient id="cs1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3E4C7C"/><stop offset="1" stop-color="#3E4C7C" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="cs2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#333F6C"/><stop offset="1" stop-color="#333F6C" stop-opacity=".05"/>
+    </linearGradient>
+    <linearGradient id="fallG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#DDE8F5" stop-opacity=".45"/><stop offset="1" stop-color="#DDE8F5" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- 月与光柱 -->
+  <circle cx="1038" cy="128" r="150" fill="url(#moonGlow)" class="moonpulse"/>
+  <circle cx="1038" cy="128" r="44" fill="#F1E2B6" opacity=".9"/>
+  <polygon points="1440,0 1440,300 380,900 40,900" fill="url(#shaft)"/>
+  <!-- 鹤影 -->
+  <g stroke="#0F1530" fill="none" stroke-width="2.2" stroke-linecap="round" opacity=".85">
+    <path d="M962 196 q9 -10 18 0 q9 -10 18 0"/>
+    <path d="M1010 236 q7 -8 14 0 q7 -8 14 0" opacity=".7"/>
+    <path d="M935 246 q5 -6 11 0 q5 -6 11 0" opacity=".5"/>
+  </g>
+  <!-- 掠空之鹤 (动) -->
+  <g class="flyers" stroke="#C9D4E8" fill="none" stroke-width="2" stroke-linecap="round" opacity=".5">
+    <path d="M0 190 q8 -9 16 0 q8 -9 16 0"/>
+    <path d="M34 206 q6 -7 13 0 q6 -7 13 0" opacity=".75"/>
+  </g>
+  <!-- 远山 A -->
+  <path d="M0 566 C120 528 210 546 306 510 C388 480 470 534 562 518 C652 502 724 462 806 476 C886 490 946 452 1014 438 C1082 424 1164 476 1252 460 C1332 446 1392 472 1440 458 L1440 900 L0 900 Z" fill="url(#mA)" opacity=".55"/>
+  <path d="M0 566 C120 528 210 546 306 510 C388 480 470 534 562 518 C652 502 724 462 806 476 C886 490 946 452 1014 438 C1082 424 1164 476 1252 460 C1332 446 1392 472 1440 458" fill="none" stroke="#E8CF96" stroke-width="1" opacity=".16"/>
+  <!-- 中山 B: 含孤峰崖台, 崖顶置仙阁 -->
+  <path d="M0 648 C110 618 190 640 278 606 C360 574 440 620 520 604 C600 588 660 550 740 562 C820 574 880 540 940 520 C972 508 988 452 1000 372 C1006 328 1013 304 1030 302 C1058 300 1064 310 1071 358 C1080 424 1098 502 1160 528 C1240 556 1330 530 1440 554 L1440 900 L0 900 Z" fill="url(#mB)" opacity=".85"/>
+  <path d="M0 648 C110 618 190 640 278 606 C360 574 440 620 520 604 C600 588 660 550 740 562 C820 574 880 540 940 520 C972 508 988 452 1000 372 C1006 328 1013 304 1030 302 C1058 300 1064 310 1071 358 C1080 424 1098 502 1160 528 C1240 556 1330 530 1440 554" fill="none" stroke="#E8CF96" stroke-width="1.1" opacity=".22"/>
+  <!-- 仙阁 (崖台之上, 明月悬顶) -->
+  <g transform="translate(1012,233)">
+    <path d="M0 66 L44 66 L41 61 L3 61 Z" fill="#0C1226" stroke="#E8CF96" stroke-width=".6" stroke-opacity=".35"/>
+    <path d="M8 61 L36 61 L34 50 L10 50 Z" fill="#0C1226"/>
+    <path d="M-2 50 C8 42 36 42 46 50 C40 38 32 35 22 35 C12 35 4 38 -2 50 Z" fill="#0C1226" stroke="#E8CF96" stroke-width=".9" stroke-opacity=".6"/>
+    <path d="M-2 50 Q-6 47 -8 42 M46 50 Q50 47 52 42" stroke="#E8CF96" stroke-width="1" fill="none" stroke-opacity=".65"/>
+    <path d="M13 35 L31 35 L29 27 L15 27 Z" fill="#0C1226"/>
+    <path d="M6 27 C13 20 31 20 38 27 C33 16 27 14 22 14 C17 14 11 16 6 27 Z" fill="#0C1226" stroke="#E8CF96" stroke-width=".9" stroke-opacity=".6"/>
+    <path d="M6 27 Q3 24 1 20 M38 27 Q41 24 43 20" stroke="#E8CF96" stroke-width="1" fill="none" stroke-opacity=".65"/>
+    <path d="M22 14 L22 5" stroke="#E8CF96" stroke-width="1.2" stroke-opacity=".75"/>
+    <circle cx="22" cy="4" r="1.5" fill="#F2C877" opacity=".95"/>
+    <rect x="15" y="53" width="3.5" height="5" fill="#F2C877" opacity=".9"/>
+    <rect x="25.5" y="53" width="3.5" height="5" fill="#F2C877" opacity=".9"/>
+    <rect x="19.5" y="29" width="5" height="3.5" fill="#F2C877" opacity=".75"/>
+  </g>
+  <!-- 雾带 -->
+  <ellipse cx="380" cy="700" rx="540" ry="46" fill="#AEC2E8" opacity=".07"/>
+  <ellipse cx="1080" cy="640" rx="480" ry="40" fill="#AEC2E8" opacity=".06"/>
+  <!-- 近山 C -->
+  <path d="M0 742 C90 702 150 728 228 690 C298 656 352 714 430 698 C500 684 542 640 612 662 C682 684 732 648 802 628 C862 610 902 662 972 654 C1050 644 1112 608 1192 638 C1282 672 1362 652 1440 674 L1440 900 L0 900 Z" fill="url(#mC)" opacity=".92"/>
+  <!-- 云海·后 (动) -->
+  <g class="csea1"><path d="M-80 648 Q0 610 90 636 Q180 660 270 632 Q360 606 460 630 Q560 652 660 626 Q760 602 860 624 Q960 645 1060 620 Q1160 597 1260 620 Q1360 640 1520 622 L1520 740 L-80 740 Z" fill="url(#cs1)" opacity=".6"/></g>
+  <!-- 侧阁 (隐于雾) -->
+  <g transform="translate(1200,565)" opacity=".8">
+    <path d="M10 44 L50 44 L47 32 L13 32 Z" fill="#0C1226"/>
+    <path d="M2 32 C12 24 48 24 58 32 C50 20 42 17 30 17 C18 17 10 20 2 32 Z" fill="url(#glaze)" stroke="#E8CF96" stroke-width=".8" stroke-opacity=".5"/>
+    <path d="M2 32 Q-2 29 -3 25 M58 32 Q62 29 63 25" stroke="#E8CF96" stroke-width=".9" fill="none" stroke-opacity=".55"/>
+    <path d="M30 17 L30 10" stroke="#E8CF96" stroke-width="1" stroke-opacity=".6"/>
+    <rect x="27" y="36" width="6" height="4" fill="#F2C877" opacity=".8"/>
+  </g>
+  <!-- 主殿·琼楼玉宇 (云海之巅) -->
+  <g transform="translate(1070,480)">
+    <path d="M-6 130 L116 130 L108 121 L2 121 Z" fill="#D6DEEA" opacity=".28"/>
+    <path d="M16 121 L94 121 L89 99 L21 99 Z" fill="#0C1226"/>
+    <rect x="34" y="105" width="6" height="9" fill="#F2C877" opacity=".9"/>
+    <rect x="52" y="105" width="6" height="9" fill="#F2C877" opacity=".95"/>
+    <rect x="70" y="105" width="6" height="9" fill="#F2C877" opacity=".9"/>
+    <path d="M2 99 C22 87 88 87 108 99 C94 76 80 70 55 70 C30 70 16 76 2 99 Z" fill="url(#glaze)" stroke="#E8CF96" stroke-width="1" stroke-opacity=".6"/>
+    <path d="M2 99 Q-3 95 -5 89 M108 99 Q113 95 115 89" stroke="#E8CF96" stroke-width="1.1" fill="none" stroke-opacity=".65"/>
+    <path d="M28 70 L82 70 L78 50 L32 50 Z" fill="#0C1226"/>
+    <rect x="43" y="56" width="7" height="7" fill="#F2C877" opacity=".85"/>
+    <rect x="60" y="56" width="7" height="7" fill="#F2C877" opacity=".85"/>
+    <path d="M18 50 C32 40 78 40 92 50 C81 31 70 26 55 26 C40 26 29 31 18 50 Z" fill="url(#glaze)" stroke="#E8CF96" stroke-width="1" stroke-opacity=".6"/>
+    <path d="M18 50 Q14 46 12 41 M92 50 Q96 46 98 41" stroke="#E8CF96" stroke-width="1" fill="none" stroke-opacity=".65"/>
+    <path d="M32 26 C40 18 70 18 78 26 C71 8 63 4 55 4 C47 4 39 8 32 26 Z" fill="url(#glaze)" stroke="#E8CF96" stroke-width=".9" stroke-opacity=".6"/>
+    <path d="M55 4 L55 -8" stroke="#E8CF96" stroke-width="1.2" stroke-opacity=".75"/>
+    <circle cx="55" cy="-9" r="1.8" fill="#F2C877" opacity=".95"/>
+    <g class="bell" transform="translate(-5,99)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#E8CF96" stroke-width=".8" opacity=".8"/>
+      <path d="M-3 8 L3 8 L0 15 Z" fill="#E8CF96" opacity=".85"/>
+    </g>
+    <g class="bell b2" transform="translate(113,89)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="#E8CF96" stroke-width=".8" opacity=".8"/>
+      <path d="M-2.6 7 L2.6 7 L0 13 Z" fill="#E8CF96" opacity=".85"/>
+    </g>
+  </g>
+  <!-- 飞瀑悬云间 (动) -->
+  <rect x="1063" y="608" width="9" height="130" fill="url(#fallG)"/>
+  <g class="fall" stroke="#DDE8F5" stroke-width="1.1" opacity=".5">
+    <line x1="1065" y1="610" x2="1065" y2="736"/>
+    <line x1="1068.5" y1="610" x2="1068.5" y2="736"/>
+    <line x1="1072" y1="610" x2="1072" y2="736"/>
+  </g>
+  <ellipse cx="1068" cy="738" rx="17" ry="5" fill="#DDE8F5" opacity=".16"/>
+  <!-- 白玉为阶 -->
+  <g>
+    <rect x="1112" y="614" width="26" height="3.6" rx="1" fill="#DEE6F2" opacity=".32"/>
+    <rect x="1105.7" y="625.5" width="33.5" height="3.6" rx="1" fill="#DEE6F2" opacity=".3"/>
+    <rect x="1099.5" y="637" width="41" height="3.6" rx="1" fill="#DEE6F2" opacity=".27"/>
+    <rect x="1093.2" y="648.5" width="48.5" height="3.6" rx="1" fill="#DEE6F2" opacity=".25"/>
+    <rect x="1087" y="660" width="56" height="3.6" rx="1" fill="#DEE6F2" opacity=".22"/>
+    <rect x="1080.7" y="671.5" width="63.5" height="3.6" rx="1" fill="#DEE6F2" opacity=".2"/>
+    <rect x="1074.5" y="683" width="71" height="3.6" rx="1" fill="#DEE6F2" opacity=".18"/>
+    <rect x="1068.2" y="694.5" width="78.5" height="3.6" rx="1" fill="#DEE6F2" opacity=".15"/>
+    <rect x="1062" y="706" width="86" height="3.6" rx="1" fill="#DEE6F2" opacity=".13"/>
+    <rect x="1055.7" y="717.5" width="93.5" height="3.6" rx="1" fill="#DEE6F2" opacity=".1"/>
+  </g>
+  <!-- 云海·前 (动) -->
+  <g class="csea2"><path d="M-80 742 Q10 700 110 728 Q210 754 310 722 Q410 692 510 720 Q610 748 710 716 Q810 688 910 714 Q1010 740 1110 710 Q1210 682 1310 708 Q1410 732 1520 710 L1520 860 L-80 860 Z" fill="url(#cs2)" opacity=".92"/></g>
+  <!-- 前山 D -->
+  <path d="M0 820 C150 792 260 812 380 794 C500 776 600 808 720 798 C840 788 950 764 1070 778 C1200 793 1330 776 1440 792 L1440 900 L0 900 Z" fill="url(#mD)"/>
+  <ellipse cx="720" cy="812" rx="760" ry="52" fill="#9FB4DE" opacity=".05"/>
+</svg>
+<div class="mist m1"></div><div class="mist m2"></div><div class="mist m3"></div>
+<div class="lang">
+  <button id="lang-en" class="on">EN</button>
+  <button id="lang-zh">中文</button>
+</div>
+
+<!-- ========== SCREEN 1: INPUT ========== -->
+<div class="panel" id="screen-input">
+  <div class="topbar">
+    <span class="label"><span class="i-en">Bazi × Zodiac</span><span class="i-zh">八字 × 星座</span></span>
+    <span class="label gold"><span class="i-en">Prototype v0.7</span><span class="i-zh">原型 v0.7</span></span>
+  </div>
+  <div class="in-hero">
+    <div class="glyphs serif">命 ✕ ♍&#xFE0E;</div>
+    <h1 class="serif"><span class="i-en">Two skies. One you.</span><span class="i-zh">两片星空,一个你</span></h1>
+    <p><span class="i-en">Your birth moment, read by the world's two great astrologies —<br>Chinese BaZi and the Western zodiac, side by side.</span>
+       <span class="i-zh">你出生的那一刻,交给世上两大命理体系同时解读——<br>八字与西方占星,并盘合参。</span></p>
+  </div>
+  <div class="field">
+    <span class="label f-label"><span class="i-en">Birth date</span><span class="i-zh">出生日期</span></span>
+    <input type="date" id="f-date" value="2000-09-11" min="1931-01-01" max="2029-12-31">
+  </div>
+  <div class="row2 field">
+    <div>
+      <span class="label f-label"><span class="i-en">Birth time</span><span class="i-zh">出生时间</span></span>
+      <input type="time" id="f-time" value="14:30">
+    </div>
+    <div>
+      <span class="label f-label"><span class="i-en">Gender</span><span class="i-zh">乾坤</span></span>
+      <div class="seg" id="f-gender">
+        <button type="button" data-v="m" class="on"><span class="i-en">Male</span><span class="i-zh">乾 · 男</span></button>
+        <button type="button" data-v="f"><span class="i-en">Female</span><span class="i-zh">坤 · 女</span></button>
+      </div>
+    </div>
+  </div>
+  <label class="chk"><input type="checkbox" id="f-notime">
+    <span class="i-en">I don't know my birth time (a 3-pillar chart still works)</span>
+    <span class="i-zh">时辰未知(仍可排三柱)</span></label>
+  <div class="field">
+    <span class="label f-label"><span class="i-en">Birth timezone</span><span class="i-zh">出生地时区</span></span>
+    <select id="f-tz"></select>
+  </div>
+  <button class="go" id="f-go"><span class="i-en">Reveal my double chart ✦</span><span class="i-zh">揭示我的双盘 ✦</span></button>
+  <p class="fine">
+    <span class="i-en">Engine: Lichun year boundary · solar terms to the minute · late-night hours roll to the next day<br>True solar time, Moon &amp; Rising, luck cycles — in the full version</span>
+    <span class="i-zh">引擎口径:立春换年 · 节气精确到分 · 晚子时归次日<br>真太阳时、月亮与上升、大运——完整版奉上</span></p>
+</div>
+
+<!-- ========== SCREEN 2: CARD ========== -->
+<div class="panel hidden" id="screen-card"></div>
+<button class="back hidden" id="btn-back"><span class="i-en">← Try another birth</span><span class="i-zh">← 再排一盘</span></button>
+
+<script>
+const TERMS = __TERMS__;
+__ENGINE__
+
+/* ============ 十干配色 (星夜版: 色相由五行取象, 深浅由阴阳) ============ */
+const STEM_COLOR = {
+  甲:"#4BA872", 乙:"#ABDCA8",   // 参天深林 / 花草新柳
+  丙:"#FF7A4D", 丁:"#F8B183",   // 太阳烈焰 / 烛火暖光
+  戊:"#C08A4D", 己:"#DFC397",   // 高山厚土 / 田园砂壤
+  庚:"#A8B9CC", 辛:"#EFE5CE",   // 剑戟寒钢 / 珠玉含光
+  壬:"#5E96D6", 癸:"#AFD2ED",   // 江海深流 / 雨露轻岚
+};
+const ELEM_COLOR = { wood:"#6FC08F", fire:"#F2895F", earth:"#CDA268", metal:"#C9D3E0", water:"#7DAEDD" };
+const CANGGAN = { 子:["癸"],丑:["己","癸","辛"],寅:["甲","丙","戊"],卯:["乙"],辰:["戊","乙","癸"],巳:["丙","戊","庚"],午:["丁","己"],未:["己","丁","乙"],申:["庚","壬","戊"],酉:["辛"],戌:["戊","辛","丁"],亥:["壬","甲"] };
+
+/* ============ 双语内容包 ============ */
+const ELEM_TXT = { en:{wood:"Wood",fire:"Fire",earth:"Earth",metal:"Metal",water:"Water"},
+                   zh:{wood:"木",fire:"火",earth:"土",metal:"金",water:"水"} };
+const ANIMAL_TXT = { en:{子:"Rat",丑:"Ox",寅:"Tiger",卯:"Rabbit",辰:"Dragon",巳:"Snake",午:"Horse",未:"Goat",申:"Monkey",酉:"Rooster",戌:"Dog",亥:"Pig"},
+                     zh:{子:"鼠",丑:"牛",寅:"虎",卯:"兔",辰:"龙",巳:"蛇",午:"马",未:"羊",申:"猴",酉:"鸡",戌:"狗",亥:"猪"} };
+const ANIMAL_TRAD = { 子:"鼠",丑:"牛",寅:"虎",卯:"兔",辰:"龍",巳:"蛇",午:"馬",未:"羊",申:"猴",酉:"雞",戌:"狗",亥:"豬" };
+const SIGN_TXT = { en:{Aries:"Aries",Taurus:"Taurus",Gemini:"Gemini",Cancer:"Cancer",Leo:"Leo",Virgo:"Virgo",Libra:"Libra",Scorpio:"Scorpio",Sagittarius:"Sagittarius",Capricorn:"Capricorn",Aquarius:"Aquarius",Pisces:"Pisces"},
+                   zh:{Aries:"白羊座",Taurus:"金牛座",Gemini:"双子座",Cancer:"巨蟹座",Leo:"狮子座",Virgo:"处女座",Libra:"天秤座",Scorpio:"天蝎座",Sagittarius:"射手座",Capricorn:"摩羯座",Aquarius:"水瓶座",Pisces:"双鱼座"} };
+const SIGN_GLYPH = { Aries:"♈︎",Taurus:"♉︎",Gemini:"♊︎",Cancer:"♋︎",Leo:"♌︎",Virgo:"♍︎",Libra:"♎︎",Scorpio:"♏︎",Sagittarius:"♐︎",Capricorn:"♑︎",Aquarius:"♒︎",Pisces:"♓︎" };
+
+const MATERIAL = { en:{甲:"Oak",乙:"Willow",丙:"Solar",丁:"Ember",戊:"Granite",己:"Amber",庚:"Silver",辛:"Pearl",壬:"Tide",癸:"Mist"},
+                   zh:{甲:"苍木",乙:"青藤",丙:"骄阳",丁:"烛火",戊:"磐岩",己:"沃土",庚:"银锋",辛:"珠玉",壬:"沧浪",癸:"烟雨"} };
+const ROLE = { en:{Aries:"Vanguard",Taurus:"Keeper",Gemini:"Messenger",Cancer:"Guardian",Leo:"Sovereign",Virgo:"Architect",Libra:"Diplomat",Scorpio:"Alchemist",Sagittarius:"Wayfarer",Capricorn:"Strategist",Aquarius:"Inventor",Pisces:"Dreamer"},
+               zh:{Aries:"先锋",Taurus:"守成者",Gemini:"信使",Cancer:"守护者",Leo:"王者",Virgo:"匠师",Libra:"衡者",Scorpio:"炼金师",Sagittarius:"远行者",Capricorn:"谋略家",Aquarius:"发明家",Pisces:"织梦者"} };
+
+const TEN_GOD_NAME = { en:{比肩:"Ally",劫财:"Rival",食神:"Poet",伤官:"Maverick",正财:"Harvest",偏财:"Windfall",正官:"Magistrate",七杀:"General",正印:"Scholar",偏印:"Mystic"},
+                       zh:{比肩:"比肩",劫财:"劫财",食神:"食神",伤官:"伤官",正财:"正财",偏财:"偏财",正官:"正官",七杀:"七杀",正印:"正印",偏印:"偏印"} };
+const TEN_GOD_FULL = { en:{比肩:"The Ally",劫财:"The Rival",食神:"The Poet",伤官:"The Maverick",正财:"The Harvest",偏财:"The Windfall",正官:"The Magistrate",七杀:"The General",正印:"The Scholar",偏印:"The Mystic"},
+                       zh:{比肩:"比肩",劫财:"劫财",食神:"食神",伤官:"伤官",正财:"正财",偏财:"偏财",正官:"正官",七杀:"七杀",正印:"正印",偏印:"偏印"} };
+const TEN_GOD_GLOSS = {
+  en:{比肩:"you move in formation — peers multiply you.",劫财:"competition is your caffeine — guard the treasury.",
+      食神:"ease is your genius — you create by enjoying.",伤官:"brilliance with a blade — authority, beware.",
+      正财:"earned things last — you build wealth like masonry.",偏财:"money finds you moving — luck likes your circulation.",
+      正官:"order becomes you — duty sits on you like a crown.",七杀:"pressure is your element — you command storms.",
+      正印:"you absorb like ink — learning is shelter.",偏印:"you know things sideways — trust the antenna."},
+  zh:{比肩:"并肩者众——同侪让你成倍。",劫财:"竞争是你的咖啡因——看好钱袋。",
+      食神:"从容即天赋——你在享受里创造。",伤官:"带刃的才华——权威当心。",
+      正财:"挣来的才留得住——你像砌墙一样攒家业。",偏财:"钱喜欢在路上遇见你——流动就是财运。",
+      正官:"秩序衬你——责任是你的冠冕。",七杀:"高压是你的主场——你在风暴里发号施令。",
+      正印:"你像墨一样吸收——学问是你的屋檐。",偏印:"你总从侧面知道答案——相信那根天线。"} };
+
+const EAST_LINE = {
+  en:{子:"The Rat is the zodiac's survivor-strategist — quick, resourceful, three exits from every room.",
+      丑:"The Ox is the zodiac's quiet powerhouse — patient, unhurried, unstoppable once moving.",
+      寅:"The Tiger is the zodiac's lightning — bold, instinctive, allergic to cages.",
+      卯:"The Rabbit is the zodiac's diplomat — gentle-footed, sharp-eared, safe by design.",
+      辰:"The Dragon is the zodiac's dynasty-builder — proud, magnetic, born for scale.",
+      巳:"The Snake is the zodiac's philosopher — cool-blooded elegance wrapped around deep heat.",
+      午:"The Horse is the zodiac's open road — restless, warm, faster than its own plans.",
+      未:"The Goat is the zodiac's artist — soft-hearted, aesthetic, stronger together.",
+      申:"The Monkey is the zodiac's trickster-engineer — clever hands, cleverer escape routes.",
+      酉:"The Rooster is the zodiac's perfectionist — precise, proud, first to see the dawn.",
+      戌:"The Dog is the zodiac's conscience — loyal, watchful, fair to a fault.",
+      亥:"The Pig is the zodiac's honest abundance — generous, sensual, harder to fool than it looks."},
+  zh:{子:"鼠为生肖里的谋生大师——机敏灵变,任何绝境都留着三条退路。",
+      丑:"牛是沉默的重器——不急不躁,一旦启动便无可阻挡。",
+      寅:"虎是生肖里的闪电——胆大凭直觉,天生受不了笼子。",
+      卯:"兔是天生的外交家——脚步轻,耳朵尖,安全感是自己设计出来的。",
+      辰:"龙是生肖里的开国者——骄傲,有磁场,生来就为成大局。",
+      巳:"蛇是冷面的哲学家——优雅盘绕之下,藏着极深的热。",
+      午:"马是一条奔跑的大路——躁动而温热,跑得比自己的计划还快。",
+      未:"羊是生肖里的艺术家——心软眼高,群处时最有力量。",
+      申:"猴是机关师——手巧,心更巧,退路永远比进路多一条。",
+      酉:"鸡是生肖里的完美主义者——精确,骄傲,永远第一个看见天亮。",
+      戌:"狗是生肖里的良心——忠诚警觉,公道得近乎固执。",
+      亥:"猪是诚实的丰饶——慷慨重感官,却远比看上去难骗。"} };
+const WEST_LINE = {
+  en:{Aries:"Aries is Mars' vanguard — first through the door, asks directions later.",
+      Taurus:"Taurus is Venus' keeper — steady hands, fine taste, immovable once planted.",
+      Gemini:"Gemini is Mercury's twin current — two minds, five tabs, endless signal.",
+      Cancer:"Cancer is the Moon's guardian — armored outside, ocean inside.",
+      Leo:"Leo is the Sun's sovereign — warmth that expects an audience.",
+      Virgo:"Virgo is Mercury's editor — analytical, useful, quietly exacting.",
+      Libra:"Libra is Venus' diplomat — beauty, balance, and a verdict withheld.",
+      Scorpio:"Scorpio is the alchemist — intensity that transmutes everything it touches.",
+      Sagittarius:"Sagittarius is Jupiter's wayfarer — aimed at the horizon, allergic to fences.",
+      Capricorn:"Capricorn is Saturn's strategist — patient ambition, mountain by mountain.",
+      Aquarius:"Aquarius is the inventor — feelings filed as ideas, the future as home address.",
+      Pisces:"Pisces is Neptune's dreamer — porous borders, oceanic imagination."},
+  zh:{Aries:"白羊是战神的先锋——先冲进门,再问路怎么走。",
+      Taurus:"金牛是维纳斯的管家——手稳,味刁,扎下根就搬不动。",
+      Gemini:"双子是水星的双频电流——两个脑子,五个窗口,信号不断。",
+      Cancer:"巨蟹是月亮的守护者——壳硬,里面是一整片海。",
+      Leo:"狮子是太阳的君王——他的温暖,自带观众席。",
+      Virgo:"处女座是水星的主编——分析,务实,静水流深地挑剔。",
+      Libra:"天秤是维纳斯的外交官——美,平衡,和一句迟迟不下的判词。",
+      Scorpio:"天蝎是炼金术士——碰到什么,就把什么炼成更深的东西。",
+      Sagittarius:"射手是木星的远行者——瞄准地平线,见栅栏就过敏。",
+      Capricorn:"摩羯是土星的战略家——耐心的野心,一座山一座山地翻。",
+      Aquarius:"水瓶是发明家——感受先归档成想法,未来才是常住地址。",
+      Pisces:"双鱼是海王星的梦客——边界是虚线,想象力是海。"} };
+
+const A_TAG = { 子:[0,1,-1,-1],丑:[-1,0,1,-1],寅:[1,-1,-1,1],卯:[-1,0,0,-1],辰:[1,0,1,1],巳:[-1,1,0,-1],午:[1,-1,-1,1],未:[-1,-1,-1,-1],申:[1,1,-1,1],酉:[0,1,1,1],戌:[-1,0,1,-1],亥:[0,-1,-1,-1] };
+const S_TAG = { Aries:[1,-1,-1,1],Taurus:[-1,0,1,-1],Gemini:[1,1,-1,1],Cancer:[-1,-1,0,-1],Leo:[1,-1,1,1],Virgo:[-1,1,1,-1],Libra:[0,1,0,1],Scorpio:[0,-1,1,-1],Sagittarius:[1,-1,-1,1],Capricorn:[-1,1,1,-1],Aquarius:[0,1,-1,0],Pisces:[-1,-1,-1,-1] };
+const AGREE_LINE = {
+  en:[{pos:"Both systems bet on your nerve: you move first and figure it out mid-air.",neg:"Both counsel patience: you win by waiting one beat longer than everyone else."},
+      {pos:"Both read you as head-led: feelings get processed as information.",neg:"Both read you as heart-led: you know before you can explain."},
+      {pos:"Both crave structure: a plan is your love language, standards your reflex.",neg:"Both run on flow: rules are suggestions, rhythm is law."},
+      {pos:"Both hand you the spotlight — you're built to be perceived.",neg:"Both prefer the backstage lever — influence over applause."}],
+  zh:[{pos:"两盘都押你的胆:先动手,半空中再想办法。",neg:"两盘都劝你稳:你赢在比所有人多等一拍。"},
+      {pos:"两盘都断你脑为先:情绪到你这里,先变成信息。",neg:"两盘都断你心为先:道理还没到,你已经知道了。"},
+      {pos:"两盘都爱规矩:计划是你的情话,标准是你的本能。",neg:"两盘都随流走:规则是参考,节奏才是法律。"},
+      {pos:"两盘都把聚光灯递给你——你生来是被看见的。",neg:"两盘都偏爱幕后那根杠杆——要影响力,不要掌声。"}] };
+const CLASH_LINE = {
+  en:["One half charges, the other calculates — you ride the brake at full throttle.",
+      "One half thinks it, the other feels it — the argument is the answer.",
+      "One half builds systems, the other torches them — you renovate yourself constantly.",
+      "One half wants the stage, the other the wings — you perform, then vanish."],
+  zh:["一半冲锋,一半算账——你踩着刹车飙车。",
+      "一半讲理,一半讲感觉——吵出来的才是答案。",
+      "一半搭系统,一半拆系统——你在自己身上永远装修。",
+      "一半要舞台,一半要侧幕——你演完就消失。"] };
+const AC_FALLBACK = {
+  en:{agree:"Two traditions, two dialects, one person — the overlap is yours to write.",clash:"No open war between your halves — your tension hides in the fine print."},
+  zh:{agree:"两套传统,两种方言,说的是同一个你——重合处留给你自己写。",clash:"你的两半没有明着开战——张力都藏在细则里。"} };
+
+const DM_LINE = {
+  en:{甲:"Yang Wood — the great tree: upright, principled, grows or breaks.",
+      乙:"Yin Wood — the vine: flexible persistence that finds light around any wall.",
+      丙:"Yang Fire — the sun: radiant, generous, needs a sky big enough to shine in.",
+      丁:"Yin Fire — the candle: precise warmth, brightest in the dark.",
+      戊:"Yang Earth — the mountain: still, reliable, moves only for earthquakes.",
+      己:"Yin Earth — the field: quiet cultivation; everything planted in you grows.",
+      庚:"Yang Metal — the sword: decisive edge, honed by friction.",
+      辛:"Yin Metal — the jewel: refined, exacting, polished under pressure.",
+      壬:"Yang Water — the great river: resourceful, restless, routes around what it can't break.",
+      癸:"Yin Water — the mist: subtle, perceptive, everywhere at once."},
+  zh:{甲:"阳木,参天之树——正直有节,宁折不弯。",
+      乙:"阴木,藤萝之柔——柔韧的坚持,绕过任何一堵墙去找光。",
+      丙:"阳火,当空之日——光热慷慨,需要足够大的天空。",
+      丁:"阴火,一盏烛——精准的温度,越暗处越亮。",
+      戊:"阳土,不动之山——稳得住万物,只为地震让步。",
+      己:"阴土,可耕之田——安静的滋养,种什么长什么。",
+      庚:"阳金,出鞘之剑——利落果决,越磨越锋。",
+      辛:"阴金,含光之玉——精致挑剔,高压之下才成器。",
+      壬:"阳水,奔流之江——足智多谋,不破岩则绕岩。",
+      癸:"阴水,润物之雾——细腻敏锐,无处不在。"} };
+const ELEM_NOTE = {
+  en:{metal:"a mind that sharpens whatever it touches",wood:"a life that keeps growing through the cracks",water:"an intelligence that finds every opening",fire:"a warmth that turns rooms into weather",earth:"a gravity that others build upon"},
+  zh:{metal:"金主锐——过手之物,皆被磨亮",wood:"木主生——裂缝里也要长出来",water:"水主智——凡有缝隙,皆是出路",fire:"火主明——你一进来,房间就换了天气",earth:"土主承——众人放心把地基交给你"} };
+
+const UI = {
+  en:{year:"Year",month:"Month",day:"Day",hour:"Hour",dm:"Day Master",needsTime:"needs birth time",
+      east:"East says",west:"West says",agree:"Both agree",clash:"Where they clash",
+      deeper:"The Deeper Chart",deeperSub:"day master · ten gods · hidden stems",
+      dLabelDM:"Day Master",dLabelMonth:"Month pillar",dLabelSoon:"Coming soon",
+      soon:"Moon & Rising, luck cycles, true solar time — the full reading.",
+      locked:"🔒 Your hour pillar and the deeper reading are waiting.<br>Add your birth time to unlock the full chart.",
+      hiddenNote:"Small glyphs under each branch are its hidden stems, colored by element.",
+      elemCount:"primary-qi count",noHour:", hour pillar excluded",dominant:"-dominant — ",
+      born:"b.",disclaimer:"For reflection & entertainment — not fate, just weather.",
+      maleChart:"male chart",femaleChart:"female chart",
+      shapes:"shapes your prime decade — "},
+  zh:{year:"年柱",month:"月柱",day:"日柱",hour:"时柱",dm:"日主",needsTime:"待时辰",
+      east:"东方说",west:"西方说",agree:"两盘同断",clash:"两盘相争",
+      deeper:"命盘深层",deeperSub:"日主 · 十神 · 藏干",
+      dLabelDM:"日主",dLabelMonth:"月柱十神",dLabelSoon:"完整版",
+      soon:"月亮与上升、大运、真太阳时——完整解读,后会有期。",
+      locked:"🔒 你的时柱与深层解读仍在等你。<br>补上出生时间,解锁完整命盘。",
+      hiddenNote:"地支下的小字为藏干,按五行着色。",
+      elemCount:"按本气统计",noHour:",未计时柱",dominant:"当令得势——",
+      born:"生于",disclaimer:"仅供自省与娱乐——非宿命,是天气。",
+      maleChart:"乾造",femaleChart:"坤造",
+      shapes:"坐镇月柱——"} };
+const TZ_OPTS = [
+  [480,"UTC+8 · Beijing / Shanghai / Singapore","UTC+8 · 北京 / 上海 / 新加坡"],
+  [540,"UTC+9 · Tokyo / Seoul","UTC+9 · 东京 / 首尔"],
+  [420,"UTC+7 · Bangkok / Jakarta","UTC+7 · 曼谷 / 雅加达"],
+  [330,"UTC+5:30 · Mumbai / Delhi","UTC+5:30 · 孟买 / 德里"],
+  [60,"UTC+1 · Paris / Berlin","UTC+1 · 巴黎 / 柏林"],
+  [0,"UTC+0 · London","UTC+0 · 伦敦"],
+  [-240,"UTC−4 · New York (summer)","UTC−4 · 纽约(夏令时)"],
+  [-300,"UTC−5 · New York (winter) / Chicago (summer)","UTC−5 · 纽约(冬令时) / 芝加哥(夏令时)"],
+  [-360,"UTC−6 · Chicago (winter)","UTC−6 · 芝加哥(冬令时)"],
+  [-420,"UTC−7 · Los Angeles (summer)","UTC−7 · 洛杉矶(夏令时)"],
+  [-480,"UTC−8 · Los Angeles (winter)","UTC−8 · 洛杉矶(冬令时)"],
+  [600,"UTC+10 · Sydney","UTC+10 · 悉尼"],
+];
+
+/* ============ 状态与渲染 ============ */
+const $ = (id) => document.getElementById(id);
+let lang = "en", gender = "m", lastChart = null;
+
+function fillTz() {
+  const sel = $("f-tz"), cur = sel.value || "480";
+  sel.innerHTML = TZ_OPTS.map(([v, en, zh]) => `<option value="${v}">${lang === "zh" ? zh : en}</option>`).join("");
+  sel.value = cur;
+}
+function setLang(l) {
+  lang = l;
+  document.body.classList.toggle("zh", l === "zh");
+  $("lang-en").classList.toggle("on", l === "en");
+  $("lang-zh").classList.toggle("on", l === "zh");
+  fillTz();
+  if (lastChart && !$("screen-card").classList.contains("hidden")) renderCard(lastChart.r, lastChart.inp);
+}
+$("lang-en").onclick = () => setLang("en");
+$("lang-zh").onclick = () => setLang("zh");
+fillTz();
+
+document.querySelectorAll("#f-gender button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll("#f-gender button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on"); gender = b.dataset.v;
+  };
+});
+$("f-notime").onchange = e => { $("f-time").disabled = e.target.checked; };
+
+function colored(gz) {
+  if (!gz) return "";
+  const c1 = STEM_COLOR[gz[0]], c2 = STEM_COLOR[ZHI_MAIN[gz[1]]];
+  return `<span style="color:${c1};text-shadow:0 0 14px ${c1}66">${gz[0]}</span><span style="color:${c2};text-shadow:0 0 14px ${c2}66">${gz[1]}</span>`;
+}
+function cgChips(branch) {
+  return `<div class="cg">` + CANGGAN[branch].map(s =>
+    `<span style="color:${STEM_COLOR[s]};border-color:${STEM_COLOR[s]}66" title="${s}">${s}</span>`).join("") + `</div>`;
+}
+function pickAgreeClash(yb, sign) {
+  const a = A_TAG[yb], s = S_TAG[sign];
+  let agree = null, clash = null;
+  for (let i = 0; i < 4; i++) {
+    if (a[i] && s[i]) {
+      if (a[i] === s[i] && !agree) agree = AGREE_LINE[lang][i][a[i] > 0 ? "pos" : "neg"];
+      if (a[i] === -s[i] && !clash) clash = CLASH_LINE[lang][i];
+    }
+  }
+  return { agree: agree || AC_FALLBACK[lang].agree, clash: clash || AC_FALLBACK[lang].clash };
+}
+
+$("f-go").onclick = () => {
+  const dv = $("f-date").value; if (!dv) return;
+  const [y, m, d] = dv.split("-").map(Number);
+  const notime = $("f-notime").checked;
+  const tv = $("f-time").value || "12:00";
+  const [hh, mi] = tv.split(":").map(Number);
+  const tz = +$("f-tz").value;
+  const r = computeChart(TERMS, { y, m, d, hh, mi, tzMin: tz, timeKnown: !notime });
+  if (r.error) { alert(lang === "zh" ? "原型支持 1931–2029 年出生。" : "Prototype supports 1931–2029 births."); return; }
+  lastChart = { r, inp: { y, m, d, hh, mi, tz, notime } };
+  renderCard(r, lastChart.inp);
+  $("screen-input").classList.add("hidden");
+  $("screen-card").classList.remove("hidden");
+  $("btn-back").classList.remove("hidden");
+  window.scrollTo(0, 0);
+};
+$("btn-back").onclick = () => {
+  $("screen-card").classList.add("hidden");
+  $("btn-back").classList.add("hidden");
+  $("screen-input").classList.remove("hidden");
+};
+
+function renderCard(r, inp) {
+  const T = UI[lang];
+  const yStem = r.year[0], yBranch = r.year[1];
+  const sign = r.sign, elem = GAN_WX[yStem];
+  const title = lang === "zh"
+    ? `${MATERIAL.zh[yStem]} · ${ROLE.zh[sign]}`
+    : `The ${MATERIAL.en[yStem]} ${ROLE.en[sign]}`;
+  const genderTag = inp.notime ? "" : " · " + (gender === "m" ? T.maleChart : T.femaleChart);
+  const pairLine = lang === "zh"
+    ? `${ELEM_TXT.zh[elem]}${ANIMAL_TXT.zh[yBranch]} × ${SIGN_TXT.zh[sign]}${genderTag}`
+    : `${ELEM_TXT.en[elem]} ${ANIMAL_TXT.en[yBranch]} × ${SIGN_TXT.en[sign]}${genderTag}`.toUpperCase();
+  const subLine = `${SIGN_GLYPH[sign]} · ${ANIMAL_TRAD[yBranch]}`;
+  const ac = pickAgreeClash(yBranch, sign);
+
+  const tgTxt = (stem) => TEN_GOD_NAME[lang][tenGod(r.dayMaster, stem)];
+  const glossTxt = (gz) => lang === "zh"
+    ? `${ELEM_TXT.zh[GAN_WX[gz[0]]]}${ANIMAL_TXT.zh[gz[1]]}`
+    : `${ELEM_TXT.en[GAN_WX[gz[0]]]} ${ANIMAL_TXT.en[gz[1]]}`;
+  const tile = (labelKey, gz, isDm) => `
+    <div class="pillar ${isDm ? "dm" : ""}">
+      <div class="p-label">${T[labelKey]}</div>
+      <div class="tgline ${isDm ? "dmx" : ""}">${isDm ? T.dm : tgTxt(gz[0])}</div>
+      <div class="gz serif">${colored(gz)}</div>
+      <div class="gloss">${glossTxt(gz)}</div>
+      ${cgChips(gz[1])}
+    </div>`;
+  const hourTile = r.hour ? tile("hour", r.hour, false)
+    : `<div class="pillar ghost"><div class="p-label">${T.hour}</div><div class="tgline"></div>
+       <div class="gz serif" style="color:var(--muted)">？</div><div class="gloss">${T.needsTime}</div><div class="cg"></div></div>`;
+
+  const maxC = Math.max(...Object.values(r.count));
+  const pills = ["metal","wood","water","fire","earth"]
+    .sort((a, b) => r.count[b] - r.count[a])
+    .map(k => {
+      const c = ELEM_COLOR[k], hot = r.count[k] === maxC;
+      return `<span class="pill" style="border-color:${c};color:${hot ? "#fff" : c};${hot ? `background:${c}` : "opacity:.8"}">${ELEM_TXT[lang][k]} ×${r.count[k]}</span>`;
+    }).join("");
+  const domK = Object.entries(r.count).sort((a, b) => b[1] - a[1])[0][0];
+  const elemNoteTxt = lang === "zh"
+    ? `${ELEM_NOTE.zh[domK]}。<span style="opacity:.6">(${T.elemCount}${r.timeKnown ? "" : T.noHour})</span>`
+    : `${ELEM_TXT.en[domK]}${T.dominant}${ELEM_NOTE.en[domK]}. <span style="opacity:.6">(${T.elemCount}${r.timeKnown ? "" : T.noHour})</span>`;
+
+  const mgod = tenGod(r.dayMaster, r.month[0]);
+  const deeper = r.timeKnown
+    ? `<div class="deeper"><div class="d-head"><span class="label gold">${T.deeper}</span><span class="unlock">${T.deeperSub}</span></div>
+       <div class="drow"><span class="d-label">${T.dLabelDM}</span><p>${lang === "zh" ? r.dayMaster + " — " : r.dayMaster + " "}${DM_LINE[lang][r.dayMaster]}</p></div>
+       <div class="drow"><span class="d-label">${T.dLabelMonth}</span><p>${TEN_GOD_FULL[lang][mgod]}${lang === "zh" ? T.shapes : " " + T.shapes}${TEN_GOD_GLOSS[lang][mgod]}</p></div>
+       <div class="drow"><span class="d-label">${T.dLabelSoon}</span><p>${T.soon}</p></div></div>`
+    : `<div class="deeper"><div class="locked">${T.locked}</div></div>`;
+
+  const born = lang === "zh"
+    ? `${T.born} ${inp.y} 年 ${inp.m} 月 ${inp.d} 日${inp.notime ? "" : ` ${String(inp.hh).padStart(2,"0")}:${String(inp.mi).padStart(2,"0")}`} · UTC${inp.tz >= 0 ? "+" : ""}${inp.tz / 60}`
+    : `${T.born} ${inp.y}-${String(inp.m).padStart(2,"0")}-${String(inp.d).padStart(2,"0")}${inp.notime ? "" : " · " + String(inp.hh).padStart(2,"0") + ":" + String(inp.mi).padStart(2,"0")} · UTC${inp.tz >= 0 ? "+" : ""}${inp.tz / 60}`;
+
+  const dipper = `<svg class="constellation" width="150" height="72" viewBox="0 0 150 72">
+    <polyline points="10,56 32,63 52,51 70,39 94,35 118,27 142,10" fill="none" stroke="#D9B96C" stroke-width="0.8" opacity="0.55"/>
+    ${[[10,56],[32,63],[52,51],[70,39],[94,35],[118,27],[142,10]].map(([x,y]) =>
+      `<circle cx="${x}" cy="${y}" r="2" fill="#EBDCA9"/><circle cx="${x}" cy="${y}" r="4.5" fill="#EBDCA9" opacity="0.18"/>`).join("")}
+  </svg>`;
+  const quote = lang === "zh"
+    ? `<div class="vquote">${"观乎天文·以察时变".split("").join("<br>")}</div>`
+    : "";
+  const hq = lang === "en" ? `<div class="hquote">"Observe the heavens; read the seasons." — I Ching</div>` : "";
+  $("screen-card").innerHTML = `
+    <div class="watermark serif">${ANIMAL_TRAD[yBranch]}</div>
+    <div class="seal serif">命</div>
+    ${dipper}${quote}
+    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.7" : "Prototype v0.7"}</span></div>
+    <div class="hero">
+      <div class="label">${pairLine}</div>
+      <h1 class="serif">${title}</h1>
+      <div class="pair">${subLine}</div>
+      ${hq}
+    </div>
+    <div class="pillars">
+      ${tile("year", r.year, false)}
+      ${tile("month", r.month, false)}
+      ${tile("day", r.day, true)}
+      ${hourTile}
+    </div>
+    <div class="pillars-note">${T.hiddenNote}</div>
+    <div class="elements">${pills}</div>
+    <div class="elements-note">${elemNoteTxt}</div>
+    <div class="voice" style="border-top:1px solid var(--hairline);padding-top:14px">
+      <span class="label">${T.east}</span><p>${EAST_LINE[lang][yBranch]}</p></div>
+    <div class="voice"><span class="label">${T.west}</span><p>${WEST_LINE[lang][sign]}</p></div>
+    <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
+    <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
+    ${deeper}
+    <div class="footer">
+      <div class="meta">${born}<br>${T.disclaimer}</div>
+    </div>`;
+}
+
+/* ============ 星野 ============ */
+(function makeSky() {
+  const sky = $("sky");
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 110; i++) {
+    const s = document.createElement("span");
+    const big = Math.random() < 0.07;
+    s.className = "star" + (Math.random() < 0.3 ? " g" : "") + (big ? " big" : "");
+    const size = big ? 2.6 : (Math.random() * 1.6 + 0.7);
+    s.style.cssText = `left:${(Math.random() * 100).toFixed(2)}%;top:${(Math.random() * 100).toFixed(2)}%;` +
+      `width:${size.toFixed(1)}px;height:${size.toFixed(1)}px;` +
+      `--d:${(Math.random() * 4 + 2).toFixed(1)}s;--dl:${(Math.random() * 5).toFixed(1)}s;`;
+    frag.appendChild(s);
+  }
+  sky.appendChild(frag);
+})();
+</script>
+</body>
+</html>

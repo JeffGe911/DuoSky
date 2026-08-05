@@ -1,4 +1,4 @@
-# DuoSky 双天
+# DuoSky 
 
 > **Two skies. One you.** — Your birth moment, read by the world's two great astrologies: Chinese BaZi and the Western zodiac, side by side.
 

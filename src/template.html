@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BaZi × Zodiac — Prototype</title>
+<title>DuoSky — BaZi × Zodiac</title>
+<link rel="preload" as="image" href="public/images/duosky-celestial-palace-red-gold-bg.webp">
 <style>
   :root {
     --ink:#ECEEF8; --muted:#96A0B8; --soft:#C3C9DB;
@@ -57,10 +58,12 @@
   #bgimg::before{content:"";position:absolute;inset:0;
     background:linear-gradient(180deg,rgba(7,9,20,.60) 0%,rgba(7,9,20,.22) 20%,rgba(9,11,24,.18) 52%,rgba(7,9,22,.72) 100%)}
   @keyframes kenburns{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.09) translate(-16px,-12px)}}
-  body.photo #bgimg{opacity:1;animation:kenburns 70s ease-in-out infinite alternate}
+  body.photo #bgimg{opacity:1;animation:kenburns 70s ease-in-out infinite alternate;
+    background-image:url(public/images/duosky-celestial-palace-red-gold-bg.webp)}
   body.photo #sky,body.photo #scene{display:none}
   body.photo .mist{opacity:.7}
-  @media (prefers-reduced-motion: reduce){body.photo #bgimg{animation:none}}
+  @media (prefers-reduced-motion: reduce){body.photo #bgimg{animation:none;
+    background-image:url(public/images/duosky-celestial-palace-red-gold-source.png)}}
   /* photo 模式: <body class="photo"> + 给 #bgimg 设 background-image (建议自己生成的画作, 勿用他人版权图上线) */
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
     background:radial-gradient(130% 95% at 50% 38%, transparent 52%, rgba(4,6,16,.6) 100%)}
@@ -191,7 +194,7 @@
   .hidden{display:none}
 </style>
 </head>
-<body>
+<body class="photo">
 <div id="sky"></div>
 <div id="bgimg"></div>
 <svg id="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
@@ -345,7 +348,7 @@
 <div class="panel" id="screen-input">
   <div class="topbar">
     <span class="label"><span class="i-en">Bazi × Zodiac</span><span class="i-zh">八字 × 星座</span></span>
-    <span class="label gold"><span class="i-en">Prototype v0.7</span><span class="i-zh">原型 v0.7</span></span>
+    <span class="label gold"><span class="i-en">Prototype v0.7.1</span><span class="i-zh">原型 v0.7.1</span></span>
   </div>
   <div class="in-hero">
     <div class="glyphs serif">命 ✕ ♍&#xFE0E;</div>
@@ -710,7 +713,7 @@ function renderCard(r, inp) {
     <div class="watermark serif">${ANIMAL_TRAD[yBranch]}</div>
     <div class="seal serif">命</div>
     ${dipper}${quote}
-    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.7" : "Prototype v0.7"}</span></div>
+    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.7.1" : "Prototype v0.7.1"}</span></div>
     <div class="hero">
       <div class="label">${pairLine}</div>
       <h1 class="serif">${title}</h1>

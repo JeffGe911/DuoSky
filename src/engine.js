@@ -189,6 +189,69 @@ function computePattern(r) {
   return { key, geStem, geTenGod: tg, via, transparent, type: JI.indexOf(key) >= 0 ? "ji" : "xiong" };
 }
 
+// ============ 大运/流年 精细喜忌评估 ============
+const WET_EARTH = new Set(["辰", "丑"]);   // 湿土(藏水金气,能润下)
+const DRY_EARTH = new Set(["未", "戌"]);   // 燥土(藏火木气,能暖上)
+/**
+ * 精细评估一步运(大运/流年)对本命的喜忌。
+ * 纳入: 天干(含与原局五合合化/合绊) + 地支藏干(本中余加权) + 湿燥土×调候
+ *       + 大运支与原局 六合/六冲(冲忌吉·冲用凶)/刑/害/三合局。
+ * @param s computeStrength 结果, cl computeClimate 结果
+ */
+function luckAssess(r, ganzhi, s, cl) {
+  cl = cl || computeClimate(r, s);
+  const favor = s.favor, avoid = s.avoid;
+  const st = ganzhi[0], br = ganzhi[1];
+  let score = 0; const reasons = [];
+  const addEl = (el, w) => { if (favor.indexOf(el) >= 0) score += w; else if (avoid.indexOf(el) >= 0) score -= w; if (cl.need && el === cl.need) score += w * 0.5; };
+  // 天干: 与原局五合 -> 合化(改element)/合绊
+  let stemEl = GAN_WX[st], stemHua = null;
+  const natalStems = [r.year[0], r.month[0], r.day[0]]; if (r.hour) natalStems.push(r.hour[0]);
+  for (const ns of natalStems) {
+    if (STEM_HE[st] === ns) {
+      const E = STEM_HE_ELEM[st + ns] || STEM_HE_ELEM[ns + st];
+      const mE = GAN_WX[ZHI_MAIN[r.month[1]]];
+      const hua = mE === E || shengOf(mE) === E;
+      stemHua = { with: ns, elem: E, hua };
+      if (hua) stemEl = E;
+      break;
+    }
+  }
+  addEl(stemEl, 2);
+  if (stemHua) reasons.push(stemHua.hua ? { t:"hua", chars: st + stemHua.with, elem: stemHua.elem } : { t:"bind", chars: st + stemHua.with });
+  // 地支藏干(本中余)
+  const hid = HIDDEN[br], RA = ({ 1:[1], 2:[0.7, 0.3], 3:[0.6, 0.3, 0.1] })[hid.length] || [0.6, 0.3, 0.1];
+  hid.forEach((h, i) => addEl(GAN_WX[h], 2.5 * RA[i]));
+  // 湿土/燥土 × 调候
+  if (GAN_WX[br] === "earth") {
+    if (WET_EARTH.has(br)) { if (cl.need === "water") { score += 1; reasons.push({ t:"wet" }); } else if (cl.need === "fire") score -= 0.5; }
+    if (DRY_EARTH.has(br)) { if (cl.need === "fire") { score += 1; reasons.push({ t:"dry" }); } else if (cl.need === "water") score -= 0.5; }
+  }
+  // 大运支 vs 原局: 合/冲/刑/害
+  const natalBr = [["year", r.year[1]], ["month", r.month[1]], ["day", r.day[1]]]; if (r.hour) natalBr.push(["hour", r.hour[1]]);
+  for (const [k, b2] of natalBr) {
+    if (ZHI_LIUHE[br] === b2) { const E = ZHI_LIUHE_ELEM[br + b2] || ZHI_LIUHE_ELEM[b2 + br]; addEl(E, 0.8); reasons.push({ t:"liuhe", chars: br + b2, elem: E, k }); }
+    if (ZHI_CHONG[br] === b2) {
+      const be = GAN_WX[ZHI_MAIN[b2]];
+      if (avoid.indexOf(be) >= 0) { score += 1; reasons.push({ t:"chongJi", chars: br + b2, k }); }
+      else if (favor.indexOf(be) >= 0) { score -= 1.5; reasons.push({ t:"chongYong", chars: br + b2, k }); }
+      else reasons.push({ t:"chong", chars: br + b2, k });
+    }
+    if (XING_PAIRS.has(br + b2)) { score -= 0.4; reasons.push({ t:"xing", chars: br + b2, k }); }
+    if (ZHI_HAI[br] === b2) { score -= 0.3; reasons.push({ t:"hai", chars: br + b2, k }); }
+  }
+  // 三合/半合局(大运支引动原局)
+  for (const [x, y, z, elem] of SANHE) {
+    const grp = [x, y, z];
+    if (grp.indexOf(br) < 0) continue;
+    const others = grp.filter(c => c !== br).filter(c => natalBr.some(nb => nb[1] === c));
+    if (others.length === 2) { addEl(elem, 2); reasons.push({ t:"sanhe", chars: grp.join(""), elem }); }
+    else if (others.length === 1 && (br === SANHE_WANG[elem] || others[0] === SANHE_WANG[elem])) { addEl(elem, 1); reasons.push({ t:"banhe", chars: br + others[0], elem }); }
+  }
+  const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
+  return { score: +score.toFixed(1), level, reasons };
+}
+
 // ============ 双人合盘 (八字合婚) ============
 function branchRel2(a, b) {
   if (ZHI_CHONG[a] === b) return "chong";
@@ -452,4 +515,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computeClimate, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

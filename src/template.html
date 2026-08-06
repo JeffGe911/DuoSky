@@ -1404,7 +1404,7 @@ function synthReadings(r) {
   if (lk && !lk.error) {
     const age = (new Date()).getFullYear() - inp.y, past = lk.list.filter(x => age >= x.startAge);
     if (past.length) {
-      const cur = past[past.length - 1], tgc = tenGod(r.dayMaster, cur.ganzhi[0]), fo = luckFortune(cur.ganzhi, s.favor, s.avoid);
+      const cur = past[past.length - 1], tgc = tenGod(r.dayMaster, cur.ganzhi[0]), fo = luckAssess(r, cur.ganzhi, s).level;
       const foT = fo === "good" ? (zh ? "整体顺遂、宜进取" : "favorable — push forward") : fo === "bad" ? (zh ? "较受制、宜守成蓄力" : "constrained — consolidate") : (zh ? "平稳、参半" : "mixed");
       luckLine = zh ? `现行大运 ${cur.ganzhi}(${cur.startAge}–${cur.startAge + 9} 岁),走「${TEN_GOD_FULL.zh[tgc]}」运——${foT};${TEN_GOD_GLOSS.zh[tgc]}` : `Current luck pillar ${cur.ganzhi} (age ${cur.startAge}–${cur.startAge + 9}) — the ${TEN_GOD_FULL.en[tgc]} decade: ${foT}. ${TEN_GOD_GLOSS.en[tgc]}`;
     } else luckLine = zh ? `尚未起运(约 ${lk.startAge} 岁起),先按本命而行。` : `Luck begins around age ${lk.startAge}.`;
@@ -1431,10 +1431,10 @@ function todayDrawer() {
   const sg = computeStrength(r);
   const tR = computeChart(TERMS, { y:ty, m:tm, d:td, hh:12, mi:0, tzMin:localTz, timeKnown:false });
   const cycRows = [[zh?"流年":"Year", tR.year], [zh?"流月":"Month", tR.month], [zh?"流日":"Day", tR.day]].map(([lbl, gz]) => {
-    const fo = luckFortune(gz, sg.favor, sg.avoid), tg = tenGod(r.dayMaster, gz[0]);
+    const fo = luckAssess(r, gz, sg).level, tg = tenGod(r.dayMaster, gz[0]);
     return `<div class="fy-row"><span class="fy-yr">${lbl}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tg]}</span><span class="fo-dot ${fo}"></span></div>`;
   }).join("");
-  const dayFo = luckFortune(tR.day, sg.favor, sg.avoid);
+  const dayFo = luckAssess(r, tR.day, sg).level;
   const dayWord = { good: zh?"今日干支扶你喜用——宜进取、办正事、见贵人。":"Today feeds your useful phase — push forward, handle key matters.",
     bad: zh?"今日干支冲你喜用——宜守成、缓决策、避冲突。":"Today works against your useful phase — hold steady, delay big calls.",
     neutral: zh?"今日干支不偏不倚——平顺度日即可。":"A neutral day — steady as she goes." }[dayFo];
@@ -1447,7 +1447,7 @@ function todayDrawer() {
   if (lk && !lk.error) {
     const age = ty - inp.y, past = lk.list.filter(x => age >= x.startAge);
     if (past.length) {
-      const cur = past[past.length - 1], fo = luckFortune(cur.ganzhi, sg.favor, sg.avoid), tg = tenGod(r.dayMaster, cur.ganzhi[0]);
+      const cur = past[past.length - 1], fo = luckAssess(r, cur.ganzhi, sg).level, tg = tenGod(r.dayMaster, cur.ganzhi[0]);
       rows.push([zh?"现行大运":"Current luck", `<b class="gold">${cur.ganzhi}</b> ${zh?`(${cur.startAge}\u2013${cur.startAge+9} 岁 · ${TEN_GOD_NAME.zh[tg]})`:`(age ${cur.startAge}\u2013${cur.startAge+9} · ${TEN_GOD_NAME.en[tg]})`} <span class="fo-dot ${fo}"></span>`]);
     } else {
       rows.push([zh?"现行大运":"Current luck", zh?`尚未起运(约 ${lk.startAge} 岁起运)。`:`Luck cycles begin around age ${lk.startAge}.`]);
@@ -1874,6 +1874,14 @@ function tenGodsDrawer(r) {
   Object.keys(map).forEach(tg => rows.push([tgFull(tg), `${TEN_GOD_GLOSS[lang][tg]} <span style="opacity:.5">(${map[tg].join(" · ")})</span>`]));
   return drawerShell(r.dayMaster, STEM_COLOR[r.dayMaster], lang === "zh" ? "十神" : "Ten Gods", lang === "zh" ? `日主 ${r.dayMaster} · 全盘取象` : `Day Master ${r.dayMaster}`, rows);
 }
+const LREASON = {
+  hua:{ zh:"合化", en:"transforms→" }, bind:{ zh:"合绊·减力", en:"bound" }, wet:{ zh:"湿土润局·调候", en:"wet earth (moistens)" }, dry:{ zh:"燥土暖局·调候", en:"dry earth (warms)" },
+  liuhe:{ zh:"六合", en:"six-harmony" }, chongJi:{ zh:"冲去忌神·吉", en:"clashes out an avoid (good)" }, chongYong:{ zh:"冲损用神·凶", en:"clashes the useful (bad)" }, chong:{ zh:"相冲·主变动", en:"clash (change)" },
+  xing:{ zh:"相刑", en:"punishment" }, hai:{ zh:"相害", en:"harm" }, sanhe:{ zh:"三合成局", en:"triad" }, banhe:{ zh:"半合", en:"half-triad" } };
+function luckReasonText(reasons) {
+  if (!reasons.length) return lang === "zh" ? "无特别引动,平顺。" : "nothing notable — steady.";
+  return reasons.map(z => { const L = LREASON[z.t] ? LREASON[z.t][lang] : z.t; return `${z.chars || ""} ${L}${z.elem ? (lang === "zh" ? ELEM_CHAR[z.elem] : " " + ELEM_TXT.en[z.elem]) : ""}`.trim(); }).join(lang === "zh" ? " · " : "; ");
+}
 function luckDrawer(r) {
   const inp = lastChart.inp;
   const lk = computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
@@ -1886,7 +1894,7 @@ function luckDrawer(r) {
   const sg = computeStrength(r);
   const cols = lk.list.map((x, i) => {
     const st = x.ganzhi[0], br = x.ganzhi[1], tg = tenGod(r.dayMaster, st), ny = nayin(x.ganzhi);
-    const fo = luckFortune(x.ganzhi, sg.favor, sg.avoid);
+    const fo = luckAssess(r, x.ganzhi, sg).level;
     return `<div class="lkc clk" role="button" tabindex="0" data-t="luckstep" data-i="${i}"><div class="lk-age">${x.startAge}${lang === "zh" ? "岁" : ""}</div>` +
       `<div class="lk-gz serif"><span style="color:${STEM_COLOR[st]}">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]}">${br}</span></div>` +
       `<div class="lk-tg">${TEN_GOD_NAME[lang][tg]}</div><div class="lk-ny">${lang === "zh" ? ny.name : ELEM_TXT.en[ny.elem]}</div><div class="lk-yr">${x.startYear}</div><span class="fo-dot ${fo}"></span></div>`;
@@ -2043,16 +2051,16 @@ function fortuneDrawer(r) {
   const daAt = age => { const p = lk.list.filter(x => age >= x.startAge); return p.length ? p[p.length - 1] : null; };
   let bands = "";
   lk.list.forEach(x => {
-    const fo = luckFortune(x.ganzhi, s.favor, s.avoid); if (fo === "neutral") return;
+    const fo = luckAssess(r, x.ganzhi, s).level; if (fo === "neutral") return;
     const x1 = xOf(x.startAge), x2 = xOf(Math.min(x.startAge + 10, MAXA));
     bands += `<rect x="${x1.toFixed(1)}" y="${Y0}" width="${(x2 - x1).toFixed(1)}" height="${H}" fill="${fo === "good" ? "#7FC08A" : "#C64B33"}" opacity=".13"/>`;
   });
   const pts = [];
   for (let a = 1; a <= MAXA; a++) {
     const yr = inp.y + a, da = a >= startAge ? daAt(a) : null;
-    const daFo = da ? luckFortune(da.ganzhi, s.favor, s.avoid) : "neutral";
+    const daFo = da ? luckAssess(r, da.ganzhi, s).level : "neutral";
     const idx = ((yr - 1984) % 60 + 60) % 60, gz = GAN[idx % 10] + ZHI[idx % 12];
-    pts.push([xOf(a), yOf(foVal(daFo) + foVal(luckFortune(gz, s.favor, s.avoid)))]);
+    pts.push([xOf(a), yOf(foVal(daFo) + foVal(luckAssess(r, gz, s).level))]);
   }
   const line = `<polyline points="${pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}" fill="none" stroke="#D9B96C" stroke-width="1.4" opacity=".92"/>`;
   let grid = `<line x1="${X0}" y1="${yMid}" x2="${X0 + W}" y2="${yMid}" stroke="#EDE6D0" stroke-opacity=".25"/>`;
@@ -2079,11 +2087,12 @@ function luckStepDrawer(i) {
     : (lang === "zh" ? "与原局无明显合冲刑害。" : "no major interaction with the natal chart.");
   const ageR = lang === "zh" ? `${x.startAge}\u2013${x.startAge + 9} 岁 · ${x.startYear}\u2013${x.startYear + 9}` : `age ${x.startAge}\u2013${x.startAge + 9} · ${x.startYear}\u2013${x.startYear + 9}`;
   const sg = computeStrength(r);
-  const foStep = luckFortune(x.ganzhi, sg.favor, sg.avoid);
+  const asmt = luckAssess(r, x.ganzhi, sg);
+  const foStep = asmt.level;
   const foTxt = { good: lang === "zh" ? "吉 · 扶喜用" : "favorable", bad: lang === "zh" ? "忌 · 伤喜用" : "adverse", neutral: lang === "zh" ? "平 · 参半" : "mixed" }[foStep];
   const favStr = lang === "zh" ? sg.favor.map(e => ELEM_CHAR[e]).join("") : sg.favor.map(e => ELEM_TXT.en[e]).join(", ");
   const fleetRows = computeFleetYears(x.startYear, 10).map(fy => {
-    const fg = luckFortune(fy.ganzhi, sg.favor, sg.avoid), tgy = tenGod(r.dayMaster, fy.ganzhi[0]);
+    const fg = luckAssess(r, fy.ganzhi, sg).level, tgy = tenGod(r.dayMaster, fy.ganzhi[0]);
     return `<div class="fy-row"><span class="fy-yr">${fy.year}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[fy.ganzhi[0]]}">${fy.ganzhi[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[fy.ganzhi[1]]]}">${fy.ganzhi[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tgy]}</span><span class="fo-dot ${fg}"></span></div>`;
   }).join("");
   const lead = lang === "zh"
@@ -2095,7 +2104,7 @@ function luckStepDrawer(i) {
     [lang === "zh" ? "藏干" : "Hidden", hid],
     [lang === "zh" ? "纳音" : "Sound element", `${ny.name}${lang === "zh" ? "" : " · " + NAYIN_EN[Math.floor(ny.idx / 2)]} · ${ELEM_TXT[lang][ny.elem]}`],
     [lang === "zh" ? "与原局" : "vs natal", relTxt],
-    [lang === "zh" ? "吉凶" : "Fortune", `<span class="fo-dot ${foStep}"></span> <b>${foTxt}</b> — ${lang === "zh" ? "喜用 " + favStr : "favor " + favStr}`],
+    [lang === "zh" ? "喜忌细批" : "Fortune (detailed)", `<span class="fo-dot ${foStep}"></span> <b>${foTxt}</b> <span style="opacity:.5">(${asmt.score})</span><br><span style="opacity:.8">${luckReasonText(asmt.reasons)}</span><br><span style="opacity:.5">${lang === "zh" ? "命局喜用 " + (favStr || "—") : "chart favors " + (favStr || "—")}</span>`],
     [lang === "zh" ? "运程" : "Span", ageR],
     [lang === "zh" ? "流年 · 十年" : "Yearly · this decade", fleetRows]
   ];

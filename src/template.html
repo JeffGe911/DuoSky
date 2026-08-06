@@ -2010,9 +2010,9 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
   ];
   const frag = document.createDocumentFragment();
   CS.forEach((cst, i) => {
-    const sc = 1.0 + Math.random() * 0.5;
+    const sc = 0.66 + Math.random() * 1.0;
     const pts = cst.s.map(p => [p[0] * sc + 6, p[1] * sc + 6]);
-    const w = Math.max(...pts.map(p => p[0])) + 8, h = Math.max(...pts.map(p => p[1])) + 20;
+    const w = Math.max(...pts.map(p => p[0])) + 8, h = Math.max(...pts.map(p => p[1])) + 8;
     const svg = document.createElementNS(NS, "svg");
     svg.setAttribute("width", w); svg.setAttribute("height", h); svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
     cst.l.forEach(([a, b]) => {
@@ -2029,15 +2029,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
       c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", k === 0 ? "2.5" : "1.6"); c.setAttribute("fill", "#F3E7C4");
       svg.appendChild(c);
     });
-    const tx = document.createElementNS(NS, "text");
-    tx.setAttribute("x", w / 2); tx.setAttribute("y", h - 4); tx.setAttribute("text-anchor", "middle");
-    tx.setAttribute("font-size", "8"); tx.setAttribute("fill", "#D9B96C"); tx.setAttribute("opacity", ".4");
-    tx.setAttribute("style", "font-family:'Songti SC','STSong',serif;letter-spacing:.1em");
-    tx.textContent = cst.zh;
-    svg.appendChild(tx);
-    const col = i % 5, row = Math.floor(i / 5);
-    svg.style.left = (col * 19 + 1 + Math.random() * 6).toFixed(1) + "%";
-    svg.style.top = (row * 30 + 3 + Math.random() * 9).toFixed(1) + "%";
+    svg.style.left = (Math.random() * 88).toFixed(1) + "%";
+    svg.style.top = (Math.random() * 82).toFixed(1) + "%";
     svg.style.setProperty("--dx", (Math.random() * 90 - 45).toFixed(0) + "px");
     svg.style.setProperty("--dy", (Math.random() * 56 - 28).toFixed(0) + "px");
     svg.style.setProperty("--dd", (60 + Math.random() * 60).toFixed(0) + "s");

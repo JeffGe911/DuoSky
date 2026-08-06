@@ -316,6 +316,18 @@
     background:linear-gradient(135deg,#E4C57E,#C9A24E);border:none;border-radius:11px;padding:13px 12px;cursor:pointer;font-weight:700;box-shadow:0 4px 16px rgba(217,185,108,.22)}
   .cta:hover{filter:brightness(1.06)} .cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .tr-row{font-size:12px;margin:3px 0;line-height:1.5}
+  .match-list{display:flex;flex-direction:column;gap:9px}
+  .match-pick{display:block;padding:12px 15px;border:1px solid var(--gold-dim);border-radius:10px;color:var(--soft);cursor:pointer;font-size:14px;letter-spacing:.03em;background:rgba(217,185,108,.05);transition:.15s}
+  .match-pick:hover{border-color:var(--gold);background:rgba(217,185,108,.14);color:var(--ink)}
+  .match-pick:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .cpt-score{flex:none;width:56px;height:56px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700;font-family:"EB Garamond",Georgia,serif}
+  @media print {
+    #sky,#bgimg,#bgwest,#scene,.mist,.lang,#cardnav,.drawer,.drawer-bg{display:none !important}
+    body{background:#fbf8f2 !important;--ink:#20242c;--soft:#333;--muted:#666;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    body::after{display:none}
+    .panel{box-shadow:none !important;background:#fff !important;width:100% !important;max-width:100% !important;border-color:#d8c79a !important}
+    .panel::after{border-color:#e0d2a8 !important}
+  }
   .hidden{display:none}
 </style>
 </head>
@@ -474,7 +486,7 @@
 <div class="panel" id="screen-input">
   <div class="topbar">
     <span class="label"><span class="i-en">Bazi × Zodiac</span><span class="i-zh">八字 × 星座</span></span>
-    <span class="label gold"><span class="i-en">Prototype v0.9</span><span class="i-zh">原型 v0.9</span></span>
+    <span class="label gold"><span class="i-en">Prototype v1.0</span><span class="i-zh">正式版 v1.0</span></span>
   </div>
   <div class="in-hero">
     <span class="glyphs serif">命 ✕ <svg class="starmark" viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-46 C7,-13 13,-7 46,0 C13,7 7,13 0,46 C-7,13 -13,7 -46,0 C-13,-7 -7,-13 0,-46 Z"/><path class="accent" d="M30,-40 C31.5,-31 32.5,-30 41,-28 C32.5,-26 31.5,-25 30,-16 C28.5,-25 27.5,-26 19,-28 C27.5,-30 28.5,-31 30,-40 Z"/></svg></span>
@@ -511,6 +523,9 @@
   <label class="chk"><input type="checkbox" id="f-notime">
     <span class="i-en">I don't know my birth time (a 3-pillar chart still works)</span>
     <span class="i-zh">时辰未知(仍可排三柱)</span></label>
+  <label class="chk"><input type="checkbox" id="f-truesolar" checked>
+    <span class="i-en">Use true solar time (correct the hour by longitude + equation of time)</span>
+    <span class="i-zh">真太阳时校正(按经度 + 均时差修正时辰,更准)</span></label>
   <div class="field">
     <span class="label f-label"><span class="i-en">Birth city</span><span class="i-zh">出生城市</span></span>
     <div class="city-row">
@@ -534,7 +549,9 @@
 <div class="panel hidden" id="screen-card"></div>
 <div class="cardnav hidden" id="cardnav">
   <button class="back" id="btn-back"><span class="i-en">← Another</span><span class="i-zh">← 再排一盘</span></button>
-  <button class="back" id="btn-save"><span class="i-en">★ Save to roster</span><span class="i-zh">★ 存入名册</span></button>
+  <button class="back" id="btn-save"><span class="i-en">★ Save</span><span class="i-zh">★ 存名册</span></button>
+  <button class="back" id="btn-share"><span class="i-en">🔗 Share</span><span class="i-zh">🔗 分享</span></button>
+  <button class="back" id="btn-print"><span class="i-en">🖨 Print</span><span class="i-zh">🖨 打印</span></button>
 </div>
 <div class="drawer-bg" id="drawer-bg"></div>
 <div class="drawer" id="drawer" role="dialog" aria-modal="true"></div>
@@ -956,6 +973,54 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 双人合盘 (八字合婚) ============
+function branchRel2(a, b) {
+  if (ZHI_CHONG[a] === b) return "chong";
+  if (ZHI_LIUHE[a] === b) return "liuhe";
+  if (XING_PAIRS.has(a + b)) return "xing";
+  if (ZHI_HAI[a] === b) return "hai";
+  for (const [x, y, z] of SANHE) { const g = [x, y, z]; if (g.indexOf(a) >= 0 && g.indexOf(b) >= 0 && a !== b) return "sanhe"; }
+  if (a === b) return "same";
+  return "none";
+}
+function computeCompat(rA, rB) {
+  const sA = computeStrength(rA), sB = computeStrength(rB);
+  const aE = GAN_WX[rA.dayMaster], bE = GAN_WX[rB.dayMaster];
+  const dmRel = STEM_HE[rA.dayMaster] === rB.dayMaster ? "he" : aE === bE ? "same" : (shengOf(aE) === bE || shengOf(bE) === aE) ? "sheng" : "ke";
+  const zodiac = branchRel2(rA.year[1], rB.year[1]);
+  const spouse = branchRel2(rA.day[1], rB.day[1]);
+  const aHelp = sA.favor.filter(e => sB.score[e] > sB.total / 5).length;   // B 能补 A 的喜用
+  const bHelp = sB.favor.filter(e => sA.score[e] > sA.total / 5).length;   // A 能补 B 的喜用
+  const aHarm = sA.avoid.filter(e => sB.score[e] > sB.total / 4).length;   // B 加重 A 的忌神
+  const bHarm = sB.avoid.filter(e => sA.score[e] > sA.total / 4).length;
+  const ZBONUS = { liuhe:15, sanhe:14, banhe:8, same:6, none:0, xing:-8, hai:-8, chong:-12 };
+  const SBONUS = { liuhe:12, sanhe:10, banhe:6, same:6, none:0, xing:-6, hai:-6, chong:-12 };
+  let score = 60;
+  score += dmRel === "he" ? 18 : dmRel === "sheng" ? 15 : dmRel === "same" ? 8 : 6;
+  score += ZBONUS[zodiac] || 0;
+  score += SBONUS[spouse] || 0;
+  score += Math.min(aHelp, 2) * 5 + Math.min(bHelp, 2) * 5 - aHarm * 3 - bHarm * 3;
+  score = Math.max(20, Math.min(98, Math.round(score)));
+  const tier = score >= 80 ? "great" : score >= 66 ? "good" : score >= 52 ? "ok" : "work";
+  return { score, tier, dmRel, zodiac, spouse, aHelp, bHelp, aHarm, bHarm, favorA: sA.favor, favorB: sB.favor, dmA: rA.dayMaster, dmB: rB.dayMaster, aE, bE };
+}
+
+// ============ 真太阳时校正 ============
+function dayOfYear(y, m, d) {
+  const a = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let n = a[m - 1] + d;
+  if (m > 2 && ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0)) n++;
+  return n;
+}
+// 相对钟表时间的分钟差 (经度校正 + 均时差); 加到钟表时间得真太阳时
+function trueSolarDelta(y, m, d, lon, tzMin) {
+  const stdMeridian = tzMin / 60 * 15;
+  const lonCorr = (lon - stdMeridian) * 4;                       // 每度4分钟
+  const B = (360 * (dayOfYear(y, m, d) - 81) / 365) * Math.PI / 180;
+  const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);  // 均时差(分)
+  return lonCorr + eot;
+}
+
 // ============ 流年 / 神煞 / 吉凶 ============
 // 流年干支: 1984=甲子(index0)
 function computeFleetYears(fromYear, count) {
@@ -1091,17 +1156,28 @@ const SANHUI = [["寅","卯","辰","wood"],["巳","午","未","fire"],["申","�
 function computeRelations(pillars) {
   const P = pillars.filter(Boolean);
   const out = [];
+  // 合化条件: 化神得月令(月支本气为化神或生化神) + 无争合妒合
+  const monthP = P.find(p => p.k === "month");
+  const monthElem = monthP ? GAN_WX[ZHI_MAIN[monthP.branch]] : null;
+  const stemsAll = P.map(p => p.stem).filter(Boolean);
+  const deLing = E => monthElem != null && (monthElem === E || shengOf(monthElem) === E);
+  const zhengHe = (a, b) => stemsAll.filter(x => x === a).length > 1 || stemsAll.filter(x => x === b).length > 1;
+  const huaInfo = (E, a, b) => {
+    const z = a != null && zhengHe(a, b);
+    const dl = deLing(E);
+    return { hua: dl && !z, reason: z ? "zhenghe" : dl ? "ok" : "buleling" };
+  };
   // ---- 天干: 五合 / 相冲 ----
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     const a = P[i].stem, b = P[j].stem; if (!a || !b) continue;
-    if (STEM_HE[a] === b) out.push({ scope:"stem", type:"he", chars:a+b, elem:STEM_HE_ELEM[a+b]||STEM_HE_ELEM[b+a], members:[P[i].k,P[j].k] });
+    if (STEM_HE[a] === b) { const E = STEM_HE_ELEM[a+b]||STEM_HE_ELEM[b+a], h = huaInfo(E, a, b); out.push({ scope:"stem", type:"he", chars:a+b, elem:E, members:[P[i].k,P[j].k], hua:h.hua, huaReason:h.reason }); }
     if (STEM_CHONG[a] === b) out.push({ scope:"stem", type:"chong", chars:a+b, elem:null, members:[P[i].k,P[j].k] });
   }
   // ---- 地支: 六冲 / 六合 / 六害 / 刑 / 自刑 ----
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     const a = P[i].branch, b = P[j].branch, m = [P[i].k, P[j].k]; if (!a || !b) continue;
     if (ZHI_CHONG[a] === b) out.push({ scope:"branch", type:"chong", chars:a+b, elem:null, members:m });
-    if (ZHI_LIUHE[a] === b) out.push({ scope:"branch", type:"liuhe", chars:a+b, elem:ZHI_LIUHE_ELEM[a+b]||ZHI_LIUHE_ELEM[b+a], members:m });
+    if (ZHI_LIUHE[a] === b) { const E = ZHI_LIUHE_ELEM[a+b]||ZHI_LIUHE_ELEM[b+a], h = huaInfo(E, null, null); out.push({ scope:"branch", type:"liuhe", chars:a+b, elem:E, members:m, hua:h.hua, huaReason:h.reason }); }
     if (ZHI_HAI[a] === b) out.push({ scope:"branch", type:"hai", chars:a+b, elem:null, members:m });
     if (XING_PAIRS.has(a+b)) out.push({ scope:"branch", type:"xing", chars:a+b, elem:null, members:m });
     if (a === b && SELF_XING.has(a)) out.push({ scope:"branch", type:"selfxing", chars:a+b, elem:null, members:m });
@@ -1110,8 +1186,8 @@ function computeRelations(pillars) {
   const membersOf = chars => P.filter(p => chars.includes(p.branch)).map(p => p.k);
   for (const [x, y, z, elem] of SANHE) {
     const present = [x, y, z].filter(c => P.some(p => p.branch === c));
-    if (present.length === 3) out.push({ scope:"branch", type:"sanhe", chars:x+y+z, elem, members:membersOf([x,y,z]) });
-    else if (present.length === 2 && present.includes(SANHE_WANG[elem])) out.push({ scope:"branch", type:"banhe", chars:present.join(""), elem, members:membersOf(present) });
+    if (present.length === 3) { const h = huaInfo(elem, null, null); out.push({ scope:"branch", type:"sanhe", chars:x+y+z, elem, members:membersOf([x,y,z]), hua:h.hua, huaReason:h.reason }); }
+    else if (present.length === 2 && present.includes(SANHE_WANG[elem])) { const h = huaInfo(elem, null, null); out.push({ scope:"branch", type:"banhe", chars:present.join(""), elem, members:membersOf(present), hua:h.hua, huaReason:h.reason }); }
   }
   for (const [x, y, z, elem] of SANHUI) {
     if ([x, y, z].every(c => P.some(p => p.branch === c))) out.push({ scope:"branch", type:"sanhui", chars:x+y+z, elem, members:membersOf([x,y,z]) });
@@ -1131,7 +1207,7 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
 
 
 /* ============ 十干配色 (星夜版: 色相由五行取象, 深浅由阴阳) ============ */
@@ -1626,13 +1702,19 @@ function readForm() {
   const notime = $("f-notime").checked;
   const [hh, mi] = ($("f-time").value || "12:00").split(":").map(Number);
   const rc = resolveCity(false);
-  return { name: ($("f-name").value || "").trim(), y, m, d, hh, mi, tz: +$("f-tz").value, notime, gender, city: rc.city, lat: rc.lat, lon: rc.lon, cityNote: rc.note };
+  return { name: ($("f-name").value || "").trim(), y, m, d, hh, mi, tz: +$("f-tz").value, notime, gender, city: rc.city, lat: rc.lat, lon: rc.lon, cityNote: rc.note, trueSolar: $("f-truesolar") ? $("f-truesolar").checked : false };
 }
 function showChart(e) {
   gender = e.gender;
-  const r = computeChart(TERMS, { y: e.y, m: e.m, d: e.d, hh: e.hh, mi: e.mi, tzMin: e.tz, timeKnown: !e.notime });
+  let cy = e.y, cm = e.m, cd = e.d, chh = e.hh, cmi = e.mi, tsDelta = null;
+  if (e.trueSolar && !e.notime && e.lon != null) {
+    tsDelta = Math.round(trueSolarDelta(e.y, e.m, e.d, e.lon, e.tz));
+    const dt = new Date(Date.UTC(e.y, e.m - 1, e.d, e.hh, e.mi) + tsDelta * 60000);
+    cy = dt.getUTCFullYear(); cm = dt.getUTCMonth() + 1; cd = dt.getUTCDate(); chh = dt.getUTCHours(); cmi = dt.getUTCMinutes();
+  }
+  const r = computeChart(TERMS, { y: cy, m: cm, d: cd, hh: chh, mi: cmi, tzMin: e.tz, timeKnown: !e.notime });
   if (r.error) { alert(lang === "zh" ? "支持 1901–2149 年出生。" : "Births supported: 1901–2149."); return; }
-  lastChart = { r, inp: { y: e.y, m: e.m, d: e.d, hh: e.hh, mi: e.mi, tz: e.tz, notime: e.notime, lat: e.lat, lon: e.lon, name: e.name, city: e.city, cityNote: e.cityNote } };
+  lastChart = { r, inp: { y: e.y, m: e.m, d: e.d, hh: e.hh, mi: e.mi, tz: e.tz, notime: e.notime, lat: e.lat, lon: e.lon, name: e.name, city: e.city, cityNote: e.cityNote, tsDelta } };
   renderCard(r, lastChart.inp);
   $("screen-input").classList.add("hidden");
   $("screen-card").classList.remove("hidden");
@@ -1644,6 +1726,7 @@ function applyEntry(e) {
   $("f-date").value = `${e.y}-${String(e.m).padStart(2, "0")}-${String(e.d).padStart(2, "0")}`;
   $("f-time").value = `${String(e.hh).padStart(2, "0")}:${String(e.mi).padStart(2, "0")}`;
   $("f-notime").checked = !!e.notime; $("f-time").disabled = !!e.notime;
+  if ($("f-truesolar")) $("f-truesolar").checked = e.trueSolar !== false;
   gender = e.gender;
   document.querySelectorAll("#f-gender button").forEach(x => x.classList.toggle("on", x.dataset.v === e.gender));
   $("f-city").value = e.city || ""; if (e.tz != null) $("f-tz").value = String(e.tz);
@@ -1659,7 +1742,7 @@ function renderRoster() {
     roster.map((e, i) => `<span class="rchip" role="button" tabindex="0" data-ri="${i}"><span class="rchip-nm">${rosterName(e, i)}</span><span class="rchip-x" data-rx="${i}" role="button" tabindex="0" aria-label="delete">\u2715</span></span>`).join("");
 }
 function saveCurrent() {
-  const e = lastChart ? { name: ($("f-name").value || "").trim() || lastChart.inp.name, y: lastChart.inp.y, m: lastChart.inp.m, d: lastChart.inp.d, hh: lastChart.inp.hh, mi: lastChart.inp.mi, tz: lastChart.inp.tz, notime: lastChart.inp.notime, gender, city: lastChart.inp.city, lat: lastChart.inp.lat, lon: lastChart.inp.lon, cityNote: lastChart.inp.cityNote } : null;
+  const e = lastChart ? { name: ($("f-name").value || "").trim() || lastChart.inp.name, y: lastChart.inp.y, m: lastChart.inp.m, d: lastChart.inp.d, hh: lastChart.inp.hh, mi: lastChart.inp.mi, tz: lastChart.inp.tz, notime: lastChart.inp.notime, gender, city: lastChart.inp.city, lat: lastChart.inp.lat, lon: lastChart.inp.lon, cityNote: lastChart.inp.cityNote, trueSolar: $("f-truesolar") ? $("f-truesolar").checked : false } : null;
   if (!e) return;
   if (!e.name) e.name = lang === "zh" ? `命盘${roster.length + 1}` : `Chart ${roster.length + 1}`;
   roster = roster.filter(x => !(x.y === e.y && x.m === e.m && x.d === e.d && x.hh === e.hh && x.mi === e.mi && x.tz === e.tz && x.notime === e.notime));
@@ -1690,6 +1773,31 @@ $("roster").onclick = (ev) => {
 };
 if ($("f-name")) $("f-name").placeholder = lang === "zh" ? "如:小明 / 我自己" : "e.g. Ann / me";
 renderRoster();
+function encodeShare(inp) {
+  const o = { n:inp.name || "", y:inp.y, m:inp.m, d:inp.d, h:inp.hh, i:inp.mi, z:inp.tz, nt:inp.notime ? 1 : 0, g:gender, c:inp.city || "", la:inp.lat, lo:inp.lon, ts:inp.tsDelta != null ? 1 : 0 };
+  return btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+}
+function decodeShare(str) {
+  try {
+    const o = JSON.parse(decodeURIComponent(escape(atob(str))));
+    let note = ""; const ci = CITY.findIndex(c => c[1] === o.c || c[0] === o.c);
+    if (ci >= 0) note = CITY_NOTE[lang][CITY[ci][0]] || "";
+    return { name:o.n, y:o.y, m:o.m, d:o.d, hh:o.h, mi:o.i, tz:o.z, notime:!!o.nt, gender:o.g || "m", city:o.c, lat:o.la, lon:o.lo, cityNote:note, trueSolar:o.ts !== 0 };
+  } catch (e) { return null; }
+}
+function shareLink() {
+  if (!lastChart) return;
+  const link = location.origin + location.pathname + "#c=" + encodeShare(lastChart.inp);
+  const done = () => { const b = $("btn-share"), en = b.querySelector(".i-en"), zh = b.querySelector(".i-zh"), oe = en.textContent, oz = zh.textContent; en.textContent = "✓ Copied"; zh.textContent = "✓ 已复制"; setTimeout(() => { en.textContent = oe; zh.textContent = oz; }, 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, () => prompt(lang === "zh" ? "复制此链接分享:" : "Copy this link:", link));
+  else prompt(lang === "zh" ? "复制此链接分享:" : "Copy this link:", link);
+}
+$("btn-share").onclick = shareLink;
+$("btn-print").onclick = () => window.print();
+(function loadShared() {
+  const h = location.hash || "";
+  if (h.indexOf("#c=") === 0) { const e = decodeShare(h.slice(3)); if (e) { applyEntry(e); showChart(e); } }
+})();
 
 const ELEM_CHAR = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
 const STG = {
@@ -1861,6 +1969,79 @@ function todayDrawer() {
   }
   return drawerShell(zh?"日":"\u2609", "#D9B96C", zh?"今日 · 此刻":"Today & Now", zh?"流年流月流日 · 大运 · 行运":"cycles · luck · transits", rows);
 }
+const CPT = {
+  tier:{ zh:{ great:"上等 · 天作之合", good:"中上 · 相处融洽", ok:"平 · 可经营", work:"需磨合" }, en:{ great:"Excellent", good:"Good", ok:"Workable", work:"Needs effort" } },
+  dm:{ he:{ zh:"日主相合(天干五合)——情投意合、彼此吸引。", en:"Day masters in union — natural attraction and rapport." },
+    sheng:{ zh:"日主相生——一方滋养一方,温柔互补。", en:"Day masters generate — one nourishes the other." },
+    same:{ zh:"日主同类——志同道合,也各有主见。", en:"Same element — like minds, two strong wills." },
+    ke:{ zh:"日主相克——张力与吸引并存,需彼此让度。", en:"Day masters clash — tension and attraction; give and take." } },
+  br:{ liuhe:{ zh:"六合——投缘、亲近。", en:"Six-harmony — easy closeness." }, sanhe:{ zh:"三合——同气相求、彼此助力。", en:"Triad — shared current, mutual lift." },
+    banhe:{ zh:"半合——渐入佳境。", en:"Half-harmony — warming." }, same:{ zh:"相同——同频,也要留空间。", en:"Same — in sync; give space." },
+    none:{ zh:"无明显合冲——各自独立。", en:"Neutral — independent." }, chong:{ zh:"相冲——起伏、易聚易散,须经营。", en:"Clash — volatile; tend it." },
+    xing:{ zh:"相刑——磨合较多。", en:"Punishment — friction." }, hai:{ zh:"相害——暗耗、猜忌。", en:"Harm — quiet strain." } } };
+function entryToChart(e) {
+  let cy = e.y, cm = e.m, cd = e.d, chh = e.hh, cmi = e.mi;
+  if (e.trueSolar !== false && !e.notime && e.lon != null) {
+    const dt = new Date(Date.UTC(e.y, e.m - 1, e.d, e.hh, e.mi) + Math.round(trueSolarDelta(e.y, e.m, e.d, e.lon, e.tz)) * 60000);
+    cy = dt.getUTCFullYear(); cm = dt.getUTCMonth() + 1; cd = dt.getUTCDate(); chh = dt.getUTCHours(); cmi = dt.getUTCMinutes();
+  }
+  const r = computeChart(TERMS, { y:cy, m:cm, d:cd, hh:chh, mi:cmi, tzMin:e.tz, timeKnown:!e.notime });
+  const utcMs = Date.UTC(e.y, e.m - 1, e.d, e.notime ? 12 : e.hh, e.notime ? 0 : e.mi) - e.tz * 60000;
+  const wheel = computeWheel(utcMs, e.lat, e.lon, !e.notime);
+  return { r, wheel, name: e.name };
+}
+function synastry(wA, wB) {
+  if (!wA || !wB) return null;
+  const FOCUS = ["Sun","Moon","Mercury","Venus","Mars"], ASP = [[0,"conj"],[60,"sextile"],[90,"square"],[120,"trine"],[180,"oppo"]];
+  const HARM = { conj:1, sextile:1, trine:1, square:-1, oppo:-1 };
+  const pa = wA.planets.filter(p => FOCUS.indexOf(p.body) >= 0), pb = wB.planets.filter(p => FOCUS.indexOf(p.body) >= 0);
+  let harmonious = 0, tense = 0; const hits = [];
+  pa.forEach(a => pb.forEach(b => {
+    let d = Math.abs(a.lon - b.lon); if (d > 180) d = 360 - d;
+    for (const [ang, nm] of ASP) { const orb = Math.abs(d - ang); if (orb <= 5) { hits.push({ a:a.body, b:b.body, type:nm, orb }); HARM[nm] > 0 ? harmonious++ : tense++; break; } }
+  }));
+  hits.sort((x, y) => x.orb - y.orb);
+  return { harmonious, tense, hits };
+}
+function matchDrawer() {
+  if (!lastChart) return ""; const zh = lang === "zh", cur = lastChart.inp;
+  const cands = roster.map((e, i) => ({ e, i })).filter(o => !(o.e.y === cur.y && o.e.m === cur.m && o.e.d === cur.d && o.e.hh === cur.hh && o.e.mi === cur.mi && o.e.tz === cur.tz));
+  const body = cands.length
+    ? `<div class="match-list">` + cands.map(o => `<span class="match-pick clk" role="button" tabindex="0" data-t="matchwith" data-ri="${o.i}">${esc(o.e.name || (zh ? "命盘" + (o.i + 1) : "Chart " + (o.i + 1)))} · ${o.e.y}</span>`).join("") + `</div>`
+    : `<p class="wnote">${zh ? "名册里还没有另一个人。先在输入页填另一个人、排盘后「★ 存入名册」,再回来选 TA 合盘。" : "No other saved person yet. Save another person to your roster first, then come back."}</p>`;
+  return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:#D9B96C;text-shadow:0 0 18px #D9B96C88">合</span>
+      <div><div class="dw-title serif">${zh ? "合盘 · 合婚" : "Compatibility"}</div><div class="dw-sub">${esc(cur.name || (zh ? "当前" : "current"))} × ?</div></div></div>
+    <div style="margin-top:14px">${body}</div>`;
+}
+function compatResultDrawer(bIdx) {
+  const zh = lang === "zh";
+  const A = { r:lastChart.r, wheel:lastWheel, name:lastChart.inp.name || (zh ? "当事人" : "You") };
+  const B = entryToChart(roster[bIdx]); if (!B.name) B.name = zh ? "对方" : "Partner";
+  const c = computeCompat(A.r, B.r), syn = synastry(A.wheel, B.wheel);
+  const col = c.tier === "great" ? "#7FC08A" : c.tier === "good" ? "#D9B96C" : c.tier === "ok" ? "#C9A24E" : "#C64B33";
+  const useTxt = (c.aHelp || c.bHelp)
+    ? (zh ? `用神互补:${c.aHelp ? "对方能补你喜用 " + c.aHelp + " 项;" : ""}${c.bHelp ? "你能补对方 " + c.bHelp + " 项。" : ""}` : `Useful-element complement: partner supplies ${c.aHelp}, you supply ${c.bHelp}.`)
+    : (zh ? "用神互补一般。" : "Modest elemental complement.");
+  const rows = [
+    [zh ? "日主" : "Day masters", `${A.r.dayMaster}(${ELEM_CHAR[c.aE]}) × ${B.r.dayMaster}(${ELEM_CHAR[c.bE]})——${CPT.dm[c.dmRel][lang]}`],
+    [zh ? "生肖" : "Zodiac (year)", `${ANIMAL_TXT[lang][A.r.year[1]]} × ${ANIMAL_TXT[lang][B.r.year[1]]}——${CPT.br[c.zodiac][lang]}`],
+    [zh ? "夫妻宫(日支)" : "Spouse palace", `${A.r.day[1]} × ${B.r.day[1]}——${CPT.br[c.spouse][lang]}`],
+    [zh ? "用神" : "Elements", useTxt]
+  ];
+  if (syn) {
+    const hitTxt = syn.hits.slice(0, 5).map(h => `<span style="color:${ASPECT_META[h.type][0]}">${PLANET_GLYPH[h.a]}${ASPECT_ABBR[h.type]}${PLANET_GLYPH[h.b]}</span>`).join("　") || (zh ? "无紧密相位" : "none tight");
+    rows.push([zh ? "西方合盘" : "Synastry", `${zh ? "和谐" : "harmonious"} ${syn.harmonious} · ${zh ? "张力" : "tense"} ${syn.tense}<br>${hitTxt}<br><span style="opacity:.6">${zh ? "(双方 日/月/水/金/火 之间的相位)" : "(Sun/Moon/Merc/Venus/Mars cross-aspects)"}</span>`]);
+  } else {
+    rows.push([zh ? "西方合盘" : "Synastry", zh ? "需双方都有出生时间与地点。" : "needs both birth times & places."]);
+  }
+  return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
+    <span class="dw-back clk" role="button" tabindex="0" data-t="match">‹ ${zh ? "重选" : "back"}</span>
+    <div class="dw-head"><span class="cpt-score" style="border-color:${col};color:${col}">${c.score}</span>
+      <div><div class="dw-title serif">${esc(A.name)} ✕ ${esc(B.name)}</div><div class="dw-sub" style="color:${col}">${CPT.tier[lang][c.tier]}</div></div></div>
+    <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>
+    <div class="wnote">${zh ? "合婚仅供参考,真感情靠经营。" : "For reflection — real love is built, not read."}</div>`;
+}
 let westObserver = null;
 function setupWestBg() {
   if (westObserver) { westObserver.disconnect(); westObserver = null; }
@@ -1968,7 +2149,7 @@ function renderCard(r, inp) {
   $("screen-card").innerHTML = `
     <div class="watermark serif">${ANIMAL_TRAD[dBranch]}</div>
     ${dipper}${quote}
-    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.9" : "Prototype v0.9"}</span></div>
+    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "正式版 v1.0" : "Prototype v1.0"}</span></div>
     <div class="hero">
       ${inp.name ? `<div class="cardname serif">${esc(inp.name)}</div>` : ""}
       <div class="label">${pairLine}</div>
@@ -1989,6 +2170,7 @@ function renderCard(r, inp) {
     <div class="cta-row">
       <span class="cta clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
       <span class="cta clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日 · 此刻 ☉" : "Today & Now ☉"}</span>
+      <span class="cta clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
     </div>
     <div class="detail-bar">
       <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
@@ -2005,7 +2187,7 @@ function renderCard(r, inp) {
     ${deeper}
     ${western}
     <div class="footer">
-      <div class="meta">${born}${inp.city ? " · " + esc(inp.city) : ""}${inp.cityNote ? `<br><span class="cityblurb">${esc(inp.cityNote)}</span>` : ""}<br>${T.disclaimer}</div>
+      <div class="meta">${born}${inp.tsDelta != null && !inp.notime ? (lang === "zh" ? ` · 真太阳时 ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta} 分` : ` · true solar ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta}m`) : ""}${inp.city ? " · " + esc(inp.city) : ""}${inp.cityNote ? `<br><span class="cityblurb">${esc(inp.cityNote)}</span>` : ""}<br>${T.disclaimer}</div>
     </div>`;
   setupWestBg();
 }
@@ -2216,17 +2398,25 @@ const REL = {
 function relColored(chars, scope) {
   return chars.split("").map(ch => { const c = scope === "stem" ? STEM_COLOR[ch] : STEM_COLOR[ZHI_MAIN[ch]]; return `<span style="color:${c}">${ch}</span>`; }).join("");
 }
+function huaTag(x) {
+  if (x.hua === undefined) return "";
+  if (x.hua) return lang === "zh" ? ` · <span style="color:#7FC08A">合化✓</span>` : ` · <span style="color:#7FC08A">transforms</span>`;
+  const why = x.huaReason === "zhenghe" ? (lang === "zh" ? "争合" : "contested") : (lang === "zh" ? "不得令" : "off-season");
+  return lang === "zh" ? ` · <span style="color:var(--muted)">合而不化(${why})</span>` : ` · <span style="color:var(--muted)">binds, no transform (${why})</span>`;
+}
 function relRow(x) {
   const [name, mean] = REL[x.type][lang];
   const elemTxt = x.elem ? ` <span class="gold">\u2192 ${ELEM_TXT[lang][x.elem]}</span>` : "";
   const pos = x.members.map(POSN).join(lang === "zh" ? "·" : "–");
-  return [`${relColored(x.chars, x.scope)} <b>${name}</b>`, `<span style="opacity:.6">${pos}</span>${elemTxt}<br>${mean}`];
+  return [`${relColored(x.chars, x.scope)} <b>${name}</b>${huaTag(x)}`, `<span style="opacity:.6">${pos}</span>${elemTxt}<br>${mean}`];
 }
 function relationDrawer(r) {
   const rels = computeRelations(natalPillars(r));
   const glyph = lang === "zh" ? "合" : "\u26b9";
   if (!rels.length) return drawerShell(glyph, "#D9B96C", lang === "zh" ? "合冲刑害" : "Relations", lang === "zh" ? "四柱之间" : "between the pillars", [[DW[lang].whatIs, lang === "zh" ? "四柱之间无明显合冲刑害——各安其位。" : "No major interactions — the pillars sit independently."]]);
-  return drawerShell(glyph, "#D9B96C", lang === "zh" ? "合冲刑害会" : "Stem & Branch Relations", lang === "zh" ? `四柱之间 · ${rels.length} 组` : `between the pillars · ${rels.length}`, rels.map(relRow));
+  const rows = rels.map(relRow);
+  if (rels.some(x => x.hua !== undefined)) rows.push([lang === "zh" ? "合化说明" : "About 合化", lang === "zh" ? "「合化」= 化神得月令且无争合,两者融为新五行;「合而不化」= 相合牵绊、但保持原性(因争合或不得令)。" : "'Transforms' = the pair fuses into a new element (in season & uncontested); 'binds' = they tie up but keep their own nature."]);
+  return drawerShell(glyph, "#D9B96C", lang === "zh" ? "合冲刑害会" : "Stem & Branch Relations", lang === "zh" ? `四柱之间 · ${rels.length} 组` : `between the pillars · ${rels.length}`, rows);
 }
 function luckStepDrawer(i) {
   const r = lastChart.r, lk = lastLuck;
@@ -2306,6 +2496,8 @@ function onPick(el) {
   else if (t === "strength") openDrawer(strengthDrawer(r));
   else if (t === "reading") openDrawer(readingDrawer(r));
   else if (t === "today") openDrawer(todayDrawer());
+  else if (t === "match") openDrawer(matchDrawer());
+  else if (t === "matchwith") openDrawer(compatResultDrawer(+el.dataset.ri));
   else if (t === "shensha") openDrawer(shenshaDrawer(r));
   else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
   else if (t === "luck") openDrawer(luckDrawer(r));

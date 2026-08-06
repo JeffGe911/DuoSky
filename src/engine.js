@@ -154,6 +154,54 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 双人合盘 (八字合婚) ============
+function branchRel2(a, b) {
+  if (ZHI_CHONG[a] === b) return "chong";
+  if (ZHI_LIUHE[a] === b) return "liuhe";
+  if (XING_PAIRS.has(a + b)) return "xing";
+  if (ZHI_HAI[a] === b) return "hai";
+  for (const [x, y, z] of SANHE) { const g = [x, y, z]; if (g.indexOf(a) >= 0 && g.indexOf(b) >= 0 && a !== b) return "sanhe"; }
+  if (a === b) return "same";
+  return "none";
+}
+function computeCompat(rA, rB) {
+  const sA = computeStrength(rA), sB = computeStrength(rB);
+  const aE = GAN_WX[rA.dayMaster], bE = GAN_WX[rB.dayMaster];
+  const dmRel = STEM_HE[rA.dayMaster] === rB.dayMaster ? "he" : aE === bE ? "same" : (shengOf(aE) === bE || shengOf(bE) === aE) ? "sheng" : "ke";
+  const zodiac = branchRel2(rA.year[1], rB.year[1]);
+  const spouse = branchRel2(rA.day[1], rB.day[1]);
+  const aHelp = sA.favor.filter(e => sB.score[e] > sB.total / 5).length;   // B 能补 A 的喜用
+  const bHelp = sB.favor.filter(e => sA.score[e] > sA.total / 5).length;   // A 能补 B 的喜用
+  const aHarm = sA.avoid.filter(e => sB.score[e] > sB.total / 4).length;   // B 加重 A 的忌神
+  const bHarm = sB.avoid.filter(e => sA.score[e] > sA.total / 4).length;
+  const ZBONUS = { liuhe:15, sanhe:14, banhe:8, same:6, none:0, xing:-8, hai:-8, chong:-12 };
+  const SBONUS = { liuhe:12, sanhe:10, banhe:6, same:6, none:0, xing:-6, hai:-6, chong:-12 };
+  let score = 60;
+  score += dmRel === "he" ? 18 : dmRel === "sheng" ? 15 : dmRel === "same" ? 8 : 6;
+  score += ZBONUS[zodiac] || 0;
+  score += SBONUS[spouse] || 0;
+  score += Math.min(aHelp, 2) * 5 + Math.min(bHelp, 2) * 5 - aHarm * 3 - bHarm * 3;
+  score = Math.max(20, Math.min(98, Math.round(score)));
+  const tier = score >= 80 ? "great" : score >= 66 ? "good" : score >= 52 ? "ok" : "work";
+  return { score, tier, dmRel, zodiac, spouse, aHelp, bHelp, aHarm, bHarm, favorA: sA.favor, favorB: sB.favor, dmA: rA.dayMaster, dmB: rB.dayMaster, aE, bE };
+}
+
+// ============ 真太阳时校正 ============
+function dayOfYear(y, m, d) {
+  const a = [0,31,59,90,120,151,181,212,243,273,304,334];
+  let n = a[m - 1] + d;
+  if (m > 2 && ((y % 4 === 0 && y % 100 !== 0) || y % 400 === 0)) n++;
+  return n;
+}
+// 相对钟表时间的分钟差 (经度校正 + 均时差); 加到钟表时间得真太阳时
+function trueSolarDelta(y, m, d, lon, tzMin) {
+  const stdMeridian = tzMin / 60 * 15;
+  const lonCorr = (lon - stdMeridian) * 4;                       // 每度4分钟
+  const B = (360 * (dayOfYear(y, m, d) - 81) / 365) * Math.PI / 180;
+  const eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B);  // 均时差(分)
+  return lonCorr + eot;
+}
+
 // ============ 流年 / 神煞 / 吉凶 ============
 // 流年干支: 1984=甲子(index0)
 function computeFleetYears(fromYear, count) {
@@ -289,17 +337,28 @@ const SANHUI = [["寅","卯","辰","wood"],["巳","午","未","fire"],["申","�
 function computeRelations(pillars) {
   const P = pillars.filter(Boolean);
   const out = [];
+  // 合化条件: 化神得月令(月支本气为化神或生化神) + 无争合妒合
+  const monthP = P.find(p => p.k === "month");
+  const monthElem = monthP ? GAN_WX[ZHI_MAIN[monthP.branch]] : null;
+  const stemsAll = P.map(p => p.stem).filter(Boolean);
+  const deLing = E => monthElem != null && (monthElem === E || shengOf(monthElem) === E);
+  const zhengHe = (a, b) => stemsAll.filter(x => x === a).length > 1 || stemsAll.filter(x => x === b).length > 1;
+  const huaInfo = (E, a, b) => {
+    const z = a != null && zhengHe(a, b);
+    const dl = deLing(E);
+    return { hua: dl && !z, reason: z ? "zhenghe" : dl ? "ok" : "buleling" };
+  };
   // ---- 天干: 五合 / 相冲 ----
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     const a = P[i].stem, b = P[j].stem; if (!a || !b) continue;
-    if (STEM_HE[a] === b) out.push({ scope:"stem", type:"he", chars:a+b, elem:STEM_HE_ELEM[a+b]||STEM_HE_ELEM[b+a], members:[P[i].k,P[j].k] });
+    if (STEM_HE[a] === b) { const E = STEM_HE_ELEM[a+b]||STEM_HE_ELEM[b+a], h = huaInfo(E, a, b); out.push({ scope:"stem", type:"he", chars:a+b, elem:E, members:[P[i].k,P[j].k], hua:h.hua, huaReason:h.reason }); }
     if (STEM_CHONG[a] === b) out.push({ scope:"stem", type:"chong", chars:a+b, elem:null, members:[P[i].k,P[j].k] });
   }
   // ---- 地支: 六冲 / 六合 / 六害 / 刑 / 自刑 ----
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
     const a = P[i].branch, b = P[j].branch, m = [P[i].k, P[j].k]; if (!a || !b) continue;
     if (ZHI_CHONG[a] === b) out.push({ scope:"branch", type:"chong", chars:a+b, elem:null, members:m });
-    if (ZHI_LIUHE[a] === b) out.push({ scope:"branch", type:"liuhe", chars:a+b, elem:ZHI_LIUHE_ELEM[a+b]||ZHI_LIUHE_ELEM[b+a], members:m });
+    if (ZHI_LIUHE[a] === b) { const E = ZHI_LIUHE_ELEM[a+b]||ZHI_LIUHE_ELEM[b+a], h = huaInfo(E, null, null); out.push({ scope:"branch", type:"liuhe", chars:a+b, elem:E, members:m, hua:h.hua, huaReason:h.reason }); }
     if (ZHI_HAI[a] === b) out.push({ scope:"branch", type:"hai", chars:a+b, elem:null, members:m });
     if (XING_PAIRS.has(a+b)) out.push({ scope:"branch", type:"xing", chars:a+b, elem:null, members:m });
     if (a === b && SELF_XING.has(a)) out.push({ scope:"branch", type:"selfxing", chars:a+b, elem:null, members:m });
@@ -308,8 +367,8 @@ function computeRelations(pillars) {
   const membersOf = chars => P.filter(p => chars.includes(p.branch)).map(p => p.k);
   for (const [x, y, z, elem] of SANHE) {
     const present = [x, y, z].filter(c => P.some(p => p.branch === c));
-    if (present.length === 3) out.push({ scope:"branch", type:"sanhe", chars:x+y+z, elem, members:membersOf([x,y,z]) });
-    else if (present.length === 2 && present.includes(SANHE_WANG[elem])) out.push({ scope:"branch", type:"banhe", chars:present.join(""), elem, members:membersOf(present) });
+    if (present.length === 3) { const h = huaInfo(elem, null, null); out.push({ scope:"branch", type:"sanhe", chars:x+y+z, elem, members:membersOf([x,y,z]), hua:h.hua, huaReason:h.reason }); }
+    else if (present.length === 2 && present.includes(SANHE_WANG[elem])) { const h = huaInfo(elem, null, null); out.push({ scope:"branch", type:"banhe", chars:present.join(""), elem, members:membersOf(present), hua:h.hua, huaReason:h.reason }); }
   }
   for (const [x, y, z, elem] of SANHUI) {
     if ([x, y, z].every(c => P.some(p => p.branch === c))) out.push({ scope:"branch", type:"sanhui", chars:x+y+z, elem, members:membersOf([x,y,z]) });
@@ -329,4 +388,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

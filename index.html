@@ -320,7 +320,7 @@
   #constels svg{position:absolute;overflow:visible;will-change:transform,opacity;
     animation:cdrift var(--dd,110s) ease-in-out var(--dl,0s) infinite alternate, ctw var(--td,9s) ease-in-out var(--dl,0s) infinite}
   @keyframes cdrift{to{transform:translate(var(--dx,30px),var(--dy,-18px))}}
-  @keyframes ctw{0%,100%{opacity:.22}50%{opacity:.7}}
+  @keyframes ctw{0%,100%{opacity:calc(var(--mx,.6) * .32)}50%{opacity:var(--mx,.6)}}
   @media (prefers-reduced-motion:reduce){#constels svg{animation:none;opacity:.4}}
   @media print{#constels{display:none !important}}
   body.west .panel{background:
@@ -2660,8 +2660,10 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
     { zh:"仙后", s:[[5,32],[26,56],[46,30],[66,58],[88,34]], l:[[0,1],[1,2],[2,3],[3,4]] }
   ];
   const frag = document.createDocumentFragment();
-  CS.forEach((cst, i) => {
-    const sc = 0.66 + Math.random() * 1.0;
+  for (let i = 0; i < 22; i++) {
+    const cst = CS[i % CS.length];
+    const sc = 0.6 + Math.random() * 1.1;
+    const mx = (0.24 + (sc - 0.6) / 1.1 * 0.52).toFixed(2);
     const pts = cst.s.map(p => [p[0] * sc + 6, p[1] * sc + 6]);
     const w = Math.max(...pts.map(p => p[0])) + 8, h = Math.max(...pts.map(p => p[1])) + 8;
     const svg = document.createElementNS(NS, "svg");
@@ -2687,8 +2689,9 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
     svg.style.setProperty("--dd", (60 + Math.random() * 60).toFixed(0) + "s");
     svg.style.setProperty("--td", (5 + Math.random() * 6).toFixed(1) + "s");
     svg.style.setProperty("--dl", (Math.random() * 6).toFixed(1) + "s");
+    svg.style.setProperty("--mx", mx);
     frag.appendChild(svg);
-  });
+  }
   host.appendChild(frag);
 })();
 </script>

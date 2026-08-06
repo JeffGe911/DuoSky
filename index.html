@@ -1963,6 +1963,7 @@ function strengthDrawer(r) {
     [L.hidden, hidRows]
   ];
   if (huaTxt) rows.splice(1, 0, [lang === "zh" ? "合化影响" : "Combinations", `${huaTxt}<br><span style="opacity:.6">${lang === "zh" ? "合化改变五行力量、合绊减力,已计入下方得分。" : "Transformations/bindings reshape the element scores below."}</span>`]);
+  rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "扶抑加权为简化模型(藏干本中余、月令加权、含合化);流派众多,仅供参考。" : "Simplified 扶抑 weighting (hidden-stem tiers, month weight, incl. 合化); schools differ — for reference."]);
   return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "旺衰 · 喜用神" : "Strength & Useful Phase", lang === "zh" ? "扶抑加权打分 · 藏干分本中余" : "weighted scoring · hidden stems split", rows);
 }
 const ELEM_ORGAN = {
@@ -2031,7 +2032,9 @@ function synthReadings(r) {
   ];
 }
 function readingDrawer(r) {
-  return drawerShell("读", "#D9B96C", lang === "zh" ? "综合解读" : "Life Reading", lang === "zh" ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart", synthReadings(r));
+  const rows = synthReadings(r);
+  rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "由规则从旺衰·十神·神煞·宫位合成,是启发而非断言;仅供自省与娱乐。" : "Synthesized by rules from your chart — a prompt for reflection, not a verdict."]);
+  return drawerShell("读", "#D9B96C", lang === "zh" ? "综合解读" : "Life Reading", lang === "zh" ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart", rows);
 }
 function todayDrawer() {
   const r = lastChart.r, inp = lastChart.inp, zh = lang === "zh";
@@ -2225,7 +2228,7 @@ function renderCard(r, inp) {
   const tile = (labelKey, gz, isDm) => `
     <div class="pillar ${isDm ? "dm" : ""}">
       <div class="p-label clk" role="button" tabindex="0" data-t="pillar" data-p="${labelKey}">${T[labelKey]}</div>
-      <div class="tgline ${isDm ? "dmx" : ""}">${isDm ? T.dm : `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${gz[0]}">${tgTxt(gz[0])}</span>`}</div>
+      <div class="tgline ${isDm ? "dmx" : ""}">${isDm ? T.dm : `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${gz[0]}" title="${tenGod(r.dayMaster, gz[0])}">${tgTxt(gz[0])}</span>`}</div>
       <div class="gz serif">${colored(gz, labelKey)}</div>
       <div class="gloss">${glossTxt(gz)}</div>
       <div class="ny">${nyLabel(gz)}</div>
@@ -2636,9 +2639,18 @@ function shenshaDrawer(r) {
   return drawerShell(glyph, "#D9B96C", lang === "zh" ? "神煞" : "Symbolic Stars", lang === "zh" ? `命带 ${list.length} 星` : `${list.length} stars`, rows);
 }
 const drawerBg = $("drawer-bg"), drawerEl = $("drawer");
-function openDrawer(html) { drawerEl.innerHTML = html; drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
-function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); }
+let lastFocus = null;
+function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
+function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); if (lastFocus && lastFocus.focus) { lastFocus.focus(); lastFocus = null; } }
 drawerBg.onclick = closeDrawer;
+drawerEl.addEventListener("keydown", e => {
+  if (e.key !== "Tab") return;
+  const f = drawerEl.querySelectorAll('button,a[href],input,select,textarea,[tabindex="0"]');
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 function onPick(el) {
   const r = lastChart && lastChart.r; if (!r) return;
   const t = el.dataset.t;

@@ -1814,7 +1814,8 @@ function buildWheel(w) {
     const p = P(pl.lon, rP);
     g.push(`<g class="clk wpg" role="button" tabindex="0" data-t="planet" data-c="${pl.body}">
       <circle cx="${p[0]}" cy="${p[1]}" r="11" fill="rgba(8,12,28,.55)"/>
-      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#EDE0BB">${PLANET_GLYPH[pl.body]}${pl.retro ? "" : ""}</text>
+      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="${pl.retro ? "#E6A9A0" : "#EDE0BB"}">${PLANET_GLYPH[pl.body]}</text>
+      ${pl.retro ? `<text x="${(+p[0] + 8).toFixed(1)}" y="${(+p[1] - 7).toFixed(1)}" text-anchor="middle" font-size="7" fill="#E6A9A0">\u211e</text>` : ""}
       <title>${PLANET_NAME[lang][pl.body]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}</title></g>`);
   });
   // 福点
@@ -1836,7 +1837,16 @@ function aspectList(w, L) {
 
 function esc(t) { return (t || "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
 const ROSTER_KEY = "duosky_roster_v1";
-function loadRoster() { try { return JSON.parse(localStorage.getItem(ROSTER_KEY)) || []; } catch (e) { return []; } }
+function loadRoster() {
+  let a; try { a = JSON.parse(localStorage.getItem(ROSTER_KEY)) || []; } catch (e) { return []; }
+  return a.map(e => {
+    if ((e.lat == null || e.city == null) && typeof e.cityIdx === "number" && CITY[e.cityIdx]) {
+      const c = CITY[e.cityIdx];
+      return Object.assign({}, e, { city: lang === "zh" ? c[1] : c[0], lat: c[2], lon: c[3], tz: e.tz != null ? e.tz : c[4] });
+    }
+    return e;
+  });
+}
 function storeRoster() { try { localStorage.setItem(ROSTER_KEY, JSON.stringify(roster.slice(0, 4))); } catch (e) {} }
 let roster = loadRoster();
 

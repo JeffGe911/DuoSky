@@ -321,7 +321,13 @@ __FONTS__
   .cta-row{display:flex;gap:10px;margin:14px 0 4px}
   .cta{flex:1;text-align:center;font-family:inherit;font-size:13px;letter-spacing:.05em;color:#1C1508;
     background:linear-gradient(135deg,#E4C57E,#C9A24E);border:none;border-radius:11px;padding:13px 12px;cursor:pointer;font-weight:700;box-shadow:0 4px 16px rgba(217,185,108,.22)}
-  .cta:hover{filter:brightness(1.06)} .cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .cta-row{flex-wrap:wrap}
+  .cta-primary{flex-basis:100%}
+  .cta-sec{background:rgba(217,185,108,.08);color:var(--gold);border:1px solid var(--gold-dim);box-shadow:none;font-weight:600;font-size:12.5px}
+  .cta:hover{filter:brightness(1.06)} .cta-sec:hover{filter:none;background:rgba(217,185,108,.16);border-color:var(--gold)}
+  .cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .gz .clk{border-bottom:1px dotted rgba(217,185,108,.4);padding-bottom:1px}
+  .gz .clk:hover{border-bottom-color:var(--gold)}
   .tr-row{font-size:12px;margin:3px 0;line-height:1.5}
   .match-list{display:flex;flex-direction:column;gap:9px}
   .match-pick{display:block;padding:12px 15px;border:1px solid var(--gold-dim);border-radius:10px;color:var(--soft);cursor:pointer;font-size:14px;letter-spacing:.03em;background:rgba(217,185,108,.05);transition:.15s}
@@ -338,6 +344,18 @@ __FONTS__
   .hint-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:11.5px;color:var(--gold);
     background:rgba(217,185,108,.09);border:1px solid var(--gold-dim);border-radius:9px;padding:8px 12px;margin:0 0 16px;letter-spacing:.02em}
   .hint-x{flex:none;cursor:pointer;opacity:.7;font-size:11px} .hint-x:hover{opacity:1}
+  .cardnavbar{position:sticky;top:0;z-index:6;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:9px 0;margin:0 -36px 16px;
+    background:linear-gradient(180deg,rgba(30,16,15,.97),rgba(30,16,15,.82) 68%,transparent);backdrop-filter:blur(4px)}
+  body.west .cardnavbar{background:linear-gradient(180deg,rgba(20,18,34,.97),rgba(20,18,34,.82) 68%,transparent)}
+  .navtab{font-size:11.5px;letter-spacing:.08em;color:var(--soft);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 15px;cursor:pointer;transition:.15s;background:rgba(217,185,108,.06)}
+  .navtab:hover{border-color:var(--gold);color:var(--gold)} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.05)}
+  .op-line{font-size:13px;line-height:1.75;color:var(--soft)} .op-line b{color:var(--gold);font-weight:700;margin-right:5px}
+  .op-take{font-size:12px;color:var(--muted);margin-top:7px;line-height:1.6;font-style:italic}
+  #sec-bazi,#sec-elem,#west-scene{scroll-margin-top:58px}
+  .match-form{display:flex;flex-direction:column;gap:9px}
+  .match-form .cta{text-align:center}
+  .match-or{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.12em;margin:16px 0 4px}
   .hidden{display:none}
 </style>
 </head>
@@ -1368,21 +1386,42 @@ function synastry(wA, wB) {
   hits.sort((x, y) => x.orb - y.orb);
   return { harmonious, tense, hits };
 }
+function readMatchForm() {
+  const dv = $("m-date") && $("m-date").value; if (!dv) { alert(lang === "zh" ? "请填对方出生日期。" : "Please enter their birth date."); return null; }
+  const [y, m, d] = dv.split("-").map(Number);
+  const notime = $("m-notime").checked;
+  const [hh, mi] = ($("m-time").value || "12:00").split(":").map(Number);
+  const raw = ($("m-city").value || "").trim();
+  const ci = CITY.findIndex(c => c[0].toLowerCase() === raw.toLowerCase() || c[1] === raw);
+  let lat = 30, lon = +(lastChart.inp.tz / 4).toFixed(2), tz = lastChart.inp.tz, note = "";
+  if (ci >= 0) { lat = CITY[ci][2]; lon = CITY[ci][3]; tz = CITY[ci][4]; note = CITY_NOTE[lang][CITY[ci][0]] || ""; }
+  return { name: ($("m-name").value || "").trim(), y, m, d, hh, mi, tz, notime, gender: $("m-gender").value, city: raw, lat, lon, cityNote: note, trueSolar: true };
+}
 function matchDrawer() {
   if (!lastChart) return ""; const zh = lang === "zh", cur = lastChart.inp;
   const cands = roster.map((e, i) => ({ e, i })).filter(o => !(o.e.y === cur.y && o.e.m === cur.m && o.e.d === cur.d && o.e.hh === cur.hh && o.e.mi === cur.mi && o.e.tz === cur.tz));
-  const body = cands.length
-    ? `<div class="match-list">` + cands.map(o => `<span class="match-pick clk" role="button" tabindex="0" data-t="matchwith" data-ri="${o.i}">${esc(o.e.name || (zh ? "命盘" + (o.i + 1) : "Chart " + (o.i + 1)))} · ${o.e.y}</span>`).join("") + `</div>`
-    : `<p class="wnote">${zh ? "名册里还没有另一个人。先在输入页填另一个人、排盘后「★ 存入名册」,再回来选 TA 合盘。" : "No other saved person yet. Save another person to your roster first, then come back."}</p>`;
+  const rosterPart = cands.length
+    ? `<div class="match-or">${zh ? "或从名册选" : "or pick from roster"}</div><div class="match-list">` + cands.map(o => `<span class="match-pick clk" role="button" tabindex="0" data-t="matchwith" data-ri="${o.i}">${esc(o.e.name || (zh ? "命盘" + (o.i + 1) : "Chart " + (o.i + 1)))} · ${o.e.y}</span>`).join("") + `</div>`
+    : "";
+  const form = `<div class="match-form">
+    <input type="text" id="m-name" maxlength="14" autocomplete="off" placeholder="${zh ? "对方称呼(可选)" : "Their name (optional)"}">
+    <div class="row2"><input type="date" id="m-date" min="1901-01-01" max="2149-12-31"><input type="time" id="m-time" value="12:00"></div>
+    <div class="row2">
+      <select id="m-gender"><option value="m">${zh ? "乾 · 男" : "Male"}</option><option value="f">${zh ? "坤 · 女" : "Female"}</option></select>
+      <input type="text" id="m-city" list="citylist" placeholder="${zh ? "出生城市(可选)" : "Birth city (optional)"}">
+    </div>
+    <label class="chk" style="margin:2px 0 0"><input type="checkbox" id="m-notime"><span>${zh ? "对方时辰未知" : "Birth time unknown"}</span></label>
+    <span class="cta clk" role="button" tabindex="0" data-t="matchgo" style="margin-top:4px">${zh ? "开始合盘 ⚭" : "Match ⚭"}</span>
+  </div>`;
   return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
     <div class="dw-head"><span class="dw-glyph serif" style="color:#D9B96C;text-shadow:0 0 18px #D9B96C88">合</span>
-      <div><div class="dw-title serif">${zh ? "合盘 · 合婚" : "Compatibility"}</div><div class="dw-sub">${esc(cur.name || (zh ? "当前" : "current"))} × ?</div></div></div>
-    <div style="margin-top:14px">${body}</div>`;
+      <div><div class="dw-title serif">${zh ? "合盘 · 合婚" : "Compatibility"}</div><div class="dw-sub">${esc(cur.name || (zh ? "当前" : "you"))} × ${zh ? "输入对方" : "enter partner"}</div></div></div>
+    <div style="margin-top:14px">${form}${rosterPart}</div>`;
 }
-function compatResultDrawer(bIdx) {
+function compatResultDrawer(bEntry) {
   const zh = lang === "zh";
   const A = { r:lastChart.r, wheel:lastWheel, name:lastChart.inp.name || (zh ? "当事人" : "You") };
-  const B = entryToChart(roster[bIdx]); if (!B.name) B.name = zh ? "对方" : "Partner";
+  const B = entryToChart(bEntry); if (!B.name) B.name = zh ? "对方" : "Partner";
   const c = computeCompat(A.r, B.r), syn = synastry(A.wheel, B.wheel);
   const col = c.tier === "great" ? "#7FC08A" : c.tier === "good" ? "#D9B96C" : c.tier === "ok" ? "#C9A24E" : "#C64B33";
   const useTxt = (c.aHelp || c.bHelp)
@@ -1513,6 +1552,15 @@ function renderCard(r, inp) {
     ? `<div class="vquote">${"观乎天文·以察时变".split("").join("<br>")}</div>`
     : "";
   const hq = lang === "en" ? `<div class="hquote">"Observe the heavens; read the seasons." — I Ching</div>` : "";
+  const favC = stg.favor.map(e => ELEM_CHAR[e]).join(""), avoC = stg.avoid.map(e => ELEM_CHAR[e]).join("");
+  const opAstro = wheel ? (lang === "zh"
+    ? `<div class="op-line"><b>星盘</b> ☉${SIGN_TXT.zh[wheel.planets[0].sign]} · ☽${SIGN_TXT.zh[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.zh[SIGNS[Math.floor(wheel.asc / 30)]] : "待出生时地"}</div>`
+    : `<div class="op-line"><b>Chart</b> ☉${SIGN_TXT.en[wheel.planets[0].sign]} · ☽${SIGN_TXT.en[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.en[SIGNS[Math.floor(wheel.asc / 30)]] : "—"}</div>`) : "";
+  const opening = `<div class="opening">
+    <div class="op-line"><b>${lang === "zh" ? "八字" : "BaZi"}</b> ${lang === "zh" ? "日主" : "DM"} ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <span class="gold">${STG[lang][stg.level]}</span>${favC ? ` · ${lang === "zh" ? "喜" : "favor"} ${favC}` : ""}${avoC ? ` · ${lang === "zh" ? "忌" : "avoid"} ${avoC}` : ""}</div>
+    ${opAstro}
+    <div class="op-take">${DM_LINE[lang][r.dayMaster]}</div></div>`;
+  const navbar = `<div class="cardnavbar"><span class="navtab" role="button" tabindex="0" data-jump="sec-bazi">${lang === "zh" ? "八字" : "BaZi"}</span><span class="navtab" role="button" tabindex="0" data-jump="sec-elem">${lang === "zh" ? "五行·解读" : "Elements"}</span>${wheel ? `<span class="navtab" role="button" tabindex="0" data-jump="west-scene">${lang === "zh" ? "星盘" : "Chart"}</span>` : ""}</div>`;
   $("screen-card").innerHTML = `
     <div class="watermark serif">${ANIMAL_TRAD[dBranch]}</div>
     ${dipper}${quote}
@@ -1524,21 +1572,23 @@ function renderCard(r, inp) {
       <div class="pair">${subLine}</div>
       ${hq}
     </div>
+    ${navbar}
     ${hint}
-    <div class="pillars">
+    ${opening}
+    <div class="pillars" id="sec-bazi">
       ${tile("year", r.year, false)}
       ${tile("month", r.month, false)}
       ${tile("day", r.day, true)}
       ${hourTile}
     </div>
     <div class="pillars-note">${T.hiddenNote}</div>
-    <div class="elements">${pills}</div>
+    <div class="elements" id="sec-elem">${pills}</div>
     <div class="elements-note">${elemNoteTxt}</div>
     <div class="stg-sum clk" role="button" tabindex="0" data-t="strength">${stgSum}</div>
     <div class="cta-row">
-      <span class="cta clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
-      <span class="cta clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日 · 此刻 ☉" : "Today & Now ☉"}</span>
-      <span class="cta clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
+      <span class="cta cta-primary clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
+      <span class="cta cta-sec clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日 · 此刻 ☉" : "Today & Now ☉"}</span>
+      <span class="cta cta-sec clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
     </div>
     <div class="detail-bar">
       <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
@@ -1866,7 +1916,8 @@ function onPick(el) {
   else if (t === "reading") openDrawer(readingDrawer(r));
   else if (t === "today") openDrawer(todayDrawer());
   else if (t === "match") openDrawer(matchDrawer());
-  else if (t === "matchwith") openDrawer(compatResultDrawer(+el.dataset.ri));
+  else if (t === "matchwith") openDrawer(compatResultDrawer(roster[+el.dataset.ri]));
+  else if (t === "matchgo") { const be = readMatchForm(); if (be) openDrawer(compatResultDrawer(be)); }
   else if (t === "shensha") openDrawer(shenshaDrawer(r));
   else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
   else if (t === "luck") openDrawer(luckDrawer(r));
@@ -1877,6 +1928,8 @@ function onPick(el) {
   else openDrawer(stemDrawer(el.dataset.c, el.dataset.t, el.dataset.p, el.dataset.host, r));
 }
 document.addEventListener("click", e => { const el = e.target.closest(".clk"); if (el) onPick(el); });
+document.addEventListener("click", e => { const t = e.target.closest(".navtab"); if (t) { const el = $(t.dataset.jump); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } });
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("navtab")) { e.preventDefault(); const el = $(e.target.dataset.jump); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer();
   else if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("clk")) { e.preventDefault(); onPick(e.target); } });
 

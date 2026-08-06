@@ -683,8 +683,8 @@ const PILLAR_MEAN = {
     day:{who:"Day stem = you · Day branch = spouse palace",stage:"midlife · ~33–48",gov:"the self + marriage & partner",line:"The Day pillar is closest to you: its stem (the Day Master) IS you, the whole chart is read around it; its branch is your spouse palace — marriage and intimacy — and it rules midlife."},
     hour:{who:"children · juniors · later years",stage:"later life · ~49 onward",gov:"children, aspirations, the final chapter",line:"The Hour pillar is your second half — children and juniors, your later years, and the aspirations you carry inward."}
   } };
-const WUI={en:{chart:"Western Chart",sub:"planets by sign · click any",note:"Rising sign & houses need your birthplace — coming in the full version.",approx:"Moon is approximate without a birth time.",retro:"retrograde",inSign:"in"},
-  zh:{chart:"西方星盘",sub:"行星落座 · 可点开",note:"上升星座与宫位需要出生地——完整版奉上。",approx:"无出生时间时月亮为近似。",retro:"逆行",inSign:"落"}};
+const WUI={en:{chart:"Western Chart",sub:"planets by sign · click any",note:"Rising sign, houses & Part of Fortune need your birth time and city.",approx:"Moon is approximate without a birth time.",retro:"retrograde",inSign:"in"},
+  zh:{chart:"西方星盘",sub:"行星落座 · 可点开",note:"上升、宫位与福点需要出生时间与出生地。",approx:"无出生时间时月亮为近似。",retro:"逆行",inSign:"落"}};
 const CITY = [
   ["Beijing","北京",39.90,116.41,480],["Shanghai","上海",31.23,121.47,480],["Hong Kong","香港",22.32,114.17,480],
   ["Taipei","台北",25.03,121.57,480],["Singapore","新加坡",1.35,103.82,480],["Tokyo","东京",35.68,139.65,540],
@@ -1719,8 +1719,7 @@ function renderCard(r, inp) {
   const deeper = r.timeKnown
     ? `<div class="deeper"><div class="d-head"><span class="label gold">${T.deeper}</span><span class="unlock">${T.deeperSub}</span></div>
        <div class="drow"><span class="d-label">${T.dLabelDM}</span><p>${lang === "zh" ? r.dayMaster + " — " : r.dayMaster + " "}${DM_LINE[lang][r.dayMaster]}</p></div>
-       <div class="drow"><span class="d-label">${T.dLabelMonth}</span><p>${TEN_GOD_FULL[lang][mgod]}${lang === "zh" ? T.shapes : " " + T.shapes}${TEN_GOD_GLOSS[lang][mgod]}</p></div>
-       <div class="drow"><span class="d-label">${T.dLabelSoon}</span><p>${T.soon}</p></div></div>`
+       <div class="drow"><span class="d-label">${T.dLabelMonth}</span><p>${TEN_GOD_FULL[lang][mgod]}${lang === "zh" ? T.shapes : " " + T.shapes}${TEN_GOD_GLOSS[lang][mgod]}</p></div></div>`
     : `<div class="deeper"><div class="locked">${T.locked}</div></div>`;
 
   const utcMs = Date.UTC(inp.y, inp.m - 1, inp.d, inp.notime ? 12 : inp.hh, inp.notime ? 0 : inp.mi) - inp.tz * 60000;

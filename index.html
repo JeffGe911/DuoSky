@@ -311,6 +311,11 @@
   body.west #bgwest{opacity:1}
   body.photo.west #sky{display:block}
   @media (prefers-reduced-motion:reduce){#bgwest{transition:opacity .3s linear}}
+  .cta-row{display:flex;gap:10px;margin:14px 0 4px}
+  .cta{flex:1;text-align:center;font-family:inherit;font-size:13px;letter-spacing:.05em;color:#1C1508;
+    background:linear-gradient(135deg,#E4C57E,#C9A24E);border:none;border-radius:11px;padding:13px 12px;cursor:pointer;font-weight:700;box-shadow:0 4px 16px rgba(217,185,108,.22)}
+  .cta:hover{filter:brightness(1.06)} .cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .tr-row{font-size:12px;margin:3px 0;line-height:1.5}
   .hidden{display:none}
 </style>
 </head>
@@ -469,7 +474,7 @@
 <div class="panel" id="screen-input">
   <div class="topbar">
     <span class="label"><span class="i-en">Bazi × Zodiac</span><span class="i-zh">八字 × 星座</span></span>
-    <span class="label gold"><span class="i-en">Prototype v0.8</span><span class="i-zh">原型 v0.8</span></span>
+    <span class="label gold"><span class="i-en">Prototype v0.9</span><span class="i-zh">原型 v0.9</span></span>
   </div>
   <div class="in-hero">
     <span class="glyphs serif">命 ✕ <svg class="starmark" viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-46 C7,-13 13,-7 46,0 C13,7 7,13 0,46 C-7,13 -13,7 -46,0 C-13,-7 -7,-13 0,-46 Z"/><path class="accent" d="M30,-40 C31.5,-31 32.5,-30 41,-28 C32.5,-26 31.5,-25 30,-16 C28.5,-25 27.5,-26 19,-28 C27.5,-30 28.5,-31 30,-40 Z"/></svg></span>
@@ -1163,6 +1168,9 @@ const PLANET_DOM = {
 const HOUSE_NAME = {
   zh:{1:"自我·外在形象",2:"金钱·价值",3:"沟通·学习·手足",4:"家·根基·父母",5:"恋爱·创造·玩乐",6:"工作·健康·日常",7:"伴侣·合作",8:"亲密·共享·蜕变",9:"远行·信念·高等学问",10:"事业·名声",11:"朋友·社群·愿望",12:"潜意识·独处·隐秘"},
   en:{1:"self & image",2:"money & values",3:"communication & kin",4:"home & roots",5:"romance & creativity",6:"work & health",7:"partnership",8:"intimacy & transformation",9:"travel & philosophy",10:"career & reputation",11:"friends & hopes",12:"the inner world"} };
+const HOUSE_LINE = {
+  zh:{1:"别人第一眼看到的你、身体与自我的起点。",2:"你怎么挣钱、看重什么,安全感的来源。",3:"表达、短途、兄弟姐妹与日常思维。",4:"家庭、出身、内心的安放处与晚景。",5:"浪漫、子女、才艺与自我表现的舞台。",6:"工作、身体、习惯与日复一日的秩序。",7:"婚姻、正式关系与一对一的伙伴或对手。",8:"深度联结、性、共有资源、生死与重生。",9:"远方、高等学问、信仰与拓展视野。",10:"社会高点、职业与被世人看见的样子。",11:"圈子、社群、理想与对未来的期许。",12:"幕后、休整、梦境、放下与自我消融。"},
+  en:{1:"how you come across, where 'you' begins.",2:"how you earn, what you value, where safety comes from.",3:"speech, short trips, siblings, everyday thinking.",4:"home, roots, the private base, later years.",5:"romance, children, creativity, self-expression.",6:"work, the body, habits, daily order.",7:"marriage, formal ties, one-to-one partners.",8:"intimacy, shared resources, death & rebirth.",9:"travel, higher learning, belief, wider horizons.",10:"your public peak, vocation, how the world sees you.",11:"circles, community, ideals, hopes ahead.",12:"the backstage, rest, dreams, letting go."} };
 const ASPECT_READ = {
   conj:{zh:"拧成一股:{A} 和 {B} 几乎分不开,一动全动、彼此放大。",en:"fused: {A} and {B} act as one — move one and the other follows, amplified."},
   oppo:{zh:"两头拉扯:{A} 和 {B} 像跷跷板,你常在两者间找平衡,或透过关系照见。",en:"a tug-of-war: {A} and {B} sit opposite; you balance between them, often through relationships."},
@@ -1567,7 +1575,7 @@ function buildWheel(w) {
       const a = P(cusp, rI), b = P(cusp, rZ);
       g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#7E8EDC" stroke-opacity=".16"/>`);
       const n = P(cusp + 15, rI + 9);
-      g.push(`<text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="#96A0B8">${i + 1}</text>`);
+      g.push(`<g class="clk" role="button" tabindex="0" data-t="houses"><text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="#96A0B8">${i + 1}</text></g>`);
     });
   }
   // 上升/中天 轴
@@ -1731,6 +1739,128 @@ function strengthDrawer(r) {
   ];
   return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "旺衰 · 喜用神" : "Strength & Useful Phase", lang === "zh" ? "扶抑加权打分 · 藏干分本中余" : "weighted scoring · hidden stems split", rows);
 }
+const ELEM_ORGAN = {
+  zh:{ wood:"肝胆、筋络、眼", fire:"心、小肠、血脉与睡眠", earth:"脾胃、消化", metal:"肺、大肠、呼吸与皮肤", water:"肾、膀胱、泌尿与骨" },
+  en:{ wood:"liver/gallbladder, tendons, eyes", fire:"heart, circulation, sleep", earth:"spleen/stomach, digestion", metal:"lungs, breath & skin", water:"kidney, bladder, bones" } };
+const TG_GROUP = { 比肩:"bi",劫财:"bi",正印:"yin",偏印:"yin",食神:"shi",伤官:"shi",正财:"cai",偏财:"cai",正官:"guan",七杀:"guan" };
+function tenGodTally(r) {
+  const g = { bi:0, yin:0, shi:0, cai:0, guan:0 };
+  const stems = [r.year[0], r.month[0]]; if (r.hour) stems.push(r.hour[0]);
+  const brs = [r.year[1], r.month[1], r.day[1]]; if (r.hour) brs.push(r.hour[1]);
+  stems.forEach(st => { if (st !== r.dayMaster) g[TG_GROUP[tenGod(r.dayMaster, st)]]++; });
+  brs.forEach(b => CANGGAN[b].forEach(hs => g[TG_GROUP[tenGod(r.dayMaster, hs)]]++));
+  return g;
+}
+function synthReadings(r) {
+  const s = computeStrength(r), g = tenGodTally(r), zh = lang === "zh";
+  const roles = s.roles, avg = s.total / 5;
+  const has = k => computeShensha(r).some(x => x.key === k);
+  const dayRels = computeRelations(natalPillars(r)).filter(x => x.scope === "branch" && x.members.includes("day"));
+  const dayHas = t => dayRels.some(x => x.type === t);
+  const domGroup = Object.keys(g).sort((a, b) => g[b] - g[a])[0];
+  const elems = ["wood","fire","earth","metal","water"];
+  const weak = elems.slice().sort((a, b) => s.score[a] - s.score[b])[0];
+  const strong = elems.slice().sort((a, b) => s.score[b] - s.score[a])[0];
+  const EN = { wood: zh?"木":"Wood", fire: zh?"火":"Fire", earth: zh?"土":"Earth", metal: zh?"金":"Metal", water: zh?"水":"Water" };
+  const careerLead = {
+    guan: zh ? "官杀分量重,天生有担当、扛得住压力,宜体制、管理岗或讲规矩与权威的领域。" : "Authority stars run strong — you carry responsibility well; suited to institutions, management, rule-bound fields.",
+    shi: zh ? "食伤透出,才华与表达突出,宜创作、技术、专业或能自由发挥的舞台,最忌被规矩捆死。" : "Output stars shine — talent and expression lead; suited to creative, technical or self-directed work.",
+    yin: zh ? "印星为重,靠学识与资历立身,利文教、研究、医卜等需沉淀的路,常得贵人扶持。" : "Resource stars dominate — you build on knowledge and credentials; teaching, research, expertise, with mentors.",
+    cai: zh ? "财星旺,务实逐利、擅经营,宜商业、销售与看得见回报的行当。" : "Wealth stars are strong — pragmatic and enterprising; business, sales, tangible-return work.",
+    bi: zh ? "比劫旺,自我与竞争心强,宜独当一面、靠本事吃饭,合伙须慎。" : "Peer stars are strong — competitive and self-reliant; go solo on your skill, partner with care."
+  }[domGroup];
+  const posture = s.level === "strong" ? (zh ? "身强,宜主动出击——创业、挑战、独立门户都担得起。" : "Strong self — go on the offensive; you can carry a venture of your own.")
+    : s.level === "weak" ? (zh ? "身弱,宜背靠平台、借团队与专业立足,稳中求进胜过单打独斗。" : "Weak self — lean on platforms, teams and expertise; steady beats solo.")
+    : (zh ? "身势中和,进退有余,顺势择机即可。" : "Balanced — room to advance or hold; pick your moments.");
+  const careerShen = has("jiangxing") ? (zh ? "命带将星,有统御之力。" : " A General star gives command.") : has("wenchang") ? (zh ? "文昌入命,利考学与文名。" : " Academic star favors study and reputation.") : has("huagai") ? (zh ? "华盖临身,专业、艺术与玄学有缘。" : " Canopy favors expertise, art, the mystical.") : "";
+  const career = careerLead + " " + posture + careerShen;
+  const caiE = roles.cai, caiScore = s.score[caiE];
+  let wealth = s.favor.indexOf(caiE) >= 0 ? (zh ? "财为喜用,求财顺遂、财能养命。" : "Wealth is a useful element for you — money comes with ease and sustains you.")
+    : s.avoid.indexOf(caiE) >= 0 ? (zh ? "财为忌神,越逐利越耗身,宜量力、靠专业稳收而非投机。" : "Wealth is unfavorable — chasing it drains you; earn steadily through skill, avoid speculation.")
+    : (zh ? "财势平常,取之有道即可。" : "Wealth is moderate — earn it honestly and it holds.");
+  wealth += (s.level === "strong" && caiScore > avg) ? (zh ? " 身强财旺,担得起财,越做越大,是能聚财的格局。" : " Strong self with strong wealth — you can hold money and grow it.")
+    : (s.level === "weak" && caiScore > avg) ? (zh ? " 财多身弱,钱来得动也守不住,易为财奔忙——宜合伙、借力、稳守。" : " Much wealth, weak self — money moves but slips away; partner up and hold steady.")
+    : (caiScore < avg * 0.7) ? (zh ? " 财星偏轻,细水长流、靠一技之长,不宜大博。" : " Light on wealth — a steady trade suits you better than big bets.") : "";
+  if (has("lu")) wealth += zh ? " 命带禄神,衣禄不缺。" : " Prosperity star: a reliable livelihood.";
+  if (has("yima")) wealth += zh ? " 驿马动财,财在走动、远方与变动中求。" : " Traveling Horse: money found through movement and travel.";
+  const male = gender === "m";
+  let love = (dayHas("liuhe") || dayHas("sanhe") || dayHas("banhe")) ? (zh ? "夫妻宫逢合,缘分深、易得伴侣之助,关系偏稳。" : "Your spouse palace is in harmony — deep bonds, a supportive partner, stability.")
+    : dayHas("chong") ? (zh ? "夫妻宫逢冲,感情多起伏、聚少离多或早晚见分,需多经营。" : "Your spouse palace is clashed — ups and downs, distance or timing; tend it with care.")
+    : (dayHas("xing") || dayHas("hai") || dayHas("selfxing")) ? (zh ? "夫妻宫见刑害,磨合较多,忌意气用事。" : "Friction in the spouse palace — more adjusting; don't act on impulse.")
+    : (zh ? "夫妻宫平稳,感情随缘、不燥不冷。" : "A steady spouse palace — love comes in its own time.");
+  const spouseStar = male ? roles.cai : roles.guan;
+  love += (s.score[spouseStar] > avg) ? (zh ? (male ? " 妻星得力,多得内助。" : " 夫星有力,伴侣可倚。") : " A strong partner star — a supportive spouse.")
+    : (s.score[spouseStar] < avg * 0.6) ? (zh ? " 配偶星偏弱,缘分宜主动把握、择人贵稳重。" : " Partner star is light — take initiative and choose steadiness.") : "";
+  if (has("taohua")) love += (s.avoid.indexOf(roles.cai) >= 0 || s.avoid.indexOf(roles.guan) >= 0) ? (zh ? " 命带桃花,魅力足、异性缘旺——也防烂桃花。" : " Peach Blossom: strong charm — mind the wrong kind too.") : (zh ? " 命带桃花,魅力足、人缘与异性缘俱旺。" : " Peach Blossom: real charm and magnetism.");
+  const missing = s.score[weak] === 0;
+  let health = zh ? `五行以${EN[weak]}最${missing ? "缺(全无)" : "弱"}——留意${ELEM_ORGAN.zh[weak]}。` : `${EN[weak]} is your ${missing ? "missing" : "weakest"} phase — mind ${ELEM_ORGAN.en[weak]}.`;
+  if (s.score[strong] > avg * 1.6) health += zh ? ` ${EN[strong]}偏旺,相关之处易过用、上火,注意疏泄平衡。` : ` ${EN[strong]} runs high — that system can overwork; keep it balanced.`;
+  health += s.level === "weak" ? (zh ? " 整体身弱,精力与免疫是长期功课,忌过劳。" : " Weak self — energy and immunity need care; avoid burnout.")
+    : s.level === "strong" ? (zh ? " 身强气足,宜多疏泄(运动、表达),避免郁积。" : " Strong self — vent through exercise and expression; avoid stagnation.") : "";
+  return [
+    [zh ? "💼 事业" : "💼 Career", career],
+    [zh ? "💰 财运" : "💰 Wealth", wealth],
+    [zh ? "❤️ 感情" : "❤️ Love", love],
+    [zh ? "🌿 健康" : "🌿 Health", health]
+  ];
+}
+function readingDrawer(r) {
+  return drawerShell("读", "#D9B96C", lang === "zh" ? "综合解读" : "Life Reading", lang === "zh" ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart", synthReadings(r));
+}
+function todayDrawer() {
+  const r = lastChart.r, inp = lastChart.inp, zh = lang === "zh";
+  const now = new Date();
+  const ty = now.getFullYear(), tm = now.getMonth() + 1, td = now.getDate();
+  const localTz = -now.getTimezoneOffset();
+  const sg = computeStrength(r);
+  const tR = computeChart(TERMS, { y:ty, m:tm, d:td, hh:12, mi:0, tzMin:localTz, timeKnown:false });
+  const cycRows = [[zh?"流年":"Year", tR.year], [zh?"流月":"Month", tR.month], [zh?"流日":"Day", tR.day]].map(([lbl, gz]) => {
+    const fo = luckFortune(gz, sg.favor, sg.avoid), tg = tenGod(r.dayMaster, gz[0]);
+    return `<div class="fy-row"><span class="fy-yr">${lbl}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tg]}</span><span class="fo-dot ${fo}"></span></div>`;
+  }).join("");
+  const dayFo = luckFortune(tR.day, sg.favor, sg.avoid);
+  const dayWord = { good: zh?"今日干支扶你喜用——宜进取、办正事、见贵人。":"Today feeds your useful phase — push forward, handle key matters.",
+    bad: zh?"今日干支冲你喜用——宜守成、缓决策、避冲突。":"Today works against your useful phase — hold steady, delay big calls.",
+    neutral: zh?"今日干支不偏不倚——平顺度日即可。":"A neutral day — steady as she goes." }[dayFo];
+  const dateStr = zh?`${ty} 年 ${tm} 月 ${td} 日`:`${ty}-${String(tm).padStart(2,"0")}-${String(td).padStart(2,"0")}`;
+  const rows = [
+    [zh?"今日":"Today", `${dateStr} <span class="fo-dot ${dayFo}"></span><br><b>${dayWord}</b>`],
+    [zh?"流年 · 流月 · 流日":"Year · Month · Day", cycRows]
+  ];
+  const lk = lastLuck || computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
+  if (lk && !lk.error) {
+    const age = ty - inp.y, past = lk.list.filter(x => age >= x.startAge);
+    if (past.length) {
+      const cur = past[past.length - 1], fo = luckFortune(cur.ganzhi, sg.favor, sg.avoid), tg = tenGod(r.dayMaster, cur.ganzhi[0]);
+      rows.push([zh?"现行大运":"Current luck", `<b class="gold">${cur.ganzhi}</b> ${zh?`(${cur.startAge}\u2013${cur.startAge+9} 岁 · ${TEN_GOD_NAME.zh[tg]})`:`(age ${cur.startAge}\u2013${cur.startAge+9} · ${TEN_GOD_NAME.en[tg]})`} <span class="fo-dot ${fo}"></span>`]);
+    } else {
+      rows.push([zh?"现行大运":"Current luck", zh?`尚未起运(约 ${lk.startAge} 岁起运)。`:`Luck cycles begin around age ${lk.startAge}.`]);
+    }
+  }
+  if (window.Astronomy && lastWheel) {
+    const tw = computeWheel(now.getTime(), inp.lat, inp.lon, !inp.notime);
+    if (tw) {
+      const FOCUS = ["Jupiter","Saturn","Uranus","Neptune","Pluto"];
+      const natal = lastWheel.planets.slice();
+      if (lastWheel.haveAngles) natal.push({ body:"ASC", lon:lastWheel.asc }, { body:"MC", lon:lastWheel.mc });
+      const ASP = [[0,"conj"],[60,"sextile"],[90,"square"],[120,"trine"],[180,"oppo"]];
+      const hits = [];
+      tw.planets.filter(p => FOCUS.indexOf(p.body) >= 0).forEach(tp => natal.forEach(np => {
+        let d = Math.abs(tp.lon - np.lon); if (d > 180) d = 360 - d;
+        for (const [a, nm] of ASP) { const orb = Math.abs(d - a); if (orb <= 2) { hits.push({ tp:tp.body, np:np.body, type:nm, orb }); break; } }
+      }));
+      hits.sort((a, b) => a.orb - b.orb);
+      const tRows = hits.slice(0, 6).map(x => {
+        const c = ASPECT_META[x.type][0];
+        return `<div class="tr-row"><span style="color:${c}">${PLANET_GLYPH[x.tp]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.np]}</span> <span style="opacity:.7">${PLANET_NAME[lang][x.tp]} \u2192 ${PLANET_NAME[lang][x.np]}</span> <span style="opacity:.45;font-size:10px">${x.orb.toFixed(1)}\u00b0</span></div>`;
+      }).join("");
+      rows.push([zh?"当前行运":"Transits now", hits.length
+        ? tRows + `<div class="wnote" style="margin-top:5px">${zh?"外行星过境正与本命形成紧密相位(≤2°),影响可持续数月——是当下的大主题。":"Slow-planet transits within 2° of your natal points — themes that last months."}</div>`
+        : (zh?"此刻无紧密的外行星过境。":"No tight slow-planet transits right now.")]);
+    }
+  }
+  return drawerShell(zh?"日":"\u2609", "#D9B96C", zh?"今日 · 此刻":"Today & Now", zh?"流年流月流日 · 大运 · 行运":"cycles · luck · transits", rows);
+}
 let westObserver = null;
 function setupWestBg() {
   if (westObserver) { westObserver.disconnect(); westObserver = null; }
@@ -1819,7 +1949,7 @@ function renderCard(r, inp) {
     <div class="wheel-wrap">${buildWheel(wheel)}</div>
     ${wheel.haveAngles ? "" : `<div class="wnote">${WX.needLoc}</div>`}
     <div class="wgrid">${legend}${angles}</div>
-    <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span></div>
+    <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span>${wheel.haveAngles ? `<span class="dbtn clk" role="button" tabindex="0" data-t="houses">${lang === "zh" ? "宫位 ✦" : "Houses ✦"}</span>` : ""}</div>
     <div class="wnote">${W.note}${inp.notime ? " " + W.approx : ""}</div></div>` : "";
 
   const born = lang === "zh"
@@ -1838,7 +1968,7 @@ function renderCard(r, inp) {
   $("screen-card").innerHTML = `
     <div class="watermark serif">${ANIMAL_TRAD[dBranch]}</div>
     ${dipper}${quote}
-    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.8" : "Prototype v0.8"}</span></div>
+    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.9" : "Prototype v0.9"}</span></div>
     <div class="hero">
       ${inp.name ? `<div class="cardname serif">${esc(inp.name)}</div>` : ""}
       <div class="label">${pairLine}</div>
@@ -1856,6 +1986,10 @@ function renderCard(r, inp) {
     <div class="elements">${pills}</div>
     <div class="elements-note">${elemNoteTxt}</div>
     <div class="stg-sum clk" role="button" tabindex="0" data-t="strength">${stgSum}</div>
+    <div class="cta-row">
+      <span class="cta clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
+      <span class="cta clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日 · 此刻 ☉" : "Today & Now ☉"}</span>
+    </div>
     <div class="detail-bar">
       <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
       <span class="dbtn clk" role="button" tabindex="0" data-t="relations">${T.btnRel}</span>
@@ -1917,7 +2051,15 @@ function westDrawer(id) {
   const WX = WEXTRA[lang], sg = L => SIGNS[Math.floor(L / 30)];
   if (id === "fortune" && lastWheel && lastWheel.fortune != null) {
     const L = lastWheel.fortune;
-    return drawerShell(FORTUNE_GLYPH, "#D9B96C", `${WX.fortune} ${WUI[lang].inSign} ${SIGN_TXT[lang][sg(L)]}`, `${SIGN_GLYPH[sg(L)]} ${Math.floor(L % 30)}\u00b0`, [[DW[lang].whatIs, WX.fortuneLine]]);
+    const sgn = sg(L), rows = [[DW[lang].whatIs, WX.fortuneLine]];
+    if (lastWheel.haveAngles) {
+      const h = ((Math.floor(L / 30) - Math.floor(lastWheel.asc / 30) + 12) % 12) + 1;
+      rows.push([lang === "zh" ? "落座" : "In sign", lang === "zh" ? `${SIGN_TXT.zh[sgn]}——以「${SIGN_MANNER.zh[sgn]}」的方式,最容易召来顺遂与好运。` : `${SIGN_TXT.en[sgn]} — luck flows most when you move ${SIGN_MANNER.en[sgn]}.`]);
+      rows.push([lang === "zh" ? "落宫" : "In house", lang === "zh" ? `第 ${h} 宫 · ${HOUSE_NAME.zh[h]}——你的福气与安适,多在这块人生领域里兑现。` : `House ${h} · ${HOUSE_NAME.en[h]} — your ease and good fortune pay off in this area.`]);
+    } else {
+      rows.push([lang === "zh" ? "落宫" : "House", lang === "zh" ? "需出生时间+地点才能定落宫。" : "House needs birth time + place."]);
+    }
+    return drawerShell(FORTUNE_GLYPH, "#D9B96C", `${WX.fortune} ${WUI[lang].inSign} ${SIGN_TXT[lang][sgn]}`, `${SIGN_GLYPH[sgn]} ${Math.floor(L % 30)}\u00b0`, rows);
   }
   if ((id === "asc" || id === "mc") && lastWheel && lastWheel[id] != null) {
     const L = lastWheel[id];
@@ -2026,6 +2168,20 @@ function westBalanceDrawer() {
      [lang === "zh" ? "四象分布" : "Elements", elBars],
      [lang === "zh" ? "三模式" : "Modalities", modeTxt],
      [lang === "zh" ? "出生月相" : "Moon phase", `<b class="gold">${ph[0]}</b> — ${ph[1]}`]]);
+}
+function housesDrawer() {
+  const w = lastWheel;
+  if (!w || !w.haveAngles) return drawerShell(lang === "zh" ? "宫" : "\u2302", "#D9B96C", lang === "zh" ? "十二宫" : "Houses", "", [[DW[lang].whatIs, lang === "zh" ? "宫位需要出生时间 + 出生地。补全后即可看每宫落在哪个星座、掌管人生哪一块、宫内有哪些行星。" : "Houses need birth time + place."]]);
+  const ascIdx = Math.floor(w.asc / 30), byHouse = {};
+  w.planets.forEach(p => { (byHouse[p.house] = byHouse[p.house] || []).push(p.body); });
+  const rows = [];
+  for (let k = 1; k <= 12; k++) {
+    const sgn = SIGNS[(ascIdx + k - 1) % 12], occ = byHouse[k] || [];
+    const label = `${lang === "zh" ? "第" + k + "宫" : "House " + k} · ${SIGN_GLYPH[sgn]}${occ.length ? " · " + occ.map(b => PLANET_GLYPH[b]).join(" ") : ""}`;
+    const txt = `<b style="color:var(--gold)">${HOUSE_NAME[lang][k]}</b> · ${SIGN_TXT[lang][sgn]}${lang === "zh" ? "座起" : ""}<br><span style="opacity:.75">${HOUSE_LINE[lang][k]}</span>${occ.length ? `<br><span style="opacity:.6">${lang === "zh" ? "宫内" : "in house"}: ${occ.map(b => PLANET_NAME[lang][b]).join(lang === "zh" ? "、" : ", ")}</span>` : ""}`;
+    rows.push([label, txt]);
+  }
+  return drawerShell(lang === "zh" ? "宫" : "\u2302", "#D9B96C", lang === "zh" ? "十二宫位" : "The Twelve Houses", lang === "zh" ? "整宫制 · 各宫落座与掌管" : "whole-sign · sign & domain of each", rows);
 }
 function aspectDrawer() {
   const WX = WEXTRA[lang], w = lastWheel;
@@ -2148,12 +2304,15 @@ function onPick(el) {
   else if (t === "tengods") openDrawer(tenGodsDrawer(r));
   else if (t === "relations") openDrawer(relationDrawer(r));
   else if (t === "strength") openDrawer(strengthDrawer(r));
+  else if (t === "reading") openDrawer(readingDrawer(r));
+  else if (t === "today") openDrawer(todayDrawer());
   else if (t === "shensha") openDrawer(shenshaDrawer(r));
   else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
   else if (t === "luck") openDrawer(luckDrawer(r));
   else if (t === "luckstep") openDrawer(luckStepDrawer(+el.dataset.i));
   else if (t === "aspects") openDrawer(aspectDrawer());
   else if (t === "wbalance") openDrawer(westBalanceDrawer());
+  else if (t === "houses") openDrawer(housesDrawer());
   else openDrawer(stemDrawer(el.dataset.c, el.dataset.t, el.dataset.p, el.dataset.host, r));
 }
 document.addEventListener("click", e => { const el = e.target.closest(".clk"); if (el) onPick(el); });

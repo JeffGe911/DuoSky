@@ -308,15 +308,22 @@
   .lk-legend{font-size:10px;color:var(--muted);margin:6px 0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
   .fy-row{display:flex;align-items:center;gap:10px;font-size:11.5px;margin:3px 0;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.05)}
   .fy-yr{flex:none;width:38px;color:var(--muted)} .fy-gz{flex:none;width:36px;font-size:15px;letter-spacing:.02em} .fy-tg{flex:1;color:var(--soft)}
-  #bgwest{position:fixed;inset:-3%;z-index:0;opacity:0;pointer-events:none;transition:opacity 1s ease;
+  #bgwest{position:fixed;inset:-3%;z-index:0;opacity:0;pointer-events:none;transition:opacity 1.1s ease;
     background:
-      radial-gradient(1100px 720px at 76% 14%, rgba(126,92,206,.42), transparent 60%),
-      radial-gradient(1000px 760px at 14% 82%, rgba(58,110,178,.34), transparent 62%),
-      radial-gradient(760px 560px at 52% 48%, rgba(196,158,92,.12), transparent 60%),
-      linear-gradient(180deg,#090a20 0%,#0c1032 48%,#070818 100%)}
+      radial-gradient(66% 52% at 50% 40%, rgba(150,120,224,.30), transparent 70%),
+      radial-gradient(1200px 820px at 80% 8%, rgba(126,92,206,.42), transparent 60%),
+      radial-gradient(1120px 840px at 10% 88%, rgba(50,112,192,.38), transparent 62%),
+      radial-gradient(900px 640px at 64% 80%, rgba(198,88,124,.16), transparent 60%),
+      radial-gradient(780px 580px at 50% 50%, rgba(196,158,92,.10), transparent 60%),
+      linear-gradient(114deg, transparent 37%, rgba(184,184,232,.06) 47%, rgba(206,196,244,.11) 52%, rgba(184,184,232,.05) 57%, transparent 64%),
+      linear-gradient(180deg,#05060f 0%,#0a0b26 46%,#050612 100%)}
+  #bgwest::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(122% 92% at 50% 44%, transparent 54%, rgba(2,3,10,.78) 100%)}
   body.west #bgwest{opacity:1}
   #constels{position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 1.1s ease}
   body.west #constels{opacity:1}
+  .wstar{position:absolute;border-radius:50%;background:#EDE6D0;box-shadow:0 0 3px rgba(237,230,208,.4);
+    animation:ctw var(--td,5s) ease-in-out var(--dl,0s) infinite}
   #constels svg{position:absolute;overflow:visible;will-change:transform,opacity;
     animation:cdrift var(--dd,110s) ease-in-out var(--dl,0s) infinite alternate, ctw var(--td,9s) ease-in-out var(--dl,0s) infinite}
   @keyframes cdrift{to{transform:translate(var(--dx,30px),var(--dy,-18px))}}
@@ -2660,6 +2667,14 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
     { zh:"仙后", s:[[5,32],[26,56],[46,30],[66,58],[88,34]], l:[[0,1],[1,2],[2,3],[3,4]] }
   ];
   const frag = document.createDocumentFragment();
+  for (let n = 0; n < 170; n++) {
+    const st = document.createElement("span");
+    const sz = (Math.random() * 1.5 + 0.5).toFixed(1);
+    st.className = "wstar";
+    st.style.cssText = `left:${(Math.random() * 100).toFixed(2)}%;top:${(Math.random() * 100).toFixed(2)}%;width:${sz}px;height:${sz}px;` +
+      `--td:${(Math.random() * 5 + 3).toFixed(1)}s;--dl:${(Math.random() * 6).toFixed(1)}s;--mx:${(0.2 + Math.random() * 0.6).toFixed(2)}`;
+    frag.appendChild(st);
+  }
   for (let i = 0; i < 22; i++) {
     const cst = CS[i % CS.length];
     const sc = 0.6 + Math.random() * 1.1;

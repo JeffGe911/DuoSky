@@ -2040,6 +2040,12 @@ function synthReadings(r) {
   const s = computeStrength(r), g = tenGodTally(r), zh = lang === "zh";
   const roles = s.roles, avg = s.total / 5;
   const has = k => computeShensha(r).some(x => x.key === k);
+  const pt = computePattern(r), cl = computeClimate(r, s);
+  const present = new Set();
+  const chs = [r.year[0], r.month[0]]; if (r.hour) chs.push(r.hour[0]);
+  [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []).forEach(b => CANGGAN[b].forEach(h => chs.push(h)));
+  chs.forEach(ch => { if (ch !== r.dayMaster) present.add(tenGod(r.dayMaster, ch)); });
+  const hasTG = t => present.has(t);
   const dayRels = computeRelations(natalPillars(r)).filter(x => x.scope === "branch" && x.members.includes("day"));
   const dayHas = t => dayRels.some(x => x.type === t);
   const domGroup = Object.keys(g).sort((a, b) => g[b] - g[a])[0];
@@ -2047,18 +2053,16 @@ function synthReadings(r) {
   const weak = elems.slice().sort((a, b) => s.score[a] - s.score[b])[0];
   const strong = elems.slice().sort((a, b) => s.score[b] - s.score[a])[0];
   const EN = { wood: zh?"木":"Wood", fire: zh?"火":"Fire", earth: zh?"土":"Earth", metal: zh?"金":"Metal", water: zh?"水":"Water" };
-  const careerLead = {
-    guan: zh ? "官杀分量重,天生有担当、扛得住压力,宜体制、管理岗或讲规矩与权威的领域。" : "Authority stars run strong — you carry responsibility well; suited to institutions, management, rule-bound fields.",
-    shi: zh ? "食伤透出,才华与表达突出,宜创作、技术、专业或能自由发挥的舞台,最忌被规矩捆死。" : "Output stars shine — talent and expression lead; suited to creative, technical or self-directed work.",
-    yin: zh ? "印星为重,靠学识与资历立身,利文教、研究、医卜等需沉淀的路,常得贵人扶持。" : "Resource stars dominate — you build on knowledge and credentials; teaching, research, expertise, with mentors.",
-    cai: zh ? "财星旺,务实逐利、擅经营,宜商业、销售与看得见回报的行当。" : "Wealth stars are strong — pragmatic and enterprising; business, sales, tangible-return work.",
-    bi: zh ? "比劫旺,自我与竞争心强,宜独当一面、靠本事吃饭,合伙须慎。" : "Peer stars are strong — competitive and self-reliant; go solo on your skill, partner with care."
-  }[domGroup];
   const posture = s.level === "strong" ? (zh ? "身强,宜主动出击——创业、挑战、独立门户都担得起。" : "Strong self — go on the offensive; you can carry a venture of your own.")
     : s.level === "weak" ? (zh ? "身弱,宜背靠平台、借团队与专业立足,稳中求进胜过单打独斗。" : "Weak self — lean on platforms, teams and expertise; steady beats solo.")
     : (zh ? "身势中和,进退有余,顺势择机即可。" : "Balanced — room to advance or hold; pick your moments.");
-  const careerShen = has("jiangxing") ? (zh ? "命带将星,有统御之力。" : " A General star gives command.") : has("wenchang") ? (zh ? "文昌入命,利考学与文名。" : " Academic star favors study and reputation.") : has("huagai") ? (zh ? "华盖临身,专业、艺术与玄学有缘。" : " Canopy favors expertise, art, the mystical.") : "";
-  const career = careerLead + " " + posture + careerShen;
+  const careerShen = has("jiangxing") ? (zh ? " 命带将星,有统御之力。" : " A General star gives command.") : has("wenchang") ? (zh ? " 文昌入命,利考学与文名。" : " Academic star favors study and reputation.") : has("huagai") ? (zh ? " 华盖临身,专业、艺术与玄学有缘。" : " Canopy favors expertise, art, the mystical.") : "";
+  const combos = [];
+  if (hasTG("伤官") && hasTG("正官")) combos.push(zh ? "命见「伤官见官」——事业与官非是非需格外留心,忌锋芒犯上。" : "'Hurting Officer meets the Officer' — mind friction with authority.");
+  if (hasTG("食神") && hasTG("七杀")) combos.push(zh ? "「食神制杀」——能驾驭压力、独当一面,利掌权与专业。" : "'Eating God tames the Killings' — you master pressure and can lead.");
+  if (hasTG("正官") && (hasTG("正印") || hasTG("偏印"))) combos.push(zh ? "「官印相生」——名实相济,利体制与名声。" : "'Officer feeds Resource' — position and repute reinforce each other.");
+  if (hasTG("伤官") && (hasTG("正印") || hasTG("偏印"))) combos.push(zh ? "「伤官配印」——才华有约束,可成大器。" : "'Hurting Officer paired with Resource' — disciplined talent.");
+  const career = `${PATTERN[pt.key][lang][1]} ${posture}${combos.length ? " " + combos.join("") : ""}${careerShen}`;
   const caiE = roles.cai, caiScore = s.score[caiE];
   let wealth = s.favor.indexOf(caiE) >= 0 ? (zh ? "财为喜用,求财顺遂、财能养命。" : "Wealth is a useful element for you — money comes with ease and sustains you.")
     : s.avoid.indexOf(caiE) >= 0 ? (zh ? "财为忌神,越逐利越耗身,宜量力、靠专业稳收而非投机。" : "Wealth is unfavorable — chasing it drains you; earn steadily through skill, avoid speculation.")
@@ -2076,18 +2080,34 @@ function synthReadings(r) {
   const spouseStar = male ? roles.cai : roles.guan;
   love += (s.score[spouseStar] > avg) ? (zh ? (male ? " 妻星得力,多得内助。" : " 夫星有力,伴侣可倚。") : " A strong partner star — a supportive spouse.")
     : (s.score[spouseStar] < avg * 0.6) ? (zh ? " 配偶星偏弱,缘分宜主动把握、择人贵稳重。" : " Partner star is light — take initiative and choose steadiness.") : "";
+  if (hasTG("正官") && hasTG("七杀")) love += zh ? " 官杀混杂,情缘选择多、易反复,贵在专一。" : " Mixed Officer/Killings — many options; steadiness serves you.";
   if (has("taohua")) love += (s.avoid.indexOf(roles.cai) >= 0 || s.avoid.indexOf(roles.guan) >= 0) ? (zh ? " 命带桃花,魅力足、异性缘旺——也防烂桃花。" : " Peach Blossom: strong charm — mind the wrong kind too.") : (zh ? " 命带桃花,魅力足、人缘与异性缘俱旺。" : " Peach Blossom: real charm and magnetism.");
   const missing = s.score[weak] === 0;
   let health = zh ? `五行以${EN[weak]}最${missing ? "缺(全无)" : "弱"}——留意${ELEM_ORGAN.zh[weak]}。` : `${EN[weak]} is your ${missing ? "missing" : "weakest"} phase — mind ${ELEM_ORGAN.en[weak]}.`;
   if (s.score[strong] > avg * 1.6) health += zh ? ` ${EN[strong]}偏旺,相关之处易过用、上火,注意疏泄平衡。` : ` ${EN[strong]} runs high — that system can overwork; keep it balanced.`;
+  if (cl.need === "fire") health += zh ? " 命局偏寒,留意血液循环、阳气与情绪低沉,宜温补、多见阳光。" : " A cold chart — mind circulation, warmth and low mood.";
+  else if (cl.need === "water") health += zh ? " 命局偏燥,留意心火、津液与睡眠,宜滋润、静养。" : " A dry/hot chart — mind inner heat, fluids and sleep.";
   health += s.level === "weak" ? (zh ? " 整体身弱,精力与免疫是长期功课,忌过劳。" : " Weak self — energy and immunity need care; avoid burnout.")
     : s.level === "strong" ? (zh ? " 身强气足,宜多疏泄(运动、表达),避免郁积。" : " Strong self — vent through exercise and expression; avoid stagnation.") : "";
-  return [
+  const inp = lastChart.inp;
+  let luckLine = "";
+  const lk = computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
+  if (lk && !lk.error) {
+    const age = (new Date()).getFullYear() - inp.y, past = lk.list.filter(x => age >= x.startAge);
+    if (past.length) {
+      const cur = past[past.length - 1], tgc = tenGod(r.dayMaster, cur.ganzhi[0]), fo = luckFortune(cur.ganzhi, s.favor, s.avoid);
+      const foT = fo === "good" ? (zh ? "整体顺遂、宜进取" : "favorable — push forward") : fo === "bad" ? (zh ? "较受制、宜守成蓄力" : "constrained — consolidate") : (zh ? "平稳、参半" : "mixed");
+      luckLine = zh ? `现行大运 ${cur.ganzhi}(${cur.startAge}–${cur.startAge + 9} 岁),走「${TEN_GOD_FULL.zh[tgc]}」运——${foT};${TEN_GOD_GLOSS.zh[tgc]}` : `Current luck pillar ${cur.ganzhi} (age ${cur.startAge}–${cur.startAge + 9}) — the ${TEN_GOD_FULL.en[tgc]} decade: ${foT}. ${TEN_GOD_GLOSS.en[tgc]}`;
+    } else luckLine = zh ? `尚未起运(约 ${lk.startAge} 岁起),先按本命而行。` : `Luck begins around age ${lk.startAge}.`;
+  }
+  const out = [
     [zh ? "💼 事业" : "💼 Career", career],
     [zh ? "💰 财运" : "💰 Wealth", wealth],
     [zh ? "❤️ 感情" : "❤️ Love", love],
     [zh ? "🌿 健康" : "🌿 Health", health]
   ];
+  if (luckLine) out.push([zh ? "⏳ 时运" : "⏳ Timing", luckLine]);
+  return out;
 }
 function readingDrawer(r) {
   const rows = synthReadings(r);

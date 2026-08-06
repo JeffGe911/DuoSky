@@ -195,6 +195,49 @@ function computePatternStatus(r, s) {
   return { key: pt.key, status, reasonKey };
 }
 
+// ============ 格局用神 (相神) ============
+function computeYongshen(r, s) {
+  s = s || computeStrength(r);
+  const st = computePatternStatus(r, s), roles = s.roles;
+  const strong = s.level === "strong", weak = s.level === "weak", cheng = st.status === "cheng";
+  let use, why;
+  switch (st.key) {
+    case "zhengguan":
+      if (!cheng) { use = "yin"; why = "guan_yin"; }
+      else if (weak) { use = "yin"; why = "guan_weak"; }
+      else { use = "cai"; why = "guan_cai"; }
+      break;
+    case "zhengcai": case "piancai":
+      if (weak) { use = "bi"; why = "cai_bi"; }
+      else { use = "shi"; why = "cai_shi"; }
+      break;
+    case "zhengyin": case "pianyin":
+      if (!cheng) { use = "bi"; why = "yin_bi"; }
+      else if (strong) { use = "shi"; why = "yin_shi"; }
+      else { use = "guan"; why = "yin_guan"; }
+      break;
+    case "shishen":
+      use = "cai"; why = cheng ? "shi_cai" : "shi_zhi";
+      break;
+    case "qisha":
+      use = "shi"; why = "sha_shi";
+      break;
+    case "shangguan":
+      if (weak) { use = "yin"; why = "shang_yin"; }
+      else { use = "cai"; why = "shang_cai"; }
+      break;
+    case "yangren":
+      use = "guan"; why = "ren_guan";
+      break;
+    case "jianlu":
+      use = strong ? "guan" : "cai"; why = "lu_out";
+      break;
+    default:
+      use = "guan"; why = "bi_guan";
+  }
+  return { use, element: roles[use], why, status: st.status, key: st.key };
+}
+
 // ============ 调候 (寒暖燥湿) ============
 const SEASON = { 寅:"spring",卯:"spring",辰:"spring", 巳:"summer",午:"summer",未:"summer", 申:"autumn",酉:"autumn",戌:"autumn", 亥:"winter",子:"winter",丑:"winter" };
 function computeClimate(r, s) {
@@ -556,4 +599,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computePatternStatus, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computePatternStatus, computeYongshen, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

@@ -1085,6 +1085,49 @@ function computePatternStatus(r, s) {
   return { key: pt.key, status, reasonKey };
 }
 
+// ============ 格局用神 (相神) ============
+function computeYongshen(r, s) {
+  s = s || computeStrength(r);
+  const st = computePatternStatus(r, s), roles = s.roles;
+  const strong = s.level === "strong", weak = s.level === "weak", cheng = st.status === "cheng";
+  let use, why;
+  switch (st.key) {
+    case "zhengguan":
+      if (!cheng) { use = "yin"; why = "guan_yin"; }
+      else if (weak) { use = "yin"; why = "guan_weak"; }
+      else { use = "cai"; why = "guan_cai"; }
+      break;
+    case "zhengcai": case "piancai":
+      if (weak) { use = "bi"; why = "cai_bi"; }
+      else { use = "shi"; why = "cai_shi"; }
+      break;
+    case "zhengyin": case "pianyin":
+      if (!cheng) { use = "bi"; why = "yin_bi"; }
+      else if (strong) { use = "shi"; why = "yin_shi"; }
+      else { use = "guan"; why = "yin_guan"; }
+      break;
+    case "shishen":
+      use = "cai"; why = cheng ? "shi_cai" : "shi_zhi";
+      break;
+    case "qisha":
+      use = "shi"; why = "sha_shi";
+      break;
+    case "shangguan":
+      if (weak) { use = "yin"; why = "shang_yin"; }
+      else { use = "cai"; why = "shang_cai"; }
+      break;
+    case "yangren":
+      use = "guan"; why = "ren_guan";
+      break;
+    case "jianlu":
+      use = strong ? "guan" : "cai"; why = "lu_out";
+      break;
+    default:
+      use = "guan"; why = "bi_guan";
+  }
+  return { use, element: roles[use], why, status: st.status, key: st.key };
+}
+
 // ============ 调候 (寒暖燥湿) ============
 const SEASON = { 寅:"spring",卯:"spring",辰:"spring", 巳:"summer",午:"summer",未:"summer", 申:"autumn",酉:"autumn",戌:"autumn", 亥:"winter",子:"winter",丑:"winter" };
 function computeClimate(r, s) {
@@ -1446,7 +1489,7 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computePatternStatus, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computePatternStatus, computeYongshen, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
 
 
 /* ============ 十干配色 (星夜版: 色相由五行取象, 深浅由阴阳) ============ */
@@ -2091,6 +2134,22 @@ const PATTERN = {
   yangren:{ zh:["阳刃格","刚猛果决、爆发力强、能成大事亦易生变,极端。","官杀制刃(刃杀两停·大贵)","刃旺无制、财旺引刃"], en:["Yang Blade","bold, explosive, capable of great feats — and volatile.","officer/killings taming the blade (great honor)","an unchecked blade; wealth provoking it"] },
   bijie:{ zh:["比劫格","自我、重义气、竞争心强,朋友多助也多争。","官杀约束、食伤泄秀、财官","印比再助身"], en:["Peer","self-driven, loyal, competitive — friends both help and vie.","officer to rein in, output to vent, wealth/officer","more resource/peers"] } };
 const PSTATUS = { zh:{ cheng:"成格", po:"破格", jiu:"破而有救" }, en:{ cheng:"intact", po:"broken", jiu:"broken but rescued" } };
+const YS_CAT = { zh:{ yin:"印·生我", bi:"比劫·帮身", shi:"食伤·泄秀制杀", cai:"财", guan:"官杀·制护" }, en:{ yin:"Resource", bi:"Peer", shi:"Output", cai:"Wealth", guan:"Officer/Killings" } };
+const YS_WHY = { zh:{
+  guan_yin:"官格逢伤,取印制伤护官", guan_weak:"身弱不任官,取印生身以任官", guan_cai:"身旺,取财生官,官格愈显",
+  cai_bi:"财多身弱,取比劫帮身任财", cai_shi:"身旺,取食伤生财,财源不竭",
+  yin_bi:"财来坏印,取比劫制财护印", yin_shi:"印旺身强,取食伤泄其秀气", yin_guan:"取官杀生印,官印相生",
+  shi_cai:"食神生财,取财为用,福厚", shi_zhi:"枭来夺食,取财制枭护食",
+  sha_shi:"七杀格首取食神制杀(最贵)", shang_yin:"伤官配印,取印制伤兼生身", shang_cai:"伤官生财,取财泄伤秀为富",
+  ren_guan:"阳刃逢官杀制刃,刃杀两停", lu_out:"禄旺无依,取官杀/财发泄", bi_guan:"比劫重,取官杀约束、食伤泄秀"
+}, en:{
+  guan_yin:"Officer hurt — Resource curbs the Hurting Officer & guards the Officer", guan_weak:"weak self can't hold office — Resource to strengthen it", guan_cai:"strong self — Wealth to feed the Officer",
+  cai_bi:"much wealth, weak self — Peer to carry it", cai_shi:"strong self — Output to feed Wealth",
+  yin_bi:"Wealth harms Resource — Peer to curb Wealth & protect it", yin_shi:"strong self, heavy Resource — Output to vent", yin_guan:"Officer to generate Resource",
+  shi_cai:"Eating God feeds Wealth — Wealth is the aim", shi_zhi:"the owl devours it — Wealth restrains the owl",
+  sha_shi:"Seven Killings — Eating God tames them (best)", shang_yin:"pair with Resource to restrain the talent & feed self", shang_cai:"channel the talent into Wealth",
+  ren_guan:"Officer/Killings to tame the Blade", lu_out:"strong rank — outlet via Officer/Wealth", bi_guan:"heavy peers — Officer to rein, Output to vent"
+} };
 const TG_POS = {
   比肩:{ year:"祖上平实、手足情深,早年多靠自己", month:"同侪中立业、朋友即资源,合伙需分明", day:"配偶独立、地位相当,易两强并立", hour:"子女自立、晚年有伴,朋友环绕" },
   劫财:{ year:"祖业易散、早年破耗,靠拼争起家", month:"事业多竞争、财来财去,合伙尤慎", day:"配偶个性强/婚多波折,防因财因友损情", hour:"子女花销大、晚年宜守财防劫" },
@@ -2150,6 +2209,7 @@ function strengthDrawer(r) {
   const s = computeStrength(r), L = STG[lang], T = UI[lang];
   const pt = computePattern(r), PT = PATTERN[pt.key][lang];
   const ps = computePatternStatus(r, s), psCol = ps.status === "cheng" ? "#7FC08A" : ps.status === "jiu" ? "#D9B96C" : "#C64B33";
+  const ys = computeYongshen(r, s);
   const cl = computeClimate(r, s);
   const SEA = { zh:{ spring:"春", summer:"夏", autumn:"秋", winter:"冬" }, en:{ spring:"spring", summer:"summer", autumn:"autumn", winter:"winter" } };
   const climTxt = lang === "zh"
@@ -2193,6 +2253,7 @@ function strengthDrawer(r) {
   rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "格局取月令、扶抑为简化模型(藏干本中余、月令加权、含合化);流派众多,仅供参考。" : "Pattern from the month; simplified 扶抑 scoring (incl. 合化) — schools differ, for reference."]);
   rows.unshift(
     [lang === "zh" ? "格局" : "Pattern", `<b class="gold">${PT[0]}</b> · ${pt.type === "ji" ? (lang === "zh" ? "吉格 · 顺用" : "benefic · flow with") : (lang === "zh" ? "凶格 · 逆用" : "malefic · tame it")}${pt.transparent ? "" : (lang === "zh" ? " <span style=\"opacity:.55\">(月令本气取格)</span>" : " <span style=\"opacity:.55\">(from month qi)</span>")}<br>${PT[1]}<br><b style="color:${psCol}">${PSTATUS[lang][ps.status]}</b> — ${PREASON[lang][ps.reasonKey]}`],
+    [lang === "zh" ? "格局用神" : "Useful god", `${lang === "zh" ? "以 " : "use "}<b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b>(${YS_CAT[lang][ys.use]})${lang === "zh" ? "为用 —— " : " — "}${YS_WHY[lang][ys.why]}`],
     [lang === "zh" ? "格局喜忌" : "Pattern needs", `${lang === "zh" ? "喜:" : "favors: "}${PT[2]}<br>${lang === "zh" ? "忌:" : "avoids: "}${PT[3]}`],
     [lang === "zh" ? "调候" : "Climate", climTxt]
   );

@@ -318,7 +318,7 @@ __FONTS__
   #constels svg{position:absolute;overflow:visible;will-change:transform,opacity;
     animation:cdrift var(--dd,110s) ease-in-out var(--dl,0s) infinite alternate, ctw var(--td,9s) ease-in-out var(--dl,0s) infinite}
   @keyframes cdrift{to{transform:translate(var(--dx,30px),var(--dy,-18px))}}
-  @keyframes ctw{0%,100%{opacity:.16}50%{opacity:.6}}
+  @keyframes ctw{0%,100%{opacity:.22}50%{opacity:.7}}
   @media (prefers-reduced-motion:reduce){#constels svg{animation:none;opacity:.4}}
   @media print{#constels{display:none !important}}
   body.west .panel{background:
@@ -1990,42 +1990,61 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
 (function makeConstels() {
   const host = $("constels"); if (!host) return;
   const NS = "http://www.w3.org/2000/svg";
-  const SHAPES = [
-    [[4,28],[20,20],[38,25],[54,11],[72,14],[92,3]],
-    [[2,4],[16,22],[32,6],[48,24],[64,4]],
-    [[6,4],[34,10],[18,34]],
-    [[4,16],[26,2],[50,14],[34,34],[12,32]],
-    [[4,2],[28,8],[52,2],[28,-4],[28,26]],
-    [[2,18],[22,10],[40,22],[60,8],[78,20]]
+  // 真实星座简化连线 (相对坐标 0~90, y向下) —— 黄道十二 + 北斗/猎户/仙后
+  const CS = [
+    { zh:"白羊", s:[[8,45],[34,32],[60,44],[86,40]], l:[[0,1],[1,2],[2,3]] },
+    { zh:"金牛", s:[[52,72],[30,42],[45,56],[58,50],[72,36],[12,12],[90,14]], l:[[1,2],[2,0],[0,3],[3,4],[4,6],[1,5]] },
+    { zh:"双子", s:[[22,12],[26,82],[48,16],[52,86],[76,20],[80,90]], l:[[0,1],[2,3],[4,5],[0,2],[2,4],[1,3],[3,5]] },
+    { zh:"巨蟹", s:[[50,18],[50,50],[28,76],[72,72]], l:[[0,1],[1,2],[1,3]] },
+    { zh:"狮子", s:[[10,32],[20,20],[32,26],[32,48],[26,62],[62,54],[90,60],[74,82]], l:[[0,1],[1,2],[2,3],[3,4],[3,5],[5,6],[6,7],[7,4]] },
+    { zh:"处女", s:[[10,20],[34,34],[56,26],[82,40],[50,58],[40,82]], l:[[0,1],[1,2],[2,3],[1,4],[4,5]] },
+    { zh:"天秤", s:[[20,60],[50,18],[82,54],[50,76]], l:[[0,1],[1,2],[2,3],[3,0]] },
+    { zh:"天蝎", s:[[8,18],[20,28],[32,34],[46,46],[56,60],[62,76],[76,86],[88,78],[80,64]], l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8]] },
+    { zh:"射手", s:[[18,52],[40,40],[62,46],[78,62],[60,78],[34,74],[50,28]], l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[1,6],[6,2]] },
+    { zh:"摩羯", s:[[10,30],[30,56],[56,72],[82,56],[90,30],[48,44]], l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]] },
+    { zh:"水瓶", s:[[8,42],[30,30],[46,46],[62,32],[84,42],[72,66]], l:[[0,1],[1,2],[2,3],[3,4],[4,5]] },
+    { zh:"双鱼", s:[[8,22],[30,30],[52,34],[74,24],[90,14],[56,58],[60,84]], l:[[0,1],[1,2],[2,3],[3,4],[2,5],[5,6]] },
+    { zh:"北斗", s:[[5,42],[22,36],[38,44],[52,30],[70,34],[80,18],[92,30]], l:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,3]] },
+    { zh:"猎户", s:[[20,10],[80,16],[36,50],[50,52],[64,50],[26,90],[78,88]], l:[[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[0,1]] },
+    { zh:"仙后", s:[[5,32],[26,56],[46,30],[66,58],[88,34]], l:[[0,1],[1,2],[2,3],[3,4]] }
   ];
   const frag = document.createDocumentFragment();
-  for (let i = 0; i < 7; i++) {
-    const sh = SHAPES[i % SHAPES.length], sc = 1.1 + Math.random() * 0.7;
-    const pts = sh.map(p => [p[0] * sc, (p[1] + 6) * sc]);
-    const w = Math.max(...pts.map(p => p[0])) + 12, h = Math.max(...pts.map(p => p[1])) + 12;
+  CS.forEach((cst, i) => {
+    const sc = 1.0 + Math.random() * 0.5;
+    const pts = cst.s.map(p => [p[0] * sc + 6, p[1] * sc + 6]);
+    const w = Math.max(...pts.map(p => p[0])) + 8, h = Math.max(...pts.map(p => p[1])) + 20;
     const svg = document.createElementNS(NS, "svg");
     svg.setAttribute("width", w); svg.setAttribute("height", h); svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
-    const line = document.createElementNS(NS, "polyline");
-    line.setAttribute("points", pts.map(p => p.join(",")).join(" "));
-    line.setAttribute("fill", "none"); line.setAttribute("stroke", "#D9B96C"); line.setAttribute("stroke-width", "0.7"); line.setAttribute("opacity", ".45");
-    svg.appendChild(line);
-    pts.forEach((p, k) => {
-      const c = document.createElementNS(NS, "circle");
-      c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", k % 3 === 0 ? "2.1" : "1.5"); c.setAttribute("fill", "#EBDCA9");
-      svg.appendChild(c);
-      const gl = document.createElementNS(NS, "circle");
-      gl.setAttribute("cx", p[0]); gl.setAttribute("cy", p[1]); gl.setAttribute("r", "4.5"); gl.setAttribute("fill", "#EBDCA9"); gl.setAttribute("opacity", ".13");
-      svg.appendChild(gl);
+    cst.l.forEach(([a, b]) => {
+      const ln = document.createElementNS(NS, "line");
+      ln.setAttribute("x1", pts[a][0]); ln.setAttribute("y1", pts[a][1]); ln.setAttribute("x2", pts[b][0]); ln.setAttribute("y2", pts[b][1]);
+      ln.setAttribute("stroke", "#D9B96C"); ln.setAttribute("stroke-width", "0.7"); ln.setAttribute("opacity", ".5");
+      svg.appendChild(ln);
     });
-    svg.style.left = (5 + Math.random() * 82).toFixed(1) + "%";
-    svg.style.top = (5 + Math.random() * 80).toFixed(1) + "%";
-    svg.style.setProperty("--dx", (Math.random() * 60 - 30).toFixed(0) + "px");
-    svg.style.setProperty("--dy", (Math.random() * 40 - 20).toFixed(0) + "px");
-    svg.style.setProperty("--dd", (95 + Math.random() * 75).toFixed(0) + "s");
-    svg.style.setProperty("--td", (6 + Math.random() * 7).toFixed(1) + "s");
+    pts.forEach((p, k) => {
+      const gl = document.createElementNS(NS, "circle");
+      gl.setAttribute("cx", p[0]); gl.setAttribute("cy", p[1]); gl.setAttribute("r", "4.6"); gl.setAttribute("fill", "#EBDCA9"); gl.setAttribute("opacity", ".14");
+      svg.appendChild(gl);
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", p[0]); c.setAttribute("cy", p[1]); c.setAttribute("r", k === 0 ? "2.5" : "1.6"); c.setAttribute("fill", "#F3E7C4");
+      svg.appendChild(c);
+    });
+    const tx = document.createElementNS(NS, "text");
+    tx.setAttribute("x", w / 2); tx.setAttribute("y", h - 4); tx.setAttribute("text-anchor", "middle");
+    tx.setAttribute("font-size", "8"); tx.setAttribute("fill", "#D9B96C"); tx.setAttribute("opacity", ".4");
+    tx.setAttribute("style", "font-family:'Songti SC','STSong',serif;letter-spacing:.1em");
+    tx.textContent = cst.zh;
+    svg.appendChild(tx);
+    const col = i % 5, row = Math.floor(i / 5);
+    svg.style.left = (col * 19 + 1 + Math.random() * 6).toFixed(1) + "%";
+    svg.style.top = (row * 30 + 3 + Math.random() * 9).toFixed(1) + "%";
+    svg.style.setProperty("--dx", (Math.random() * 90 - 45).toFixed(0) + "px");
+    svg.style.setProperty("--dy", (Math.random() * 56 - 28).toFixed(0) + "px");
+    svg.style.setProperty("--dd", (60 + Math.random() * 60).toFixed(0) + "s");
+    svg.style.setProperty("--td", (5 + Math.random() * 6).toFixed(1) + "s");
     svg.style.setProperty("--dl", (Math.random() * 6).toFixed(1) + "s");
     frag.appendChild(svg);
-  }
+  });
   host.appendChild(frag);
 })();
 </script>

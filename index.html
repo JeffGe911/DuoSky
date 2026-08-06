@@ -1044,6 +1044,47 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 格局成败 (成格/破格/救应) ============
+function computePatternStatus(r, s) {
+  s = s || computeStrength(r);
+  const pt = computePattern(r), present = new Set();
+  const chs = [r.year[0], r.month[0]]; if (r.hour) chs.push(r.hour[0]);
+  [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []).forEach(b => HIDDEN[b].forEach(h => chs.push(h)));
+  chs.forEach(c => { if (c !== r.dayMaster) present.add(tenGod(r.dayMaster, c)); });
+  const has = t => present.has(t);
+  const yin = has("正印") || has("偏印"), cai = has("正财") || has("偏财");
+  const shi = has("食神"), shang = has("伤官"), guan = has("正官"), sha = has("七杀"), bijie = has("比肩") || has("劫财");
+  const weak = s.level === "weak";
+  let status = "cheng", reasonKey = "ok";
+  switch (pt.key) {
+    case "zhengguan":
+      if (shang) { status = (yin || cai) ? "jiu" : "po"; reasonKey = (yin || cai) ? "guan_jiu" : "guan_po"; }
+      break;
+    case "shangguan":
+      if (guan) { status = (yin || cai) ? "jiu" : "po"; reasonKey = (yin || cai) ? "shang_jiu" : "shang_po"; }
+      else { reasonKey = (yin || cai) ? "shang_ok" : "shang_bare"; }
+      break;
+    case "qisha":
+      if (!shi && !yin) { status = weak ? "po" : "cheng"; reasonKey = weak ? "sha_po" : "sha_strong"; }
+      else { reasonKey = shi ? "sha_shi" : "sha_yin"; }
+      break;
+    case "zhengcai": case "piancai":
+      if (bijie && weak) { status = guan ? "jiu" : "po"; reasonKey = guan ? "cai_jiu" : "cai_po"; }
+      break;
+    case "zhengyin": case "pianyin":
+      if (cai) { status = (bijie || guan || sha) ? "jiu" : "po"; reasonKey = (bijie || guan || sha) ? "yin_jiu" : "yin_po"; }
+      break;
+    case "shishen":
+      if (has("偏印")) { status = cai ? "jiu" : "po"; reasonKey = cai ? "shi_jiu" : "shi_po"; }
+      break;
+    case "jianlu": case "yangren":
+      if (!cai && !guan && !sha && !shi && !shang) { status = "po"; reasonKey = "lu_po"; }
+      else reasonKey = "lu_ok";
+      break;
+  }
+  return { key: pt.key, status, reasonKey };
+}
+
 // ============ 调候 (寒暖燥湿) ============
 const SEASON = { 寅:"spring",卯:"spring",辰:"spring", 巳:"summer",午:"summer",未:"summer", 申:"autumn",酉:"autumn",戌:"autumn", 亥:"winter",子:"winter",丑:"winter" };
 function computeClimate(r, s) {
@@ -1405,7 +1446,7 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computePatternStatus, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
 
 
 /* ============ 十干配色 (星夜版: 色相由五行取象, 深浅由阴阳) ============ */
@@ -2049,6 +2090,50 @@ const PATTERN = {
   jianlu:{ zh:["建禄格","自立自强、靠本事、独当一面,身旺。","财官食伤(有处发泄与成就)","再逢印比(身过旺无制)"], en:["Established Rank","self-made, self-reliant, stands alone — strong self.","wealth/officer/output to spend the strength","more resource/peers (over-strong, unchecked)"] },
   yangren:{ zh:["阳刃格","刚猛果决、爆发力强、能成大事亦易生变,极端。","官杀制刃(刃杀两停·大贵)","刃旺无制、财旺引刃"], en:["Yang Blade","bold, explosive, capable of great feats — and volatile.","officer/killings taming the blade (great honor)","an unchecked blade; wealth provoking it"] },
   bijie:{ zh:["比劫格","自我、重义气、竞争心强,朋友多助也多争。","官杀约束、食伤泄秀、财官","印比再助身"], en:["Peer","self-driven, loyal, competitive — friends both help and vie.","officer to rein in, output to vent, wealth/officer","more resource/peers"] } };
+const PSTATUS = { zh:{ cheng:"成格", po:"破格", jiu:"破而有救" }, en:{ cheng:"intact", po:"broken", jiu:"broken but rescued" } };
+const TG_POS = {
+  比肩:{ year:"祖上平实、手足情深,早年多靠自己", month:"同侪中立业、朋友即资源,合伙需分明", day:"配偶独立、地位相当,易两强并立", hour:"子女自立、晚年有伴,朋友环绕" },
+  劫财:{ year:"祖业易散、早年破耗,靠拼争起家", month:"事业多竞争、财来财去,合伙尤慎", day:"配偶个性强/婚多波折,防因财因友损情", hour:"子女花销大、晚年宜守财防劫" },
+  食神:{ year:"祖上有福、早年食禄不缺,性情温和", month:"以才艺口才立业,做喜欢的事而生财", day:"配偶温和有情趣、重生活享受", hour:"子女聪慧有福、晚景安逸" },
+  伤官:{ year:"早慧张扬、少年不羁,祖业难守", month:"才华型事业、名声在外,忌硬碰上司体制", day:"配偶出色却难驯,婚姻要留空间", hour:"子女聪明叛逆、晚年仍不服老" },
+  正财:{ year:"祖上务实、早年家境安稳", month:"靠勤劳稳定生财的事业,踏实积累", day:"配偶顾家节俭(男得贤妻),婚姻务实", hour:"子女孝顺持家、晚年财稳" },
+  偏财:{ year:"祖上活络、早年见世面", month:"善经营、财路广的事业,长袖善舞", day:"配偶大方有魅力、异性缘旺(男)", hour:"子女能干、晚年财丰但宜聚不宜散" },
+  正官:{ year:"出身有规矩名望,早年守礼", month:"体制/管理的正途事业,重名声地位", day:"配偶端正可靠(女得良夫),婚姻正派", hour:"子女有出息守规矩、晚得子女之荣" },
+  七杀:{ year:"早年环境严苛或压力大,磨出韧性", month:"高压高成就的事业,能掌权担责", day:"配偶强势有威(女夫刚烈),婚姻需磨合", hour:"子女刚烈有为、晚年为子女操心" },
+  正印:{ year:"祖荫深厚、早年得长辈庇护", month:"靠学识资历的事业,贵人相助", day:"配偶顾家有涵养、多得内助", hour:"子女孝顺有学、晚年有靠" },
+  偏印:{ year:"早年或与母缘薄、环境特别,心思深", month:"偏才/专业/玄学之路,独树一帜", day:"配偶个性独特、缘分微妙", hour:"子女独立少依、晚年宜有精神寄托" } };
+const TG_POSE = {
+  比肩:{ year:"plain forebears, close siblings; self-reliant early", month:"builds among peers; friends are capital", day:"an equal, independent partner", hour:"self-reliant children; company late" },
+  劫财:{ year:"scattered inheritance, early losses; scrappy", month:"competitive field, money comes and goes", day:"a strong-willed spouse; guard love vs money/friends", hour:"big-spending children; guard savings late" },
+  食神:{ year:"blessed, well-fed early; gentle", month:"earns through talent and doing what you love", day:"a warm, pleasure-loving partner", hour:"clever, lucky children; easeful late" },
+  伤官:{ year:"precocious, unruly young; hard to keep inheritance", month:"talent-led, known — don't clash with bosses", day:"a brilliant but untamable spouse; give space", hour:"clever rebellious children; ageless late" },
+  正财:{ year:"practical forebears, stable childhood home", month:"steady wealth by diligence", day:"a thrifty, home-minded spouse (a good wife for men)", hour:"filial children; steady wealth late" },
+  偏财:{ year:"worldly forebears; sees the world early", month:"enterprising, wide income streams", day:"a generous, charming partner", hour:"capable children; rich late but keep it" },
+  正官:{ year:"respectable, ordered origins", month:"the orthodox path — institutions, reputation", day:"an upright, reliable spouse (a good husband for women)", hour:"successful, orderly children; honored late" },
+  七杀:{ year:"a harsh early environment forges resilience", month:"high-pressure, high-achievement; command", day:"a strong, commanding spouse; needs work", hour:"fierce capable children; worry over them late" },
+  正印:{ year:"deep ancestral shelter; protected early", month:"career on learning and credentials; mentors", day:"a cultured, supportive, home-minded spouse", hour:"filial learned children; support late" },
+  偏印:{ year:"a special early milieu, thin mother-bond; deep-thinking", month:"a niche/specialist/mystical path", day:"a uniquely-charactered spouse; subtle ties", hour:"independent children; a spiritual anchor late" } };
+const PREASON = { zh:{
+  ok:"格局清纯,循喜忌而行即可。",
+  guan_jiu:"伤官见官,幸有印制伤或财通关——化险为夷。", guan_po:"伤官见官而无救,官星受损,主是非、仕途或婚姻波折。",
+  shang_jiu:"伤官见官,得印制/财化而解,才华仍可成器。", shang_po:"伤官见官、无印无财,恃才犯上,易惹官非。",
+  shang_ok:"伤官配印或伤官生财,才华有约束,贵/富可期。", shang_bare:"伤官无制无泄,才华外露、锋芒毕露,宜自敛。",
+  sha_shi:"食神制杀,驾驭得住压力,能掌权、成就大。", sha_yin:"印星化杀,凶为我用,逢难有靠。", sha_strong:"身强敌杀,虽无制亦能扛,魄力过人。", sha_po:"七杀无制而身弱,压力反噬,宜借印比自保。",
+  cai_jiu:"比劫夺财,幸有官星制劫护财,财可守。", cai_po:"比劫夺财、身弱财旺,易破财、为财所困。",
+  yin_jiu:"财来坏印,得比劫制财或官星通关,名可保。", yin_po:"财星坏印,重利轻名,学业名声易受损。",
+  shi_jiu:"枭印夺食,幸有财星制枭,福气得续。", shi_po:"偏印夺食(枭夺食),福气受制,宜见财解。",
+  lu_ok:"禄刃有财官食伤发泄,身旺有为。", lu_po:"禄刃无泄无制,身过旺,宜行财官运方发。"
+}, en:{
+  ok:"a clean pattern — just follow its favor/avoid.",
+  guan_jiu:"Hurting Officer meets Officer, but Resource/Wealth rescues it.", guan_po:"Hurting Officer breaks the Officer with no rescue — disputes, career or marriage friction.",
+  shang_jiu:"Hurting Officer meets Officer, resolved by Resource/Wealth — talent still bears fruit.", shang_po:"Hurting Officer meets Officer, no rescue — talent that offends authority.",
+  shang_ok:"paired with Resource or feeding Wealth — disciplined talent; honor/wealth likely.", shang_bare:"unrestrained talent, brilliant but exposed — rein it in.",
+  sha_shi:"Eating God tames the Killings — masters pressure, can lead.", sha_yin:"Resource channels the Killings — danger turned to use.", sha_strong:"strong self faces the Killings unaided — formidable.", sha_po:"Killings unchecked with a weak self — pressure backfires.",
+  cai_jiu:"peers rob wealth, but the Officer guards it.", cai_po:"peers rob wealth, weak self under heavy wealth — losses.",
+  yin_jiu:"wealth harms the resource, but peers/officer rescue it.", yin_po:"wealth breaks the resource — profit over name costs you.",
+  shi_jiu:"the owl devours the Eating God, but wealth restrains it.", shi_po:"Indirect Resource devours the Eating God — bring in wealth.",
+  lu_ok:"rank/blade with outlets (wealth/officer/output) — strong and capable.", lu_po:"rank/blade with no outlet — over-strong; thrives in wealth/officer luck."
+} };
 const STG = {
   zh:{ strong:"身强", weak:"身弱", balanced:"中和",
     support:"同党 · 印+比劫", drain:"异党 · 食伤+财+官杀", score:"五行得分", favor:"喜用", avoid:"忌神", use:"用神首选", hidden:"藏干计分(本/中/余)",
@@ -2064,6 +2149,7 @@ function elName(e) { return ELEM_TXT[lang][e] + (lang === "zh" ? ELEM_CHAR[e] : 
 function strengthDrawer(r) {
   const s = computeStrength(r), L = STG[lang], T = UI[lang];
   const pt = computePattern(r), PT = PATTERN[pt.key][lang];
+  const ps = computePatternStatus(r, s), psCol = ps.status === "cheng" ? "#7FC08A" : ps.status === "jiu" ? "#D9B96C" : "#C64B33";
   const cl = computeClimate(r, s);
   const SEA = { zh:{ spring:"春", summer:"夏", autumn:"秋", winter:"冬" }, en:{ spring:"spring", summer:"summer", autumn:"autumn", winter:"winter" } };
   const climTxt = lang === "zh"
@@ -2106,7 +2192,7 @@ function strengthDrawer(r) {
   if (s.favor.length) rows.push([lang === "zh" ? "开运" : "Boosters", s.favor.map(e => `<b style="color:${ELEM_COLOR[e]}">${ELEM_CHAR[e]}</b> ${LUCKY[e][lang][0]} · ${lang === "zh" ? "方位 " : ""}${LUCKY[e][lang][1]} · ${lang === "zh" ? "数 " : "no. "}${LUCKY[e][lang][2]}`).join("<br>") + `<br><span style="opacity:.6">${lang === "zh" ? "宜业" : "fields"}:${LUCKY[s.favor[0]][lang][3]}</span>`]);
   rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "格局取月令、扶抑为简化模型(藏干本中余、月令加权、含合化);流派众多,仅供参考。" : "Pattern from the month; simplified 扶抑 scoring (incl. 合化) — schools differ, for reference."]);
   rows.unshift(
-    [lang === "zh" ? "格局" : "Pattern", `<b class="gold">${PT[0]}</b> · ${pt.type === "ji" ? (lang === "zh" ? "吉格 · 顺用" : "benefic · flow with") : (lang === "zh" ? "凶格 · 逆用" : "malefic · tame it")}${pt.transparent ? "" : (lang === "zh" ? " <span style=\"opacity:.55\">(月令本气取格)</span>" : " <span style=\"opacity:.55\">(from month qi)</span>")}<br>${PT[1]}`],
+    [lang === "zh" ? "格局" : "Pattern", `<b class="gold">${PT[0]}</b> · ${pt.type === "ji" ? (lang === "zh" ? "吉格 · 顺用" : "benefic · flow with") : (lang === "zh" ? "凶格 · 逆用" : "malefic · tame it")}${pt.transparent ? "" : (lang === "zh" ? " <span style=\"opacity:.55\">(月令本气取格)</span>" : " <span style=\"opacity:.55\">(from month qi)</span>")}<br>${PT[1]}<br><b style="color:${psCol}">${PSTATUS[lang][ps.status]}</b> — ${PREASON[lang][ps.reasonKey]}`],
     [lang === "zh" ? "格局喜忌" : "Pattern needs", `${lang === "zh" ? "喜:" : "favors: "}${PT[2]}<br>${lang === "zh" ? "忌:" : "avoids: "}${PT[3]}`],
     [lang === "zh" ? "调候" : "Climate", climTxt]
   );
@@ -2621,12 +2707,17 @@ function westDrawer(id) {
     `${SIGN_GLYPH[pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " · " + WUI[lang].retro : ""}`, rows);
 }
 function pillarDrawer(pk) {
-  const m = PILLAR_MEAN[lang][pk], T = UI[lang], r = lastChart.r, gz = r[pk];
-  return drawerShell(gz || "?", "#D9B96C", `${T[pk]}${gz ? " · " + gz : ""}`, lang === "zh" ? "这根柱子代表什么" : "what this pillar means",
-    [[lang === "zh" ? "代表" : "Represents", m.who],
-     [lang === "zh" ? "主管阶段" : "Life stage", m.stage],
-     [lang === "zh" ? "主管领域" : "Governs", m.gov],
-     [DW[lang].whatIs, m.line]]);
+  const m = PILLAR_MEAN[lang][pk], T = UI[lang], r = lastChart.r, gz = r[pk], dm = r.dayMaster;
+  const ptg = pk === "day" ? tenGod(dm, ZHI_MAIN[r.day[1]]) : (r[pk] ? tenGod(dm, r[pk][0]) : null);
+  const rows = [
+    [lang === "zh" ? "代表" : "Represents", m.who],
+    [lang === "zh" ? "主管阶段" : "Life stage", m.stage],
+    [lang === "zh" ? "主管领域" : "Governs", m.gov],
+    [DW[lang].whatIs, m.line]
+  ];
+  const POS = lang === "zh" ? TG_POS : TG_POSE;
+  if (ptg && POS[ptg] && POS[ptg][pk]) rows.push([lang === "zh" ? "此宫十神" : "Ten God here", `<b class="gold">${TEN_GOD_FULL[lang][ptg]}</b>${pk === "day" ? (lang === "zh" ? "(配偶宫本气)" : " (spouse-palace qi)") : ""}——${POS[ptg][pk]}`]);
+  return drawerShell(gz || "?", "#D9B96C", `${T[pk]}${gz ? " · " + gz : ""}`, lang === "zh" ? "这根柱子代表什么" : "what this pillar means", rows);
 }
 const LK = {
   en:{title:"Luck Cycles",sub:"大运 · ten-year fortune",fwd:"forward",bwd:"reverse",begins:"begins at age",note:"Each pillar rules ~10 years — read its stem as a Ten God against your Day Master. Start age is approximate (3 days to the next solar term ≈ 1 year).",oor:"Out of computable range."},

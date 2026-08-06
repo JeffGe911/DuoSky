@@ -154,6 +154,47 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 格局成败 (成格/破格/救应) ============
+function computePatternStatus(r, s) {
+  s = s || computeStrength(r);
+  const pt = computePattern(r), present = new Set();
+  const chs = [r.year[0], r.month[0]]; if (r.hour) chs.push(r.hour[0]);
+  [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []).forEach(b => HIDDEN[b].forEach(h => chs.push(h)));
+  chs.forEach(c => { if (c !== r.dayMaster) present.add(tenGod(r.dayMaster, c)); });
+  const has = t => present.has(t);
+  const yin = has("正印") || has("偏印"), cai = has("正财") || has("偏财");
+  const shi = has("食神"), shang = has("伤官"), guan = has("正官"), sha = has("七杀"), bijie = has("比肩") || has("劫财");
+  const weak = s.level === "weak";
+  let status = "cheng", reasonKey = "ok";
+  switch (pt.key) {
+    case "zhengguan":
+      if (shang) { status = (yin || cai) ? "jiu" : "po"; reasonKey = (yin || cai) ? "guan_jiu" : "guan_po"; }
+      break;
+    case "shangguan":
+      if (guan) { status = (yin || cai) ? "jiu" : "po"; reasonKey = (yin || cai) ? "shang_jiu" : "shang_po"; }
+      else { reasonKey = (yin || cai) ? "shang_ok" : "shang_bare"; }
+      break;
+    case "qisha":
+      if (!shi && !yin) { status = weak ? "po" : "cheng"; reasonKey = weak ? "sha_po" : "sha_strong"; }
+      else { reasonKey = shi ? "sha_shi" : "sha_yin"; }
+      break;
+    case "zhengcai": case "piancai":
+      if (bijie && weak) { status = guan ? "jiu" : "po"; reasonKey = guan ? "cai_jiu" : "cai_po"; }
+      break;
+    case "zhengyin": case "pianyin":
+      if (cai) { status = (bijie || guan || sha) ? "jiu" : "po"; reasonKey = (bijie || guan || sha) ? "yin_jiu" : "yin_po"; }
+      break;
+    case "shishen":
+      if (has("偏印")) { status = cai ? "jiu" : "po"; reasonKey = cai ? "shi_jiu" : "shi_po"; }
+      break;
+    case "jianlu": case "yangren":
+      if (!cai && !guan && !sha && !shi && !shang) { status = "po"; reasonKey = "lu_po"; }
+      else reasonKey = "lu_ok";
+      break;
+  }
+  return { key: pt.key, status, reasonKey };
+}
+
 // ============ 调候 (寒暖燥湿) ============
 const SEASON = { 寅:"spring",卯:"spring",辰:"spring", 巳:"summer",午:"summer",未:"summer", 申:"autumn",酉:"autumn",戌:"autumn", 亥:"winter",子:"winter",丑:"winter" };
 function computeClimate(r, s) {
@@ -515,4 +556,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computePatternStatus, computeClimate, luckAssess, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

@@ -277,6 +277,35 @@ function computeStrength(r) {
     const hid = HIDDEN[br], rs = RATIO[hid.length] || RATIO[3];
     hid.forEach((hs, i) => { const pts = +(base * rs[i]).toFixed(1); score[GAN_WX[hs]] += pts; detail.push({ pos, kind:"branch", branch:br, stem:hs, role:i, pts }); });
   }
+  // ---- 合化 / 合绊 调整: 合化成功→两干化为化神; 合而不化→羁绊减力; 三合三会成局→化神加力 ----
+  const STEM_W = { year:10, month:15, day:15, hour:10 };
+  const stemAt = { year:r.year[0], month:r.month[0], day:r.day[0], hour:r.hour ? r.hour[0] : null };
+  const pil = [{ k:"year", stem:r.year[0], branch:r.year[1] }, { k:"month", stem:r.month[0], branch:r.month[1] }, { k:"day", stem:r.day[0], branch:r.day[1] }];
+  if (r.hour) pil.push({ k:"hour", stem:r.hour[0], branch:r.hour[1] });
+  const huaNotes = [];
+  for (const x of computeRelations(pil)) {
+    if (x.type === "he") {
+      const pa = x.members[0], pb = x.members[1], sa = stemAt[pa], sb = stemAt[pb], wa = STEM_W[pa], wb = STEM_W[pb];
+      const involvesDay = pa === "day" || pb === "day";
+      if (x.hua && !involvesDay) {
+        score[GAN_WX[sa]] -= wa; score[GAN_WX[sb]] -= wb; score[x.elem] += wa + wb;
+        huaNotes.push({ kind:"hua", chars:x.chars, elem:x.elem });
+      } else if (x.hua && involvesDay) {
+        const op = pa === "day" ? pb : pa, os = pa === "day" ? sb : sa;
+        score[GAN_WX[os]] -= STEM_W[op] * 0.3;
+        huaNotes.push({ kind:"bind", chars:x.chars, elem:null });
+      } else {
+        if (pa !== "day") score[GAN_WX[sa]] -= wa * 0.4;
+        if (pb !== "day") score[GAN_WX[sb]] -= wb * 0.4;
+        huaNotes.push({ kind:"bind", chars:x.chars, elem:null });
+      }
+    } else if (x.type === "sanhe") { score[x.elem] += x.hua ? 20 : 8; huaNotes.push({ kind:x.hua ? "ju" : "halfju", chars:x.chars, elem:x.elem }); }
+    else if (x.type === "sanhui") { score[x.elem] += 22; huaNotes.push({ kind:"hui", chars:x.chars, elem:x.elem }); }
+    else if (x.type === "banhe") { score[x.elem] += x.hua ? 10 : 4; if (x.hua) huaNotes.push({ kind:"halfju", chars:x.chars, elem:x.elem }); }
+    else if (x.type === "liuhe" && x.hua) { score[x.elem] += 8; huaNotes.push({ kind:"hua", chars:x.chars, elem:x.elem }); }
+  }
+  for (const k in score) { if (score[k] < 0) score[k] = 0; score[k] = +score[k].toFixed(1); }
+
   const dmE = GAN_WX[r.dayMaster];
   const yin = WX_ORDER.find(e => shengOf(e) === dmE);   // 生我=印
   const bi = dmE;                                        // 同我=比劫
@@ -293,7 +322,7 @@ function computeStrength(r) {
   else if (level === "weak") { favor = [yin, bi]; avoid = [shi, cai, guan]; }
   // 用神: 喜用五行中当前分数最低者(最需引入/补强的平衡点)
   const useGod = favor.length ? favor.slice().sort((a, b) => score[a] - score[b])[0] : null;
-  return { score, dmElement:dmE, roles:{ yin, bi, shi, cai, guan }, support, drain, total, ratio, level, favor, avoid, useGod, detail };
+  return { score, dmElement:dmE, roles:{ yin, bi, shi, cai, guan }, support, drain, total, ratio, level, favor, avoid, useGod, detail, huaNotes };
 }
 
 // ============ 六十甲子纳音 (30 组, 每组辖两干支) ============

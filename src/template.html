@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DuoSky — BaZi × Zodiac</title>
-<link rel="preload" as="image" href="public/images/duosky-celestial-palace-red-gold-source.png">
+<link rel="preload" as="image" href="public/images/duosky-bg.jpg">
 <style>
 __FONTS__
   :root {
@@ -61,11 +61,11 @@ __FONTS__
       linear-gradient(180deg,rgba(11,14,32,.34) 0%,rgba(11,14,32,.08) 26%,rgba(11,14,32,.12) 58%,rgba(7,9,22,.70) 100%)}
   @keyframes kenburns{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.09) translate(-16px,-12px)}}
   body.photo #bgimg{opacity:1;
-    background-image:url(public/images/duosky-celestial-palace-red-gold-source.png)}
+    background-image:url(public/images/duosky-bg.jpg)}
   body.photo #sky,body.photo #scene{display:none}
   body.photo .mist{display:none}
   @media (prefers-reduced-motion: reduce){body.photo #bgimg{animation:none;
-    background-image:url(public/images/duosky-celestial-palace-red-gold-source.png)}}
+    background-image:url(public/images/duosky-bg.jpg)}}
   /* photo 模式: <body class="photo"> + 给 #bgimg 设 background-image (建议自己生成的画作, 勿用他人版权图上线) */
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
     background:radial-gradient(130% 95% at 50% 38%, transparent 52%, rgba(4,6,16,.6) 100%)}
@@ -320,6 +320,7 @@ __FONTS__
   body.west #bgwest{opacity:1}
   #constels{position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 1.1s ease}
   body.west #constels{opacity:1}
+  body:not(.west) #constels *{animation-play-state:paused}
   .meteor{position:absolute;height:2px;width:150px;pointer-events:none;opacity:0;border-radius:2px;
     background:linear-gradient(90deg, rgba(237,230,208,0), rgba(237,230,208,.95));
     filter:drop-shadow(0 0 6px rgba(237,230,208,.6))}
@@ -1272,6 +1273,8 @@ function strengthDrawer(r) {
     return `<div class="hid-row"><span class="hid-pos">${posName[pos]} ${g.br}${pos === "month" ? (lang === "zh" ? " · 月令×2" : " · cmd×2") : ""}</span><span>${items}</span></div>`;
   }).join("");
   const note = s.level === "strong" ? L.strongNote : s.level === "weak" ? L.weakNote : L.balNote;
+  const huaMap = { hua:{ zh:"合化", en:"transforms" }, bind:{ zh:"合绊(减力)", en:"bound" }, ju:{ zh:"三合成局", en:"triad" }, halfju:{ zh:"半合", en:"half-triad" }, hui:{ zh:"三会方", en:"assembly" } };
+  const huaTxt = s.huaNotes.length ? s.huaNotes.map(n => `${n.chars} ${huaMap[n.kind][lang]}${n.elem ? " \u2192 " + ELEM_TXT[lang][n.elem] : ""}`).join(lang === "zh" ? " · " : ", ") : "";
   const rows = [
     [DW[lang].whatIs, `<b class="gold">${lang === "zh" ? "日主 " + r.dayMaster + ELEM_CHAR[s.dmElement] : "Day Master " + r.dayMaster}</b> · <b>${L[s.level]}</b>(${lang === "zh" ? "扶抑比" : "ratio"} ${(s.ratio * 100).toFixed(0)}%)。${note}`],
     [L.support + " / " + L.drain, balance],
@@ -1279,6 +1282,7 @@ function strengthDrawer(r) {
     [L.favor + " / " + L.avoid, `${L.favor}:${favTxt}　${L.avoid}:${avoTxt}<br>${L.use}:${useTxt}`],
     [L.hidden, hidRows]
   ];
+  if (huaTxt) rows.splice(1, 0, [lang === "zh" ? "合化影响" : "Combinations", `${huaTxt}<br><span style="opacity:.6">${lang === "zh" ? "合化改变五行力量、合绊减力,已计入下方得分。" : "Transformations/bindings reshape the element scores below."}</span>`]);
   return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "旺衰 · 喜用神" : "Strength & Useful Phase", lang === "zh" ? "扶抑加权打分 · 藏干分本中余" : "weighted scoring · hidden stems split", rows);
 }
 const ELEM_ORGAN = {

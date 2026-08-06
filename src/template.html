@@ -318,6 +318,22 @@ __FONTS__
   #bgwest::before{content:"";position:absolute;inset:0;pointer-events:none;
     background:radial-gradient(122% 92% at 50% 44%, transparent 54%, rgba(2,3,10,.78) 100%)}
   body.west #bgwest{opacity:1}
+  #palace-fx{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:1;transition:opacity .8s ease}
+  body:not(.photo) #palace-fx{display:none} body.west #palace-fx{opacity:0}
+  #palace-fx>div{position:absolute}
+  .fx-cloud{border-radius:50%;filter:blur(32px);mix-blend-mode:screen;background:radial-gradient(closest-side, rgba(255,255,255,.18), transparent)}
+  .fx-c1{left:18%;top:50%;width:34%;height:15%;animation:fxdA 46s ease-in-out infinite alternate}
+  .fx-c2{left:40%;top:60%;width:40%;height:16%;animation:fxdB 62s ease-in-out infinite alternate}
+  .fx-c3{left:8%;top:22%;width:30%;height:14%;animation:fxdB 80s ease-in-out infinite alternate}
+  @keyframes fxdA{to{transform:translateX(80px)}} @keyframes fxdB{to{transform:translateX(-100px)}}
+  .fx-fall{mix-blend-mode:screen;filter:blur(1.6px);opacity:.5;background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,.30) 45%, rgba(255,255,255,0) 85%);background-size:100% 42%}
+  .fx-f1{left:66.4%;top:27%;width:1.7%;height:26%;animation:fxflow 1.15s linear infinite}
+  .fx-f2{left:62.1%;top:66%;width:1.3%;height:13%;animation:fxflow 1.35s linear infinite}
+  @keyframes fxflow{from{background-position:0 -42%}to{background-position:0 100%}}
+  .fx-tree{left:73%;top:52%;width:12%;height:26%;border-radius:50%;filter:blur(24px);mix-blend-mode:soft-light;
+    background:radial-gradient(closest-side, rgba(200,220,180,.22), transparent);animation:fxbreath 7s ease-in-out infinite alternate}
+  @keyframes fxbreath{from{opacity:.35;transform:translateX(-3px)}to{opacity:.7;transform:translateX(3px)}}
+  @media (prefers-reduced-motion:reduce){#palace-fx>div{animation:none}}
   #constels{position:fixed;inset:0;z-index:0;opacity:0;pointer-events:none;transition:opacity 1.1s ease}
   body.west #constels{opacity:1}
   body:not(.west) #constels *{animation-play-state:paused}
@@ -402,6 +418,11 @@ __FONTS__
 <div id="bgimg"></div>
 <div id="bgwest" aria-hidden="true"></div>
 <div id="constels" aria-hidden="true"></div>
+<div id="palace-fx" aria-hidden="true">
+  <div class="fx-cloud fx-c1"></div><div class="fx-cloud fx-c2"></div><div class="fx-cloud fx-c3"></div>
+  <div class="fx-fall fx-f1"></div><div class="fx-fall fx-f2"></div>
+  <div class="fx-tree fx-t1"></div>
+</div>
 <svg id="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
   <defs>
     <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
@@ -2055,12 +2076,13 @@ function fortuneDrawer(r) {
     const x1 = xOf(x.startAge), x2 = xOf(Math.min(x.startAge + 10, MAXA));
     bands += `<rect x="${x1.toFixed(1)}" y="${Y0}" width="${(x2 - x1).toFixed(1)}" height="${H}" fill="${fo === "good" ? "#7FC08A" : "#C64B33"}" opacity=".13"/>`;
   });
-  const pts = [];
+  const pts = [], data = [];
   for (let a = 1; a <= MAXA; a++) {
     const yr = inp.y + a, da = a >= startAge ? daAt(a) : null;
     const daFo = da ? luckAssess(r, da.ganzhi, s).level : "neutral";
     const idx = ((yr - 1984) % 60 + 60) % 60, gz = GAN[idx % 10] + ZHI[idx % 12];
-    pts.push([xOf(a), yOf(foVal(daFo) + foVal(luckAssess(r, gz, s).level))]);
+    const val = foVal(daFo) + foVal(luckAssess(r, gz, s).level);
+    pts.push([xOf(a), yOf(val)]); data.push({ age: a, year: yr, val });
   }
   const line = `<polyline points="${pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}" fill="none" stroke="#D9B96C" stroke-width="1.4" opacity=".92"/>`;
   let grid = `<line x1="${X0}" y1="${yMid}" x2="${X0 + W}" y2="${yMid}" stroke="#EDE6D0" stroke-opacity=".25"/>`;
@@ -2069,11 +2091,18 @@ function fortuneDrawer(r) {
   let nowMark = "";
   if (age >= 1 && age <= MAXA) { const nx = xOf(age).toFixed(1); nowMark = `<line x1="${nx}" y1="${Y0}" x2="${nx}" y2="${Y0 + H}" stroke="#D9B96C" stroke-width="1" stroke-dasharray="3 3" opacity=".85"/><text x="${nx}" y="${Y0 - 2}" text-anchor="middle" font-size="8" fill="#D9B96C">${zh ? "今·" + age : age}</text>`; }
   const svg = `<svg viewBox="0 0 ${X0 + W + 10} ${Y0 + H + 22}" style="width:100%;display:block">${bands}${grid}${line}${nowMark}</svg>`;
-  const legend = `<div class="wnote" style="margin-top:8px"><span class="fo-dot good"></span>${zh ? "吉运十年" : "favorable decade"} <span class="fo-dot bad"></span>${zh ? "忌运十年" : "adverse decade"} · ${zh ? "金线=逐年起伏(大运+流年,依喜用神);横轴为年龄" : "gold line = year-by-year (luck + annual by useful phase); x = age"}</div>`;
+  const legend = `<div class="wnote" style="margin-top:8px"><span class="fo-dot good"></span>${zh ? "吉运十年" : "favorable decade"} <span class="fo-dot bad"></span>${zh ? "忌运十年" : "adverse decade"} · ${zh ? "金线=逐年起伏(大运+流年,依喜用神);横轴为年龄" : "gold line = year-by-year; x = age"}</div>`;
+  const fut = data.filter(d => d.age >= Math.max(1, age) && d.age <= age + 18);
+  const sorted = fut.slice().sort((a, b) => b.val - a.val);
+  const highs = sorted.filter(d => d.val >= 1).slice(0, 3).sort((a, b) => a.year - b.year);
+  const lows = sorted.slice().reverse().filter(d => d.val <= -1).slice(0, 3).sort((a, b) => a.year - b.year);
+  const hi = highs.length ? highs.map(d => d.year + `(${d.age}${zh ? "岁" : ""})`).join("、") : (zh ? "无明显高峰" : "—");
+  const lo = lows.length ? lows.map(d => d.year + `(${d.age}${zh ? "岁" : ""})`).join("、") : (zh ? "无明显低谷" : "—");
+  const outlook = `<div class="wnote" style="margin-top:6px;color:var(--soft)">${zh ? "未来约18年" : "next ~18 yrs"} · <span style="color:#7FC08A">${zh ? "高峰" : "peaks"}</span> ${hi} · <span style="color:var(--seal)">${zh ? "低谷" : "troughs"}</span> ${lo}</div>`;
   return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
     <div class="dw-head"><span class="dw-glyph serif" style="color:#D9B96C;text-shadow:0 0 18px #D9B96C88">運</span>
       <div><div class="dw-title serif">${zh ? "运势曲线" : "Fortune Curve"}</div><div class="dw-sub">${zh ? "一生起伏 · 依喜用神" : "a life's rise & fall · by useful phase"}</div></div></div>
-    <div style="margin-top:14px">${svg}</div>${legend}`;
+    <div style="margin-top:14px">${svg}</div>${legend}${outlook}`;
 }
 function luckStepDrawer(i) {
   const r = lastChart.r, lk = lastLuck;

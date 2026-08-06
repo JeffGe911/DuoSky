@@ -395,6 +395,7 @@
     .dw-close{width:34px;height:34px}
     .wp{padding:7px 6px}
   }
+  .dgn{font-size:9px;font-style:normal;color:var(--gold);opacity:.75;margin-left:2px}
   .hidden{display:none}
 </style>
 </head>
@@ -1737,7 +1738,8 @@ function computeWheel(utcMs, lat, lon, timeKnown) {
     return { body: b, lon: L, sign: SIGNS[Math.floor(L / 30)], deg: L % 30, retro };
   });
   let asc = null, mc = null, fortune = null, houses = null;
-  const haveAngles = timeKnown && lat != null && lon != null;
+  const polar = timeKnown && lat != null && Math.abs(lat) > 66;
+  const haveAngles = timeKnown && lat != null && lon != null && !polar;
   if (haveAngles) {
     const D = Math.PI / 180, eps = 23.4393 * D;
     const ramc = (((A.SiderealTime(date) + lon / 15) % 24 + 24) % 24) * 15 * D;
@@ -1762,7 +1764,8 @@ function computeWheel(utcMs, lat, lon, timeKnown) {
     for (const [a, nm, orb] of ASP) if (Math.abs(d - a) <= Math.min(orb, orbMax)) { aspects.push({ a: pts[i].body, b: pts[j].body, type: nm, la: pts[i].lon, lb: pts[j].lon, orb: +Math.abs(d - a).toFixed(1) }); break; }
   }
   const moonPhase = _nrm(planets[1].lon - planets[0].lon);
-  return { planets, asc, mc, fortune, houses, aspects, haveAngles, moonPhase };
+  const node = _nrm(125.0447 - 0.0529539 * (utcMs / 86400000 - 10957.5));   // 平均北交点(逆行)
+  return { planets, asc, mc, fortune, houses, aspects, haveAngles, moonPhase, node, polar };
 }
 let lastWest = [], lastWheel = null, lastLuck = null;
 
@@ -1818,6 +1821,10 @@ function buildWheel(w) {
   if (w.fortune != null) {
     const p = P(w.fortune, rP - 26);
     g.push(`<g class="clk" role="button" tabindex="0" data-t="fortune"><circle cx="${p[0]}" cy="${p[1]}" r="10" fill="rgba(8,12,28,.55)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#D9B96C">${FORTUNE_GLYPH}</text></g>`);
+  }
+  if (w.node != null) {
+    const p = P(w.node, rP - 26);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="node"><circle cx="${p[0]}" cy="${p[1]}" r="9" fill="rgba(8,12,28,.55)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B7C3E0">\u260a</text></g>`);
   }
   return `<svg viewBox="0 0 360 360" class="wheel" role="img" aria-label="natal wheel">${g.join("")}</svg>`;
 }
@@ -2355,17 +2362,19 @@ function renderCard(r, inp) {
   lastWheel = wheel; lastWest = wheel ? wheel.planets : [];
   const W = WUI[lang], WX = WEXTRA[lang];
   const sgOf = (L) => `${SIGN_GLYPH[SIGNS[Math.floor(L / 30)]]} ${SIGN_TXT[lang][SIGNS[Math.floor(L / 30)]]} ${Math.floor(L % 30)}\u00b0`;
-  const legend = wheel ? wheel.planets.map(pl => `<div class="wp clk" role="button" tabindex="0" data-t="planet" data-c="${pl.body}"><span class="wp-gl">${PLANET_GLYPH[pl.body]}</span><span class="wp-nm">${PLANET_NAME[lang][pl.body]}</span><span class="wp-sg">${SIGN_GLYPH[pl.sign]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}</span></div>`).join("") : "";
+  const legend = wheel ? wheel.planets.map(pl => `<div class="wp clk" role="button" tabindex="0" data-t="planet" data-c="${pl.body}"><span class="wp-gl">${PLANET_GLYPH[pl.body]}</span><span class="wp-nm">${PLANET_NAME[lang][pl.body]}</span><span class="wp-sg">${SIGN_GLYPH[pl.sign]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}${dignityOf(pl.body, pl.sign) !== "peregrine" ? ` <i class="dgn">${DIGN[lang][dignityOf(pl.body, pl.sign)]}</i>` : ""}</span></div>`).join("") : "";
   const angles = wheel && wheel.haveAngles ? `<div class="wp clk" role="button" tabindex="0" data-t="asc"><span class="wp-gl">AC</span><span class="wp-nm">${WX.asc}</span><span class="wp-sg">${sgOf(wheel.asc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="mc"><span class="wp-gl">MC</span><span class="wp-nm">${WX.mc}</span><span class="wp-sg">${sgOf(wheel.mc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="fortune"><span class="wp-gl">${FORTUNE_GLYPH}</span><span class="wp-nm">${WX.fortune}</span><span class="wp-sg">${sgOf(wheel.fortune)}</span></div>` : "";
+  const nodeRow = wheel && wheel.node != null ? `<div class="wp clk" role="button" tabindex="0" data-t="node"><span class="wp-gl">\u260a</span><span class="wp-nm">${NODE_TXT[lang][0]}</span><span class="wp-sg">${sgOf(wheel.node)}</span></div>` : "";
   const sunS = wheel.planets[0].sign, moonS = wheel.planets[1].sign, ascS = wheel.haveAngles ? SIGNS[Math.floor(wheel.asc / 30)] : null;
   const wsum = lang === "zh"
     ? `<div class="wsum"><b>速读</b>:太阳在${SIGN_TXT.zh[sunS]} = 你的内核;月亮在${SIGN_TXT.zh[moonS]} = 你的情绪底色;${ascS ? `上升在${SIGN_TXT.zh[ascS]} = 别人第一眼看到的你` : `上升(第一印象)需出生时间+地点`}。<span class="wsum-tip">点任意行星 / 相位,看它对你意味着什么。</span></div>`
     : `<div class="wsum"><b>Quick read</b>: Sun in ${SIGN_TXT.en[sunS]} = your core; Moon in ${SIGN_TXT.en[moonS]} = your emotional baseline; ${ascS ? `Rising in ${SIGN_TXT.en[ascS]} = the you others meet first` : `Rising (first impression) needs birth time + place`}. <span class="wsum-tip">Tap any planet or aspect to see what it means for you.</span></div>`;
   const western = wheel ? `<div class="deeper" id="west-scene"><div class="d-head"><span class="label gold">${W.chart}</span><span class="unlock">${W.sub}</span></div>
     ${wsum}
+    ${wheel.haveAngles ? (() => { const rp = RULER[ascS], pd = wheel.planets.find(p => p.body === rp); return pd ? `<div class="wnote" style="color:var(--gold);opacity:.9">${lang === "zh" ? `命主星:<b>${PLANET_NAME.zh[rp]}</b>(上升${SIGN_TXT.zh[ascS]}守护)落 ${SIGN_TXT.zh[pd.sign]}${pd.house ? " 第" + pd.house + "宫" : ""}——你这一生的总钥匙。` : `Chart ruler: <b>${PLANET_NAME.en[rp]}</b> (rules your ${SIGN_TXT.en[ascS]} Ascendant) in ${SIGN_TXT.en[pd.sign]}${pd.house ? ", house " + pd.house : ""} — the key to the whole chart.`}</div>` : ""; })() : ""}
     <div class="wheel-wrap">${buildWheel(wheel)}</div>
     ${wheel.haveAngles ? "" : `<div class="wnote">${WX.needLoc}</div>`}
-    <div class="wgrid">${legend}${angles}</div>
+    <div class="wgrid">${legend}${angles}${nodeRow}</div>
     <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span>${wheel.haveAngles ? `<span class="dbtn clk" role="button" tabindex="0" data-t="houses">${lang === "zh" ? "宫位 ✦" : "Houses ✦"}</span>` : ""}</div>
     <div class="wnote">${W.note}${inp.notime ? " " + W.approx : ""}</div></div>` : "";
 
@@ -2478,6 +2487,21 @@ function branchDrawer(branch, pk, r) {
   return drawerShell(branch, STEM_COLOR[ZHI_MAIN[branch]], `${branch} · ${ANIMAL_TXT[lang][branch]}`, ELEM_TXT[lang][GAN_WX[ZHI_MAIN[branch]]],
     [[DW[lang].whatIs, BRANCH_LINE[lang][branch]], [DW[lang].inChart, `<b class="gold">${posLabel(pk, "branch")}</b>`], [DW[lang].hidden, hid]]);
 }
+const RULER = { Aries:"Mars",Taurus:"Venus",Gemini:"Mercury",Cancer:"Moon",Leo:"Sun",Virgo:"Mercury",Libra:"Venus",Scorpio:"Mars",Sagittarius:"Jupiter",Capricorn:"Saturn",Aquarius:"Saturn",Pisces:"Jupiter" };
+const DOMICILE = { Sun:["Leo"],Moon:["Cancer"],Mercury:["Gemini","Virgo"],Venus:["Taurus","Libra"],Mars:["Aries","Scorpio"],Jupiter:["Sagittarius","Pisces"],Saturn:["Capricorn","Aquarius"],Uranus:["Aquarius"],Neptune:["Pisces"],Pluto:["Scorpio"] };
+const EXALT = { Sun:"Aries",Moon:"Taurus",Mercury:"Virgo",Venus:"Pisces",Mars:"Capricorn",Jupiter:"Cancer",Saturn:"Libra" };
+const oppSign = sg => SIGNS[(SIGNS.indexOf(sg) + 6) % 12];
+function dignityOf(body, sign) {
+  const dom = DOMICILE[body] || [];
+  if (dom.indexOf(sign) >= 0) return "domicile";
+  if (EXALT[body] === sign) return "exalt";
+  if (dom.some(d => oppSign(d) === sign)) return "detriment";
+  if (EXALT[body] && oppSign(EXALT[body]) === sign) return "fall";
+  return "peregrine";
+}
+const DIGN = { zh:{ domicile:"入庙", exalt:"入旺", detriment:"落陷", fall:"入落", peregrine:"平" }, en:{ domicile:"domicile", exalt:"exalted", detriment:"detriment", fall:"fall", peregrine:"peregrine" } };
+const DIGN_NOTE = { zh:{ domicile:"在自家宫位,最得力、纯粹。", exalt:"客居贵地,发挥出色、加分。", detriment:"客居对宫,施展受限、别扭。", fall:"落于弱地,力有不逮、需借力。", peregrine:"不强不弱,随大局流转。" }, en:{ domicile:"in its own sign — pure and strong.", exalt:"exalted — performs at its best.", detriment:"in the opposite sign — constrained.", fall:"in its fall — weakened, needs support.", peregrine:"neutral — flows with the whole." } };
+const NODE_TXT = { zh:["北交点", "今生要修的方向、成长的功课——顺着它走,别缩回南交点的舒适区。"], en:["North Node", "this life's growth edge — lean toward it, don't retreat to the South Node's comfort."] };
 function westDrawer(id) {
   const WX = WEXTRA[lang], sg = L => SIGNS[Math.floor(L / 30)];
   if (id === "fortune" && lastWheel && lastWheel.fortune != null) {
@@ -2496,6 +2520,12 @@ function westDrawer(id) {
     const L = lastWheel[id];
     return drawerShell(id === "asc" ? "AC" : "MC", "#D9B96C", `${id === "asc" ? WX.asc : WX.mc} ${WUI[lang].inSign} ${SIGN_TXT[lang][sg(L)]}`, `${SIGN_GLYPH[sg(L)]} ${Math.floor(L % 30)}\u00b0`, [[DW[lang].whatIs, id === "asc" ? WX.ascLine : WX.mcLine]]);
   }
+  if (id === "node" && lastWheel && lastWheel.node != null) {
+    const L = lastWheel.node, sgn = sg(L), rows = [[DW[lang].whatIs, NODE_TXT[lang][1]]];
+    if (lastWheel.haveAngles) { const h = ((Math.floor(L / 30) - Math.floor(lastWheel.asc / 30) + 12) % 12) + 1; rows.push([lang === "zh" ? "落座落宫" : "Sign / House", `${SIGN_TXT[lang][sgn]} · ${lang === "zh" ? "第" + h + "宫" : "House " + h} ${HOUSE_NAME[lang][h]}`]); }
+    else rows.push([lang === "zh" ? "落座" : "Sign", SIGN_TXT[lang][sgn]]);
+    return drawerShell("\u260a", "#B7C3E0", `${NODE_TXT[lang][0]} ${WUI[lang].inSign} ${SIGN_TXT[lang][sgn]}`, `${SIGN_GLYPH[sgn]} ${Math.floor(L % 30)}\u00b0`, rows);
+  }
   const pl = lastWest.find(p => p.body === id); if (!pl) return "";
   const dom = PLANET_DOM[lang][id];
   const reading = lang === "zh"
@@ -2503,6 +2533,8 @@ function westDrawer(id) {
     : `This planet runs your <b class="gold">${dom}</b> — ${PLANET_ARCH.en[id]}. In ${SIGN_TXT.en[pl.sign]} it comes through <b>${SIGN_MANNER.en[pl.sign]}</b>.${pl.retro ? " Retrograde: the energy turns inward and asks to be revisited." : ""}`;
   const rows = [[DW[lang].whatIs, reading]];
   if (pl.house) rows.push([lang === "zh" ? "落宫" : "House", lang === "zh" ? `第 ${pl.house} 宫 · ${HOUSE_NAME.zh[pl.house]}——最受它影响的人生领域。` : `House ${pl.house} · ${HOUSE_NAME.en[pl.house]} — the life area it shapes most.`]);
+  const dg = dignityOf(id, pl.sign);
+  rows.push([lang === "zh" ? "庙旺(格)" : "Dignity", `<b>${DIGN[lang][dg]}</b> — ${DIGN_NOTE[lang][dg]}`]);
   return drawerShell(PLANET_GLYPH[id], "#D9B96C", `${PLANET_GLYPH[id]} ${PLANET_NAME[lang][id]} ${WUI[lang].inSign} ${SIGN_TXT[lang][pl.sign]}`,
     `${SIGN_GLYPH[pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " · " + WUI[lang].retro : ""}`, rows);
 }
@@ -2618,6 +2650,25 @@ function housesDrawer() {
   }
   return drawerShell(lang === "zh" ? "宫" : "\u2302", "#D9B96C", lang === "zh" ? "十二宫位" : "The Twelve Houses", lang === "zh" ? "整宫制 · 各宫落座与掌管" : "whole-sign · sign & domain of each", rows);
 }
+function aspectPatterns(w) {
+  const P = w.planets, out = [], isP = b => b !== "ASC" && b !== "MC";
+  const bySign = {};
+  P.forEach(p => (bySign[p.sign] = bySign[p.sign] || []).push(p.body));
+  Object.keys(bySign).forEach(sgn => { if (bySign[sgn].length >= 3) out.push({ t:"stellium", info: bySign[sgn], sign: sgn }); });
+  const tri = {}, sq = {}, opp = [];
+  w.aspects.forEach(a => {
+    if (!isP(a.a) || !isP(a.b)) return;
+    if (a.type === "trine") { (tri[a.a] = tri[a.a] || new Set()).add(a.b); (tri[a.b] = tri[a.b] || new Set()).add(a.a); }
+    if (a.type === "square") { (sq[a.a] = sq[a.a] || new Set()).add(a.b); (sq[a.b] = sq[a.b] || new Set()).add(a.a); }
+    if (a.type === "oppo") opp.push([a.a, a.b]);
+  });
+  const bodies = P.map(p => p.body), seen = new Set();
+  for (const a of bodies) for (const b of (tri[a] || [])) for (const c of (tri[b] || [])) {
+    if (a < b && b < c && tri[a] && tri[a].has(c)) { const k = a + b + c; if (!seen.has(k)) { seen.add(k); out.push({ t:"grandtrine", info:[a, b, c] }); } }
+  }
+  opp.forEach(([a, b]) => bodies.forEach(c => { if (c !== a && c !== b && sq[c] && sq[c].has(a) && sq[c].has(b)) { const k = "T" + [a, b, c].sort().join(); if (!seen.has(k)) { seen.add(k); out.push({ t:"tsquare", info:[a, b, c] }); } } }));
+  return out;
+}
 function aspectDrawer() {
   const WX = WEXTRA[lang], w = lastWheel;
   if (!w || !w.aspects || !w.aspects.length) return drawerShell("\u25b3", "#D9B96C", WX.aspects, "", [[DW[lang].whatIs, lang === "zh" ? "未见明显相位。" : "No major aspects."]]);
@@ -2628,6 +2679,13 @@ function aspectDrawer() {
     const head = `<span style="color:${c}">${PLANET_GLYPH[x.a]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.b]}</span> ${PLANET_NAME[lang][x.a]}<span style="opacity:.55">(${domA})</span> \u2014 ${PLANET_NAME[lang][x.b]}<span style="opacity:.55">(${domB})</span>${x.orb != null ? ` <span style="opacity:.5;font-size:10px">${x.orb}\u00b0 ${tight}</span>` : ""}`;
     return [head, `<span style="color:${c}">${ASPECT_META[x.type][1][lang]}</span><br>${flavor}`];
   });
+  const pats = aspectPatterns(w);
+  if (pats.length) {
+    const PN = { stellium:{ zh:"星群", en:"Stellium" }, grandtrine:{ zh:"大三角", en:"Grand Trine" }, tsquare:{ zh:"T 三角", en:"T-Square" } };
+    const PNO = { stellium:{ zh:"能量高度集中于一处,是主场也是执念。", en:"energy massed in one place — a stronghold and a fixation." }, grandtrine:{ zh:"天赋顺流、才华自成体系,也易安于舒适。", en:"talent flows freely — gifted, but can grow complacent." }, tsquare:{ zh:"两极对立 + 一个焦点,压力大却极有成事的驱动力。", en:"two poles in tension focused on one point — pressured but driving." } };
+    const patRows = pats.map(p => `<b class="gold">${PN[p.t][lang]}</b>(${p.info.map(bd => PLANET_GLYPH[bd]).join(" ")}${p.sign ? " @" + SIGN_GLYPH[p.sign] : ""})<br><span style="opacity:.7">${PNO[p.t][lang]}</span>`).join("<br>");
+    rows.unshift([lang === "zh" ? "相位格局" : "Patterns", patRows]);
+  }
   return drawerShell("\u25b3", "#D9B96C", WX.aspects, lang === "zh" ? "你身上两股能量如何互动" : "how your energies interact", rows);
 }
 const NAYIN_EN = ["Sea Gold","Furnace Fire","Forest Wood","Roadside Earth","Sword Metal","Peak Fire","Gully Water","Rampart Earth","Wax Metal","Willow Wood","Spring Water","Rooftop Earth","Thunder Fire","Pine Wood","Flowing Water","Sand Gold","Foothill Fire","Plain Wood","Wall Earth","Gold Foil","Lamp Fire","Sky-river Water","Post-road Earth","Ornament Metal","Mulberry Wood","Stream Water","Sandy Earth","Heaven Fire","Pomegranate Wood","Ocean Water"];
@@ -2751,7 +2809,7 @@ function onPick(el) {
   const r = lastChart && lastChart.r; if (!r) return;
   const t = el.dataset.t;
   if (t === "planet") openDrawer(westDrawer(el.dataset.c));
-  else if (t === "fortune" || t === "asc" || t === "mc") openDrawer(westDrawer(t));
+  else if (t === "fortune" || t === "asc" || t === "mc" || t === "node") openDrawer(westDrawer(t));
   else if (t === "branch") openDrawer(branchDrawer(el.dataset.c, el.dataset.p, r));
   else if (t === "tengod") openDrawer(tenGodDrawer(el.dataset.c, r));
   else if (t === "tengods") openDrawer(tenGodsDrawer(r));

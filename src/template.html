@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DuoSky — BaZi × Zodiac</title>
-<link rel="preload" as="image" href="public/images/duosky-celestial-palace-red-gold-bg.webp">
+<link rel="preload" as="image" href="public/images/duosky-celestial-palace-red-gold-source.png">
 <style>
+__FONTS__
   :root {
     --ink:#ECEEF8; --muted:#96A0B8; --soft:#C3C9DB;
     --gold:#D9B96C; --gold-dim:rgba(217,185,108,.40); --hairline:rgba(217,185,108,.24);
@@ -19,7 +20,7 @@
       linear-gradient(180deg,#0a0d22 0%,#0c1130 48%,#090e24 100%);
     min-height:100vh;display:flex;flex-direction:column;align-items:center;
     padding:44px 16px 64px;
-    font-family:-apple-system,"SF Pro Text","Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    font-family:"EB Garamond","Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Songti SC","STSong","Source Han Serif SC","Noto Serif SC","SimSun",serif;
     color:var(--ink)}
   #sky{position:fixed;inset:0;pointer-events:none;z-index:0}
   .star{position:absolute;border-radius:50%;background:#fff;
@@ -53,21 +54,22 @@
   .moonpulse{animation:mpulse 9s ease-in-out infinite alternate}
   @keyframes mpulse{from{opacity:.8}to{opacity:1}}
   @media (prefers-reduced-motion: reduce){.star,.mist,.csea1,.csea2,.flyers,.bell,.fall line,.moonpulse{animation:none}}
-  #scene{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+  #scene{display:none}
   #bgimg{position:fixed;inset:-3%;background:center 30%/cover no-repeat;opacity:0;z-index:0}
   #bgimg::before{content:"";position:absolute;inset:0;
-    background:linear-gradient(180deg,rgba(7,9,20,.60) 0%,rgba(7,9,20,.22) 20%,rgba(9,11,24,.18) 52%,rgba(7,9,22,.72) 100%)}
+    background:radial-gradient(125% 80% at 50% 42%,transparent 44%,rgba(9,11,26,.34) 100%),
+      linear-gradient(180deg,rgba(11,14,32,.34) 0%,rgba(11,14,32,.08) 26%,rgba(11,14,32,.12) 58%,rgba(7,9,22,.70) 100%)}
   @keyframes kenburns{from{transform:scale(1.02) translate(0,0)}to{transform:scale(1.09) translate(-16px,-12px)}}
-  body.photo #bgimg{opacity:1;animation:kenburns 70s ease-in-out infinite alternate;
-    background-image:url(public/images/duosky-celestial-palace-red-gold-bg.webp)}
+  body.photo #bgimg{opacity:1;
+    background-image:url(public/images/duosky-celestial-palace-red-gold-source.png)}
   body.photo #sky,body.photo #scene{display:none}
-  body.photo .mist{opacity:.7}
+  body.photo .mist{display:none}
   @media (prefers-reduced-motion: reduce){body.photo #bgimg{animation:none;
     background-image:url(public/images/duosky-celestial-palace-red-gold-source.png)}}
   /* photo 模式: <body class="photo"> + 给 #bgimg 设 background-image (建议自己生成的画作, 勿用他人版权图上线) */
   body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
     background:radial-gradient(130% 95% at 50% 38%, transparent 52%, rgba(4,6,16,.6) 100%)}
-  .serif{font-family:Georgia,"Times New Roman","Songti SC","STSong","SimSun",serif}
+  .serif{font-family:"EB Garamond",Georgia,"Songti SC","STSong","SimSun",serif}
   .label{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:600}
   body.zh .label{letter-spacing:.34em;font-weight:500}
   .gold{color:var(--gold)}
@@ -83,10 +85,12 @@
 
   /* 卡片外壳: 琉璃夜盘 */
   .panel{position:relative;width:500px;max-width:100%;z-index:1;
-    background:linear-gradient(160deg,rgba(27,33,66,.90) 0%,rgba(13,17,38,.94) 70%);
+    background:
+      radial-gradient(120% 85% at 50% -8%, rgba(233,190,120,.12), transparent 58%),
+      linear-gradient(162deg,rgba(58,29,24,.84) 0%,rgba(34,17,16,.92) 72%);
     border:1px solid var(--gold-dim);border-radius:20px;padding:34px 36px 28px;
-    box-shadow:0 0 0 1px rgba(126,142,220,.07), 0 30px 90px rgba(3,5,15,.7),
-      0 0 70px rgba(118,108,220,.12);
+    box-shadow:0 0 0 1px rgba(217,185,108,.10), 0 30px 90px rgba(3,5,15,.72),
+      0 0 70px rgba(217,185,108,.13);
     backdrop-filter:blur(6px);overflow:hidden}
   .panel::after{content:"";position:absolute;inset:9px;border:1px solid var(--hairline);
     border-radius:13px;pointer-events:none}
@@ -115,11 +119,21 @@
   .in-hero p{font-size:12.5px;color:var(--soft);line-height:1.75}
   .field{margin-bottom:16px;position:relative;z-index:1}
   .field .f-label{display:block;margin-bottom:7px}
-  input[type=date],input[type=time],select{
+  input[type=date],input[type=time],input[type=text],select{
     width:100%;background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.15);
     border-radius:10px;color:var(--ink);padding:10px 12px;font-size:15px;font-family:inherit;
     color-scheme:dark}
   input:focus,select:focus{outline:none;border-color:var(--gold)}
+  .name-field{position:relative}
+  .name-field .name-star{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--gold);opacity:.75;pointer-events:none;filter:drop-shadow(0 0 5px rgba(217,185,108,.5))}
+  #f-name{width:100%;background:linear-gradient(180deg,rgba(217,185,108,.09),rgba(255,255,255,.03));
+    border:1px solid var(--gold-dim);border-radius:10px;color:var(--gold);
+    padding:11px 14px 11px 38px;font-size:16px;font-family:"EB Garamond","Songti SC","STSong",Georgia,serif;
+    letter-spacing:.1em;transition:.18s;color-scheme:dark}
+  #f-name::placeholder{color:var(--muted);letter-spacing:.04em;opacity:.7;font-style:italic}
+  #f-name:focus{border-color:var(--gold);color:var(--ink);
+    box-shadow:0 0 0 3px rgba(217,185,108,.13),0 0 18px rgba(217,185,108,.18);
+    background:linear-gradient(180deg,rgba(217,185,108,.15),rgba(255,255,255,.04))}
   .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .seg{display:flex;border:1px solid rgba(255,255,255,.15);border-radius:10px;overflow:hidden;
     background:rgba(255,255,255,.04)}
@@ -191,12 +205,117 @@
     border-radius:30px;padding:9px 24px;font-size:12px;letter-spacing:.08em;cursor:pointer;font-family:inherit;
     position:relative;z-index:1;backdrop-filter:blur(4px)}
   .back:hover{border-color:var(--gold);color:var(--gold)}
+  .gz .clk,.cg .clk{cursor:pointer}
+  .gz .clk:hover{filter:brightness(1.3)} .gz .clk:focus-visible,.cg .clk:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:4px}
+  .drawer-bg{position:fixed;inset:0;background:rgba(4,6,16,.62);backdrop-filter:blur(3px);z-index:20;opacity:0;pointer-events:none;transition:opacity .22s}
+  .drawer-bg.open{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);width:500px;max-width:100%;z-index:21;
+    background:
+      radial-gradient(120% 70% at 50% -6%, rgba(233,190,120,.10), transparent 58%),
+      linear-gradient(162deg,rgba(54,27,22,.97),rgba(28,14,13,.99));border:1px solid var(--gold-dim);border-bottom:none;
+    border-radius:20px 20px 0 0;padding:22px 26px 30px;box-shadow:0 -20px 60px rgba(3,5,15,.72);
+    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:82vh;overflow:auto}
+  .drawer.open{transform:translate(-50%,0)}
+  .dw-close{position:absolute;top:15px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--soft);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px;line-height:1;font-family:inherit}
+  .dw-close:hover{border-color:var(--gold);color:var(--gold)}
+  .dw-head{display:flex;gap:15px;align-items:center;border-bottom:1px solid var(--hairline);padding-bottom:14px}
+  .dw-glyph{font-size:46px;line-height:1}
+  .dw-title{font-size:19px} .dw-sub{font-size:10px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+  .wgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:6px 0 4px}
+  .wp{display:flex;align-items:baseline;gap:7px;padding:4px 6px;border-radius:8px;cursor:pointer;transition:background .15s}
+  .wp:hover{background:rgba(217,185,108,.10)} .wp:focus-visible{outline:1px solid var(--gold);outline-offset:1px}
+  .wp-gl{font-size:15px;color:var(--gold);width:16px;flex:none;text-align:center}
+  .wp-nm{font-size:11.5px;color:var(--soft);flex:none;width:64px} body.zh .wp-nm{width:46px}
+  .wp-sg{font-size:11px;color:var(--muted)}
+  .wnote{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6}
+  @media (prefers-reduced-motion:reduce){.drawer,.drawer-bg{transition:none}}
+  .wheel-wrap{display:flex;justify-content:center;margin:10px 0 12px}
+  .wheel{width:100%;max-width:340px;height:auto}
+  .wheel .clk{cursor:pointer} .wheel .wpg:hover circle{fill:rgba(217,185,108,.28)}
+  .asp-row{margin:10px 0 4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .asp{font-size:12.5px;border:1px solid;border-radius:6px;padding:1px 7px;background:rgba(8,12,28,.4)}
+  .glyphs .starmark{display:inline-block;width:.82em;height:.82em;vertical-align:-.08em;
+    filter:drop-shadow(0 0 9px rgba(217,185,108,.65))}
+  .starmark path{fill:var(--gold)} .starmark .accent{fill:var(--gold);opacity:.75}
+  @keyframes twk{from{opacity:.82}to{opacity:1}}
+  @media (prefers-reduced-motion:no-preference){.starmark{animation:twk 3.6s ease-in-out infinite alternate}}
+  .samp{display:block;margin-top:6px;font-size:12px;letter-spacing:.02em;opacity:.62;font-style:italic}
+  .cg-link{width:1px;height:7px;margin:2px auto 3px;opacity:.55;border-radius:1px}
+  .cgc{position:relative} .cgc.main{font-weight:700}
+  .cgc .cgp{font-size:6.5px;opacity:.7;font-style:normal;margin-left:1px;vertical-align:super}
+  .detail-bar{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 2px}
+  .dbtn{flex:1;min-width:130px;text-align:center;font-family:inherit;font-size:12px;letter-spacing:.05em;color:var(--gold);
+    background:rgba(217,185,108,.06);border:1px solid var(--gold-dim);border-radius:10px;padding:11px 12px;cursor:pointer;transition:.15s}
+  .dbtn:hover{background:rgba(217,185,108,.14);border-color:var(--gold)}
+  .dbtn:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .lk-meta{font-size:12px;color:var(--soft);margin:12px 0;letter-spacing:.04em}
+  .lk-strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px}
+  .lkc{flex:none;width:54px;text-align:center;border:1px solid var(--hairline);border-radius:9px;padding:7px 3px;background:rgba(255,255,255,.02)}
+  .lk-age{font-size:9px;color:var(--muted)}
+  .lk-gz{font-size:21px;line-height:1.15;margin:3px 0;letter-spacing:.02em}
+  .lk-tg{font-size:8.5px;color:var(--gold);letter-spacing:.02em}
+  .lk-yr{font-size:8px;color:var(--muted);margin-top:2px}
+  .lk-ny{font-size:8px;color:var(--gold);opacity:.8;margin-top:1px;line-height:1.1}
+  .lkc.clk{cursor:pointer;transition:.15s} .lkc.clk:hover{border-color:var(--gold);background:rgba(217,185,108,.08)}
+  .lkc.clk:focus-visible{outline:1px solid var(--gold);outline-offset:1px}
+  .ny{font-size:8px;color:var(--gold);opacity:.72;margin:-2px 0 4px;letter-spacing:.02em;line-height:1.2}
+  .dw-back{position:absolute;top:16px;left:18px;font-size:11px;color:var(--gold);opacity:.8;cursor:pointer;letter-spacing:.04em}
+  .dw-back:hover{opacity:1} .dw-back:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .wsum{font-size:12px;line-height:1.7;color:var(--soft);background:rgba(217,185,108,.06);border:1px solid var(--gold-dim);border-radius:10px;padding:11px 13px;margin:2px 0 14px}
+  .wsum b{color:var(--gold)} .wsum-tip{display:block;margin-top:5px;font-size:10.5px;color:var(--muted)}
+  .p-label.clk{cursor:pointer;transition:color .15s} .p-label.clk:hover{color:var(--gold)}
+  .p-label.clk:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:3px}
+  .roster{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 20px}
+  .roster-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+  .rchip{display:inline-flex;align-items:center;gap:7px;background:rgba(217,185,108,.08);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 7px 5px 13px;cursor:pointer;font-size:12.5px;color:var(--soft);transition:.15s}
+  .rchip:hover{border-color:var(--gold);background:rgba(217,185,108,.16);color:var(--ink)}
+  .rchip:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .rchip-nm{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rchip-x{width:17px;height:17px;line-height:16px;text-align:center;border-radius:50%;font-size:9px;color:var(--muted);background:rgba(255,255,255,.06)}
+  .rchip-x:hover{color:#fff;background:rgba(198,75,51,.55)}
+  .cardnav{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+  .cardname{font-size:15px;letter-spacing:.12em;color:var(--gold);margin-bottom:6px}
+  .city-row{display:flex;gap:8px}
+  .city-row input{flex:1}
+  .detect{flex:none;width:44px;background:rgba(217,185,108,.10);border:1px solid var(--gold-dim);border-radius:10px;color:var(--gold);font-size:16px;cursor:pointer;transition:.15s}
+  .detect:hover{background:rgba(217,185,108,.2);border-color:var(--gold)} .detect:disabled{opacity:.5;cursor:default}
+  .city-note{font-size:11px;color:var(--gold);opacity:.82;margin-top:7px;line-height:1.55;min-height:14px;font-style:italic}
+  .cityblurb{color:var(--gold);opacity:.7;font-style:italic}
+  .voice-yr{display:block;margin-top:7px;font-size:12px;color:var(--muted);line-height:1.6}
+  .stg-sum{font-size:12.5px;color:var(--soft);margin:-6px 0 14px;line-height:1.65;cursor:pointer;padding:9px 12px;border:1px solid var(--gold-dim);border-radius:10px;background:rgba(217,185,108,.05);transition:.15s}
+  .stg-sum:hover{background:rgba(217,185,108,.12);border-color:var(--gold)} .stg-sum:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .stg-tap{color:var(--gold);font-size:11px;white-space:nowrap}
+  .sbar-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:11px}
+  .sbar-nm{flex:none;width:56px} body.zh .sbar-nm{width:42px}
+  .sbar-track{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+  .sbar-fill{display:block;height:100%;border-radius:4px}
+  .sbar-val{flex:none;width:56px;text-align:right;color:var(--muted)}
+  .sbal{display:flex;height:24px;border-radius:6px;overflow:hidden;font-size:10px;border:1px solid var(--hairline)}
+  .sbal-s{background:rgba(217,185,108,.38);color:var(--ink);display:flex;align-items:center;justify-content:center;min-width:52px}
+  .sbal-d{flex:1;background:rgba(198,75,51,.30);color:var(--ink);display:flex;align-items:center;justify-content:center}
+  .hid-row{display:flex;justify-content:space-between;gap:10px;font-size:11px;margin:4px 0;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.05)}
+  .hid-pos{color:var(--muted);flex:none}
+  .fo-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin:2px 2px 0}
+  .fo-dot.good{background:#7FC08A} .fo-dot.bad{background:var(--seal)} .fo-dot.neutral{background:var(--muted);opacity:.55}
+  .lk-legend{font-size:10px;color:var(--muted);margin:6px 0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .fy-row{display:flex;align-items:center;gap:10px;font-size:11.5px;margin:3px 0;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.05)}
+  .fy-yr{flex:none;width:38px;color:var(--muted)} .fy-gz{flex:none;width:36px;font-size:15px;letter-spacing:.02em} .fy-tg{flex:1;color:var(--soft)}
+  #bgwest{position:fixed;inset:-3%;z-index:0;opacity:0;pointer-events:none;transition:opacity 1s ease;
+    background:
+      radial-gradient(1100px 720px at 76% 14%, rgba(126,92,206,.42), transparent 60%),
+      radial-gradient(1000px 760px at 14% 82%, rgba(58,110,178,.34), transparent 62%),
+      radial-gradient(760px 560px at 52% 48%, rgba(196,158,92,.12), transparent 60%),
+      linear-gradient(180deg,#090a20 0%,#0c1032 48%,#070818 100%)}
+  body.west #bgwest{opacity:1}
+  body.photo.west #sky{display:block}
+  @media (prefers-reduced-motion:reduce){#bgwest{transition:opacity .3s linear}}
   .hidden{display:none}
 </style>
 </head>
 <body class="photo">
 <div id="sky"></div>
 <div id="bgimg"></div>
+<div id="bgwest" aria-hidden="true"></div>
 <svg id="scene" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
   <defs>
     <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
@@ -348,22 +467,31 @@
 <div class="panel" id="screen-input">
   <div class="topbar">
     <span class="label"><span class="i-en">Bazi × Zodiac</span><span class="i-zh">八字 × 星座</span></span>
-    <span class="label gold"><span class="i-en">Prototype v0.7.1</span><span class="i-zh">原型 v0.7.1</span></span>
+    <span class="label gold"><span class="i-en">Prototype v0.8</span><span class="i-zh">原型 v0.8</span></span>
   </div>
   <div class="in-hero">
-    <div class="glyphs serif">命 ✕ ♍&#xFE0E;</div>
+    <span class="glyphs serif">命 ✕ <svg class="starmark" viewBox="-50 -50 100 100" aria-hidden="true"><path d="M0,-46 C7,-13 13,-7 46,0 C13,7 7,13 0,46 C-7,13 -13,7 -46,0 C-13,-7 -7,-13 0,-46 Z"/><path class="accent" d="M30,-40 C31.5,-31 32.5,-30 41,-28 C32.5,-26 31.5,-25 30,-16 C28.5,-25 27.5,-26 19,-28 C27.5,-30 28.5,-31 30,-40 Z"/></svg></span>
     <h1 class="serif"><span class="i-en">Two skies. One you.</span><span class="i-zh">两片星空,一个你</span></h1>
     <p><span class="i-en">Your birth moment, read by the world's two great astrologies —<br>Chinese BaZi and the Western zodiac, side by side.</span>
        <span class="i-zh">你出生的那一刻,交给世上两大命理体系同时解读——<br>八字与西方占星,并盘合参。</span></p>
   </div>
+  <div id="roster" class="roster hidden"></div>
+  <div class="field">
+    <span class="label f-label"><span class="i-en">Name (optional)</span><span class="i-zh">称呼(可选)</span></span>
+    <div class="name-field">
+      <span class="name-star" aria-hidden="true"><svg viewBox="-50 -50 100 100" width="15" height="15"><path d="M0,-46 C7,-13 13,-7 46,0 C13,7 7,13 0,46 C-7,13 -13,7 -46,0 C-13,-7 -7,-13 0,-46 Z" fill="currentColor"/></svg></span>
+      <input type="text" id="f-name" maxlength="14" autocomplete="off">
+    </div>
+  </div>
   <div class="field">
     <span class="label f-label"><span class="i-en">Birth date</span><span class="i-zh">出生日期</span></span>
-    <input type="date" id="f-date" value="2000-09-11" min="1931-01-01" max="2029-12-31">
+    <input type="date" id="f-date" value="1940-11-27" min="1901-01-01" max="2149-12-31">
+    <span class="samp"><span class="i-en">Sample chart: Bruce Lee, 1940 — edit to your own</span><span class="i-zh">示例盘:李小龙 · 1940 —— 改成你自己的</span></span>
   </div>
   <div class="row2 field">
     <div>
       <span class="label f-label"><span class="i-en">Birth time</span><span class="i-zh">出生时间</span></span>
-      <input type="time" id="f-time" value="14:30">
+      <input type="time" id="f-time" value="07:12">
     </div>
     <div>
       <span class="label f-label"><span class="i-en">Gender</span><span class="i-zh">乾坤</span></span>
@@ -377,19 +505,34 @@
     <span class="i-en">I don't know my birth time (a 3-pillar chart still works)</span>
     <span class="i-zh">时辰未知(仍可排三柱)</span></label>
   <div class="field">
+    <span class="label f-label"><span class="i-en">Birth city</span><span class="i-zh">出生城市</span></span>
+    <div class="city-row">
+      <input type="text" id="f-city" list="citylist" autocomplete="off">
+      <button type="button" id="f-detect" class="detect" title="Use my location / 定位">📍</button>
+    </div>
+    <datalist id="citylist"></datalist>
+    <div class="city-note" id="city-note"></div>
+  </div>
+  <div class="field">
     <span class="label f-label"><span class="i-en">Birth timezone</span><span class="i-zh">出生地时区</span></span>
     <select id="f-tz"></select>
   </div>
   <button class="go" id="f-go"><span class="i-en">Reveal my double chart ✦</span><span class="i-zh">揭示我的双盘 ✦</span></button>
   <p class="fine">
-    <span class="i-en">Engine: Lichun year boundary · solar terms to the minute · late-night hours roll to the next day<br>True solar time, Moon &amp; Rising, luck cycles — in the full version</span>
-    <span class="i-zh">引擎口径:立春换年 · 节气精确到分 · 晚子时归次日<br>真太阳时、月亮与上升、大运——完整版奉上</span></p>
+    <span class="i-en">Engine: Lichun year boundary · solar terms to the minute · late-night hours roll to the next day<br>Ten Gods · relations · luck cycles · natal wheel included — true solar time &amp; yearly cycles next</span>
+    <span class="i-zh">引擎口径:立春换年 · 节气精确到分 · 晚子时归次日<br>十神 · 合冲刑害 · 大运 · 西方星盘 已内置——真太阳时、流年续做</span></p>
 </div>
 
 <!-- ========== SCREEN 2: CARD ========== -->
 <div class="panel hidden" id="screen-card"></div>
-<button class="back hidden" id="btn-back"><span class="i-en">← Try another birth</span><span class="i-zh">← 再排一盘</span></button>
+<div class="cardnav hidden" id="cardnav">
+  <button class="back" id="btn-back"><span class="i-en">← Another</span><span class="i-zh">← 再排一盘</span></button>
+  <button class="back" id="btn-save"><span class="i-en">★ Save to roster</span><span class="i-zh">★ 存入名册</span></button>
+</div>
+<div class="drawer-bg" id="drawer-bg"></div>
+<div class="drawer" id="drawer" role="dialog" aria-modal="true"></div>
 
+<script>__ASTRO__</script>
 <script>
 const TERMS = __TERMS__;
 __ENGINE__
@@ -414,6 +557,87 @@ const ANIMAL_TRAD = { 子:"鼠",丑:"牛",寅:"虎",卯:"兔",辰:"龍",巳:"蛇
 const SIGN_TXT = { en:{Aries:"Aries",Taurus:"Taurus",Gemini:"Gemini",Cancer:"Cancer",Leo:"Leo",Virgo:"Virgo",Libra:"Libra",Scorpio:"Scorpio",Sagittarius:"Sagittarius",Capricorn:"Capricorn",Aquarius:"Aquarius",Pisces:"Pisces"},
                    zh:{Aries:"白羊座",Taurus:"金牛座",Gemini:"双子座",Cancer:"巨蟹座",Leo:"狮子座",Virgo:"处女座",Libra:"天秤座",Scorpio:"天蝎座",Sagittarius:"射手座",Capricorn:"摩羯座",Aquarius:"水瓶座",Pisces:"双鱼座"} };
 const SIGN_GLYPH = { Aries:"♈︎",Taurus:"♉︎",Gemini:"♊︎",Cancer:"♋︎",Leo:"♌︎",Virgo:"♍︎",Libra:"♎︎",Scorpio:"♏︎",Sagittarius:"♐︎",Capricorn:"♑︎",Aquarius:"♒︎",Pisces:"♓︎" };
+const PLANET_ORDER=["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn","Uranus","Neptune","Pluto"];
+const PLANET_GLYPH={Sun:"☉",Moon:"☽",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Uranus:"♅",Neptune:"♆",Pluto:"♇",ASC:"AC",MC:"MC"};
+const PLANET_NAME={en:{Sun:"Sun",Moon:"Moon",Mercury:"Mercury",Venus:"Venus",Mars:"Mars",Jupiter:"Jupiter",Saturn:"Saturn",Uranus:"Uranus",Neptune:"Neptune",Pluto:"Pluto",ASC:"Ascendant",MC:"Midheaven"},
+  zh:{Sun:"太阳",Moon:"月亮",Mercury:"水星",Venus:"金星",Mars:"火星",Jupiter:"木星",Saturn:"土星",Uranus:"天王星",Neptune:"海王星",Pluto:"冥王星",ASC:"上升",MC:"中天"}};
+const PLANET_ARCH={en:{Sun:"your core self — the light you steer by",Moon:"your inner tides, and what you need to feel safe",Mercury:"how you think, talk, and connect the dots",Venus:"what you love, and how you value",Mars:"how you fight, want, and get things done",Jupiter:"where you expand and trust your luck",Saturn:"where you meet limits and build for real",Uranus:"where you break the mold",Neptune:"where you dream, blur, and long",Pluto:"where you're forced to transform"},
+  zh:{Sun:"你的核心自我——导航用的那束光",Moon:"你内在的潮汐,和你要什么才安心",Mercury:"你思考、表达、连点成线的方式",Venus:"你所爱,以及你如何衡量价值",Mars:"你的战法、欲望和把事做成的那股劲",Jupiter:"你扩张、信运气的方向",Saturn:"你撞见边界、真正筑基的地方",Uranus:"你打破常规的地方",Neptune:"你造梦、消融与向往之处",Pluto:"你被迫脱胎换骨之处"}};
+const SIGN_MANNER={en:{Aries:"bold and first through the door",Taurus:"steady, sensual, hard to move",Gemini:"quick, curious, plural",Cancer:"protective, tidal, memory-deep",Leo:"warm and built for the spotlight",Virgo:"precise, useful, quietly exacting",Libra:"weighing, relational, fond of balance",Scorpio:"intense, private, all-or-nothing",Sagittarius:"far-seeing, restless, allergic to fences",Capricorn:"patient, ambitious, one summit at a time",Aquarius:"detached, inventive, future-facing",Pisces:"porous, dreaming, boundaries optional"},
+  zh:{Aries:"果敢,第一个冲进门",Taurus:"稳沉、重感官,难被推动",Gemini:"机敏、好奇、多线并行",Cancer:"护巢、多感、记忆很深",Leo:"热烈,为聚光灯而生",Virgo:"精准务实,静水流深地挑剔",Libra:"权衡、重关系、偏爱平衡",Scorpio:"深烈、私密,要么全要",Sagittarius:"望远、躁动,见栅栏就过敏",Capricorn:"耐心有野心,一座峰一座峰地翻",Aquarius:"疏离、爱发明、面向未来",Pisces:"边界模糊、耽于梦,界限可选"}};
+const PLANET_DOM = {
+  zh:{Sun:"自我",Moon:"情绪",Mercury:"思维",Venus:"爱与审美",Mars:"行动力",Jupiter:"扩张",Saturn:"责任",Uranus:"变革",Neptune:"梦想",Pluto:"蜕变",ASC:"外在自我",MC:"事业方向"},
+  en:{Sun:"self",Moon:"emotions",Mercury:"mind",Venus:"love & taste",Mars:"drive",Jupiter:"growth",Saturn:"discipline",Uranus:"change",Neptune:"dreams",Pluto:"power",ASC:"outer self",MC:"vocation"} };
+const HOUSE_NAME = {
+  zh:{1:"自我·外在形象",2:"金钱·价值",3:"沟通·学习·手足",4:"家·根基·父母",5:"恋爱·创造·玩乐",6:"工作·健康·日常",7:"伴侣·合作",8:"亲密·共享·蜕变",9:"远行·信念·高等学问",10:"事业·名声",11:"朋友·社群·愿望",12:"潜意识·独处·隐秘"},
+  en:{1:"self & image",2:"money & values",3:"communication & kin",4:"home & roots",5:"romance & creativity",6:"work & health",7:"partnership",8:"intimacy & transformation",9:"travel & philosophy",10:"career & reputation",11:"friends & hopes",12:"the inner world"} };
+const ASPECT_READ = {
+  conj:{zh:"拧成一股:{A} 和 {B} 几乎分不开,一动全动、彼此放大。",en:"fused: {A} and {B} act as one — move one and the other follows, amplified."},
+  oppo:{zh:"两头拉扯:{A} 和 {B} 像跷跷板,你常在两者间找平衡,或透过关系照见。",en:"a tug-of-war: {A} and {B} sit opposite; you balance between them, often through relationships."},
+  square:{zh:"互相较劲:{A} 和 {B} 容易起摩擦、卡壳,但这股张力也逼你长本事。",en:"friction: {A} and {B} grind against each other — frustrating, but it forces growth."},
+  trine:{zh:"天生顺:{A} 和 {B} 配合默契,是不太费劲就有的天赋。",en:"easy flow: {A} and {B} cooperate naturally — a gift that costs little effort."},
+  sextile:{zh:"有机会:{A} 和 {B} 只要你肯主动,就能互相借力。",en:"an opening: {A} and {B} help each other whenever you take initiative."} };
+const PILLAR_MEAN = {
+  zh:{
+    year:{who:"祖上 · 父母长辈 · 家世根基",stage:"少年运 · 约 0–16 岁",gov:"出身、根基、早年环境与长辈缘",line:"年柱是你的「根」——家世出身、祖辈父母、童年的底色,也管你 16 岁前的大方向。"},
+    month:{who:"父母 · 兄弟姐妹 · 事业环境",stage:"青年运 · 约 17–32 岁",gov:"事业、社会、人际与成长环境(全局最吃重的一柱)",line:"月柱又叫「提纲」,是四柱里最要紧的一柱——事业、社会舞台、父母手足与青年时运都看它。"},
+    day:{who:"日干=你自己 · 日支=配偶/婚姻宫",stage:"中年运 · 约 33–48 岁",gov:"自身本命 + 婚姻伴侣",line:"日柱最贴身:天干「日主」就是你本人,全盘围绕它读;地支是你的「夫妻宫」,看配偶与亲密关系,也主中年。"},
+    hour:{who:"子女 · 晚辈下属 · 晚景",stage:"晚年运 · 约 49 岁以后",gov:"子女、志向抱负与晚景",line:"时柱看你的「后半程」——子女晚辈、晚年光景,也藏着你内心的志向与归宿。"}
+  },
+  en:{
+    year:{who:"ancestors · parents & elders · roots",stage:"youth · ~age 0–16",gov:"origins, family background, early environment",line:"The Year pillar is your roots — lineage, elders, the backdrop of childhood. It also colors your first ~16 years."},
+    month:{who:"parents · siblings · career & milieu",stage:"young adulthood · ~17–32",gov:"career, society, environment (the most weighted pillar)",line:"The Month pillar (the 'headline') is the most important of the four — career, social stage, parents and siblings, and young-adult luck all read from here."},
+    day:{who:"Day stem = you · Day branch = spouse palace",stage:"midlife · ~33–48",gov:"the self + marriage & partner",line:"The Day pillar is closest to you: its stem (the Day Master) IS you, the whole chart is read around it; its branch is your spouse palace — marriage and intimacy — and it rules midlife."},
+    hour:{who:"children · juniors · later years",stage:"later life · ~49 onward",gov:"children, aspirations, the final chapter",line:"The Hour pillar is your second half — children and juniors, your later years, and the aspirations you carry inward."}
+  } };
+const WUI={en:{chart:"Western Chart",sub:"planets by sign · click any",note:"Rising sign & houses need your birthplace — coming in the full version.",approx:"Moon is approximate without a birth time.",retro:"retrograde",inSign:"in"},
+  zh:{chart:"西方星盘",sub:"行星落座 · 可点开",note:"上升星座与宫位需要出生地——完整版奉上。",approx:"无出生时间时月亮为近似。",retro:"逆行",inSign:"落"}};
+const CITY = [
+  ["Beijing","北京",39.90,116.41,480],["Shanghai","上海",31.23,121.47,480],["Hong Kong","香港",22.32,114.17,480],
+  ["Taipei","台北",25.03,121.57,480],["Singapore","新加坡",1.35,103.82,480],["Tokyo","东京",35.68,139.65,540],
+  ["Seoul","首尔",37.57,126.98,540],["Bangkok","曼谷",13.75,100.50,420],["Delhi","德里",28.61,77.21,330],
+  ["Dubai","迪拜",25.20,55.27,240],["London","伦敦",51.51,-0.13,0],["Paris","巴黎",48.86,2.35,60],
+  ["Berlin","柏林",52.52,13.40,60],["New York","纽约",40.71,-74.01,-300],["Chicago","芝加哥",41.88,-87.63,-360],
+  ["Los Angeles","洛杉矶",34.05,-118.24,-480],["San Francisco","旧金山",37.77,-122.42,-480],["Toronto","多伦多",43.65,-79.38,-300],
+  ["Vancouver","温哥华",49.28,-123.12,-480],["Sydney","悉尼",-33.87,151.21,600] ];
+const CITY_NOTE = { zh:{
+  Beijing:"帝都龙脉,红墙金瓦——厚重与野心并存。",Shanghai:"东方巴黎,十里洋场——新旧昼夜交替。",
+  "Hong Kong":"山海之间的不夜港——速度、霓虹与咸风。",Taipei:"温润市井——巷弄有人情,夜市有烟火。",
+  Singapore:"花园之城——秩序里长出热带的绿。",Tokyo:"精密与静默——极繁与极简同处一城。",
+  Seoul:"山环江绕——传统与潮流同频跳动。",Bangkok:"金塔与河市——热烈而松弛。",
+  Delhi:"千年层叠的古都——喧腾里有神性。",Dubai:"沙海之上拔地的奇观——欲望与未来。",
+  London:"雾与钟声——旧秩序里的世界心脏。",Paris:"塞纳河的光——浪漫是一种日常。",
+  Berlin:"伤痕与自由并存——冷峻而先锋。",
+  "New York":"永不熄灭的野心之城——人人都是主角。",Chicago:"湖风与钢骨——硬朗中带着蓝调。",
+  "Los Angeles":"阳光、公路与造梦工厂。","San Francisco":"海雾漫过山丘——叛逆与创新的湾。",
+  Toronto:"湖畔的多元之城——温和而开阔。",Vancouver:"山海相拥——雨林般的温柔。",Sydney:"海湾与阳光——松弛的南半球都会。" },
+  en:{ Beijing:"The imperial capital — red walls, dynastic weight, quiet ambition.",Shanghai:"Paris of the East — old and new trading places by the hour.",
+  "Hong Kong":"A harbor that never sleeps — speed, neon, and salt air.",Taipei:"Warm and lived-in — alleys of kindness, night-market smoke.",
+  Singapore:"A garden city — tropical green grown inside order.",Tokyo:"Precision and hush — the maximal and minimal in one city.",
+  Seoul:"Ringed by mountains and river — tradition in time with trend.",Bangkok:"Gilded temples and river markets — fervent yet easy.",
+  Delhi:"A capital layered over millennia — the divine inside the din.",Dubai:"A mirage made real from the desert — appetite and the future.",
+  London:"Fog and bells — the world's heart inside an old order.",Paris:"Seine light — where romance is simply the weather.",
+  Berlin:"Scars and freedom together — austere and avant-garde.",
+  "New York":"The city of unquenched ambition — everyone a lead.",Chicago:"Lake wind and steel — muscle with a blues undertone.",
+  "Los Angeles":"Sun, freeways, and the dream factory.","San Francisco":"Fog over the hills — a bay of rebellion and invention.",
+  Toronto:"A lakeside city of many peoples — mild and wide-open.",Vancouver:"Where mountains meet sea — a rainforest gentleness.",Sydney:"Harbor and sunshine — the laid-back metropolis of the south." } };
+const FORTUNE_GLYPH = "\u2297";
+const WEXTRA = { en:{asc:"Ascendant",mc:"Midheaven",fortune:"Part of Fortune",house:"House",aspects:"Aspects",
+    needLoc:"Add birth city + time to unlock rising sign, houses & Part of Fortune.",
+    fortuneLine:"Part of Fortune — where ease and luck pool for you; the point the ancients read for well-being.",
+    ascLine:"Ascendant — the mask you wear in, your first-impression self and how you meet the world.",
+    mcLine:"Midheaven — your public peak: vocation, reputation, what you're seen climbing toward.",city:"Birth city"},
+  zh:{asc:"上升",mc:"中天",fortune:"福点",house:"宫",aspects:"相位",
+    needLoc:"补上出生城市+时间,解锁上升、宫位与福点。",
+    fortuneLine:"福点——你的顺遂与福气汇聚之处;古人据此看安乐。",
+    ascLine:"上升——你入场时戴的面具、初印象的自己,以及你迎接世界的方式。",
+    mcLine:"中天——你的舞台之巅:事业、名声、众人看你在攀登的方向。",city:"出生城市"} };
+const ASPECT_META = { conj:["#D9B96C",{en:"conjunction — fused, amplified",zh:"合——融为一体,彼此放大"}],
+  oppo:["#C64B33",{en:"opposition — a tug-of-war across the chart",zh:"冲——横跨星盘的拉锯"}],
+  square:["#C64B33",{en:"square — friction that forces growth",zh:"刑——较劲,逼你成长"}],
+  trine:["#5AA0C0",{en:"trine — talent that flows easily",zh:"拱——天赋顺流而下"}],
+  sextile:["#5AA0C0",{en:"sextile — an opportunity, if you take it",zh:"六合——机会,取之则得"}] };
+const ASPECT_ABBR = { conj:"☌",oppo:"☍",square:"□",trine:"△",sextile:"⚹" };
 
 const MATERIAL = { en:{甲:"Oak",乙:"Willow",丙:"Solar",丁:"Ember",戊:"Granite",己:"Amber",庚:"Silver",辛:"Pearl",壬:"Tide",癸:"Mist"},
                    zh:{甲:"苍木",乙:"青藤",丙:"骄阳",丁:"烛火",戊:"磐岩",己:"沃土",庚:"银锋",辛:"珠玉",壬:"沧浪",癸:"烟雨"} };
@@ -487,6 +711,9 @@ const WEST_LINE = {
       Aquarius:"水瓶是发明家——感受先归档成想法,未来才是常住地址。",
       Pisces:"双鱼是海王星的梦客——边界是虚线,想象力是海。"} };
 
+const BRANCH_LINE = {
+  en:{子:"Deep-winter midnight — still water beneath the ice, where the year gathers itself before it begins again.",丑:"Frozen ground before the thaw — patient storage that keeps what the cold won't yet release.",寅:"The first push of spring — sap cracking dormancy, the hour things finally dare to move.",卯:"Full spring morning — soft green growth and open doors; light on its feet, sharp in the ears.",辰:"The dragon's damp earth — a reservoir that holds water, wood and storm all at once.",巳:"Early-summer's coiled heat — an elegant surface wrapped around a rising fire.",午:"High noon at full blaze — peak yang, pure visible fire with nothing hidden.",未:"Sun-baked late-summer earth — dry and sweet, keeping the last of the season's warmth.",申:"Autumn's first metal — clever edges as the year turns hard and bright.",酉:"Refined autumn metal — pure clarity, everything precise and pared to essentials.",戌:"The dog's dry autumn earth — a kiln where the year's fire is banked and stored.",亥:"Winter's opening ocean — deep still water already carrying next spring's seed."},
+  zh:{子:"隆冬子夜——冰下静水,一年在此收拢,只待重启。",丑:"解冻前的冻土——耐心的仓廪,替寒气暂扣住尚未释放之物。",寅:"初春第一推——阳气破土,万物终于敢动的时辰。",卯:"仲春清晨——嫩绿舒展、门户大开;脚步轻,耳朵尖。",辰:"龙的湿土——一座水库,把水、木与雷雨一并收着。",巳:"初夏盘曲的热——优雅的表皮,裹着一团往上蹿的火。",午:"正午当空——阳之极,纯粹可见的火,无所遁形。",未:"晒透的夏末之土——干而回甘,存着季节最后的暖。",申:"秋日第一道金——年岁转硬转亮,锋刃开始锋利。",酉:"精炼的秋金——澄澈,一切被削到只剩要害。",戌:"狗的秋燥之土——一座窑,把一年的火收火封存。",亥:"冬日初启的海——深而静的水,已经揣着来春的种子。"} };
 const A_TAG = { 子:[0,1,-1,-1],丑:[-1,0,1,-1],寅:[1,-1,-1,1],卯:[-1,0,0,-1],辰:[1,0,1,1],巳:[-1,1,0,-1],午:[1,-1,-1,1],未:[-1,-1,-1,-1],申:[1,1,-1,1],酉:[0,1,1,1],戌:[-1,0,1,-1],亥:[0,-1,-1,-1] };
 const S_TAG = { Aries:[1,-1,-1,1],Taurus:[-1,0,1,-1],Gemini:[1,1,-1,1],Cancer:[-1,-1,0,-1],Leo:[1,-1,1,1],Virgo:[-1,1,1,-1],Libra:[0,1,0,1],Scorpio:[0,-1,1,-1],Sagittarius:[1,-1,-1,1],Capricorn:[-1,1,1,-1],Aquarius:[0,1,-1,0],Pisces:[-1,-1,-1,-1] };
 const AGREE_LINE = {
@@ -541,24 +768,27 @@ const UI = {
       east:"East says",west:"West says",agree:"Both agree",clash:"Where they clash",
       deeper:"The Deeper Chart",deeperSub:"day master · ten gods · hidden stems",
       dLabelDM:"Day Master",dLabelMonth:"Month pillar",dLabelSoon:"Coming soon",
-      soon:"Moon & Rising, luck cycles, true solar time — the full reading.",
+      soon:"True solar time and yearly cycles — coming next.",
       locked:"🔒 Your hour pillar and the deeper reading are waiting.<br>Add your birth time to unlock the full chart.",
       hiddenNote:"Small glyphs under each branch are its hidden stems, colored by element.",
       elemCount:"primary-qi count",noHour:", hour pillar excluded",dominant:"-dominant — ",
       born:"b.",disclaimer:"For reflection & entertainment — not fate, just weather.",
-      maleChart:"male chart",femaleChart:"female chart",
+      maleChart:"male chart",femaleChart:"female chart",btnTenGods:"Ten Gods ✦",btnRel:"Relations 合冲",btnStg:"Strength 旺衰",btnShen:"Stars 神煞",btnLuck:"Luck 運",
       shapes:"shapes your prime decade — "},
   zh:{year:"年柱",month:"月柱",day:"日柱",hour:"时柱",dm:"日主",needsTime:"待时辰",
       east:"东方说",west:"西方说",agree:"两盘同断",clash:"两盘相争",
       deeper:"命盘深层",deeperSub:"日主 · 十神 · 藏干",
       dLabelDM:"日主",dLabelMonth:"月柱十神",dLabelSoon:"完整版",
-      soon:"月亮与上升、大运、真太阳时——完整解读,后会有期。",
+      soon:"真太阳时精算、流年运程——续做中。",
       locked:"🔒 你的时柱与深层解读仍在等你。<br>补上出生时间,解锁完整命盘。",
       hiddenNote:"地支下的小字为藏干,按五行着色。",
       elemCount:"按本气统计",noHour:",未计时柱",dominant:"当令得势——",
       born:"生于",disclaimer:"仅供自省与娱乐——非宿命,是天气。",
-      maleChart:"乾造",femaleChart:"坤造",
+      maleChart:"乾造",femaleChart:"坤造",btnTenGods:"十神 ✦",btnRel:"合冲刑害 ✦",btnStg:"旺衰喜用 ✦",btnShen:"神煞 ✦",btnLuck:"大运 運",
       shapes:"坐镇月柱——"} };
+const DW={en:{whatIs:"What it is",inChart:"In your chart",hidden:"Hidden inside",dayMaster:"This is your Day Master — the \"you\" the whole chart is read around."},
+  zh:{whatIs:"本义",inChart:"在你盘里",hidden:"所藏",dayMaster:"这是你的日主——全盘围绕的那个「你」。"}};
+const DWPOS={en:{year:"Year",month:"Month",day:"Day",hour:"Hour"},zh:{year:"年",month:"月",day:"日",hour:"时"}};
 const TZ_OPTS = [
   [480,"UTC+8 · Beijing / Shanghai / Singapore","UTC+8 · 北京 / 上海 / 新加坡"],
   [540,"UTC+9 · Tokyo / Seoul","UTC+9 · 东京 / 首尔"],
@@ -583,17 +813,67 @@ function fillTz() {
   sel.innerHTML = TZ_OPTS.map(([v, en, zh]) => `<option value="${v}">${lang === "zh" ? zh : en}</option>`).join("");
   sel.value = cur;
 }
+let cityLL = { lat: CITY[16][2], lon: CITY[16][3] }, detectedLL = null;
+function fillCity() {
+  const dl = $("citylist"); if (dl) dl.innerHTML = CITY.map(c => `<option value="${lang === "zh" ? c[1] : c[0]}"></option>`).join("");
+  const inp = $("f-city"); if (!inp) return;
+  const v = (inp.value || "").trim();
+  const i = CITY.findIndex(c => c[0].toLowerCase() === v.toLowerCase() || c[1] === v);
+  if (i >= 0) inp.value = lang === "zh" ? CITY[i][1] : CITY[i][0];
+  else if (!v) inp.value = lang === "zh" ? CITY[16][1] : CITY[16][0];
+  resolveCity();
+}
+function resolveCity(showNote) {
+  const inp = $("f-city"); if (!inp) return { city: "", lat: cityLL.lat, lon: cityLL.lon, note: "" };
+  const raw = (inp.value || "").trim();
+  let lat, lon, note = "";
+  if (detectedLL && (raw.indexOf("当前位置") >= 0 || raw.indexOf("My location") >= 0)) {
+    lat = detectedLL.lat; lon = detectedLL.lon;
+    note = lang === "zh" ? `已定位:${lat.toFixed(2)}, ${lon.toFixed(2)}` : `Located: ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+  } else {
+    const i = CITY.findIndex(c => c[0].toLowerCase() === raw.toLowerCase() || c[1] === raw);
+    if (i >= 0) { lat = CITY[i][2]; lon = CITY[i][3]; if ($("f-tz")) $("f-tz").value = String(CITY[i][4]); note = CITY_NOTE[lang][CITY[i][0]] || ""; }
+    else { lon = +(+$("f-tz").value / 4).toFixed(2); lat = 30; note = raw ? (lang === "zh" ? "自定义地点——经度按时区估算,上升与宫位为近似。" : "Custom place — longitude estimated from timezone; rising & houses approximate.") : ""; }
+  }
+  cityLL = { lat, lon };
+  if (showNote !== false && $("city-note")) $("city-note").textContent = note;
+  return { city: raw, lat, lon, note };
+}
+function detectCity() {
+  const btn = $("f-detect");
+  if (!navigator.geolocation) { alert(lang === "zh" ? "此浏览器不支持定位。" : "Geolocation not supported."); return; }
+  const old = btn.textContent; btn.textContent = "…"; btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const la = pos.coords.latitude, lo = pos.coords.longitude;
+    detectedLL = { lat: la, lon: lo };
+    let best = 0, bd = Infinity;
+    CITY.forEach((c, i) => { const dd = (c[2] - la) ** 2 + (c[3] - lo) ** 2; if (dd < bd) { bd = dd; best = i; } });
+    $("f-tz").value = String(CITY[best][4]);
+    $("f-city").value = lang === "zh" ? "📍 当前位置" : "📍 My location";
+    cityLL = { lat: la, lon: lo };
+    if ($("city-note")) $("city-note").textContent = lang === "zh"
+      ? `已定位:${la.toFixed(2)}, ${lo.toFixed(2)} · 最近城市 ${CITY[best][1]}(时区已带出)`
+      : `Located: ${la.toFixed(2)}, ${lo.toFixed(2)} · nearest ${CITY[best][0]} (timezone set)`;
+    btn.textContent = old; btn.disabled = false;
+  }, () => { btn.textContent = old; btn.disabled = false; alert(lang === "zh" ? "定位失败或被拒绝,请手动输入城市。" : "Location failed or denied — type a city instead."); });
+}
 function setLang(l) {
   lang = l;
   document.body.classList.toggle("zh", l === "zh");
   $("lang-en").classList.toggle("on", l === "en");
   $("lang-zh").classList.toggle("on", l === "zh");
-  fillTz();
+  fillTz(); fillCity();
+  if ($("f-name")) $("f-name").placeholder = lang === "zh" ? "如:小明 / 我自己" : "e.g. Ann / me";
+  if (typeof renderRoster === "function") renderRoster();
+  if (typeof closeDrawer === "function") closeDrawer();
   if (lastChart && !$("screen-card").classList.contains("hidden")) renderCard(lastChart.r, lastChart.inp);
 }
 $("lang-en").onclick = () => setLang("en");
 $("lang-zh").onclick = () => setLang("zh");
 fillTz();
+fillCity();
+$("f-city").oninput = () => resolveCity();
+$("f-detect").onclick = detectCity;
 
 document.querySelectorAll("#f-gender button").forEach(b => {
   b.onclick = () => {
@@ -603,14 +883,21 @@ document.querySelectorAll("#f-gender button").forEach(b => {
 });
 $("f-notime").onchange = e => { $("f-time").disabled = e.target.checked; };
 
-function colored(gz) {
+function colored(gz, pk) {
   if (!gz) return "";
-  const c1 = STEM_COLOR[gz[0]], c2 = STEM_COLOR[ZHI_MAIN[gz[1]]];
-  return `<span style="color:${c1};text-shadow:0 0 14px ${c1}66">${gz[0]}</span><span style="color:${c2};text-shadow:0 0 14px ${c2}66">${gz[1]}</span>`;
+  const a = gz[0], b = gz[1], c1 = STEM_COLOR[a], c2 = STEM_COLOR[ZHI_MAIN[b]];
+  return `<span class="clk" role="button" tabindex="0" data-c="${a}" data-t="stem" data-p="${pk}" style="color:${c1};text-shadow:0 0 14px ${c1}66">${a}</span>` +
+         `<span class="clk" role="button" tabindex="0" data-c="${b}" data-t="branch" data-p="${pk}" style="color:${c2};text-shadow:0 0 14px ${c2}66">${b}</span>`;
 }
 function cgChips(branch) {
-  return `<div class="cg">` + CANGGAN[branch].map(s =>
-    `<span style="color:${STEM_COLOR[s]};border-color:${STEM_COLOR[s]}66" title="${s}">${s}</span>`).join("") + `</div>`;
+  const pos = lang === "zh" ? ["本","中","余"] : ["","",""];
+  const bc = STEM_COLOR[ZHI_MAIN[branch]];
+  const chips = CANGGAN[branch].map((s, i) => {
+    const c = STEM_COLOR[s], main = i === 0;
+    const st = main ? `background:${c};border-color:${c};color:#0e1330` : `color:${c};border-color:${c}66`;
+    return `<span class="clk cgc${main ? " main" : ""}" role="button" tabindex="0" data-c="${s}" data-t="hidden" data-host="${branch}" style="${st}" title="${s} ${pos[i]||""}">${s}<i class="cgp">${pos[i]||""}</i></span>`;
+  }).join("");
+  return `<div class="cg-link" style="background:${bc}" aria-hidden="true"></div><div class="cg">${chips}</div>`;
 }
 function pickAgreeClash(yb, sign) {
   const a = A_TAG[yb], s = S_TAG[sign];
@@ -623,42 +910,269 @@ function pickAgreeClash(yb, sign) {
   }
   return { agree: agree || AC_FALLBACK[lang].agree, clash: clash || AC_FALLBACK[lang].clash };
 }
+const _nrm = x => ((x % 360) + 360) % 360;
+function computeWheel(utcMs, lat, lon, timeKnown) {
+  const A = window.Astronomy; if (!A) return null;
+  const date = new Date(utcMs);
+  const elon = b => _nrm(A.Ecliptic(A.GeoVector(A.Body[b], date, true)).elon);
+  const planets = PLANET_ORDER.map(b => {
+    const L = elon(b); let retro = false;
+    if (b !== "Sun" && b !== "Moon") {
+      const l2 = _nrm(A.Ecliptic(A.GeoVector(A.Body[b], new Date(utcMs + 21600000), true)).elon);
+      let d = l2 - L; if (d > 180) d -= 360; if (d < -180) d += 360; retro = d < 0;
+    }
+    return { body: b, lon: L, sign: SIGNS[Math.floor(L / 30)], deg: L % 30, retro };
+  });
+  let asc = null, mc = null, fortune = null, houses = null;
+  const haveAngles = timeKnown && lat != null && lon != null;
+  if (haveAngles) {
+    const D = Math.PI / 180, eps = 23.4393 * D;
+    const ramc = (((A.SiderealTime(date) + lon / 15) % 24 + 24) % 24) * 15 * D;
+    mc = _nrm(Math.atan2(Math.sin(ramc), Math.cos(ramc) * Math.cos(eps)) * 180 / Math.PI);
+    asc = _nrm(Math.atan2(Math.cos(ramc), -(Math.sin(ramc) * Math.cos(eps) + Math.tan(lat * D) * Math.sin(eps))) * 180 / Math.PI);
+    const sun = planets[0].lon, moon = planets[1].lon, day = _nrm(sun - asc) >= 180;
+    fortune = _nrm(day ? asc + moon - sun : asc + sun - moon);
+    const h1 = Math.floor(asc / 30) * 30;
+    houses = Array.from({ length: 12 }, (_, i) => _nrm(h1 + i * 30));
+    const ascHouse = Math.floor(asc / 30);
+    planets.forEach(p => p.house = ((Math.floor(p.lon / 30) - ascHouse + 12) % 12) + 1);
+  }
+  const ASP = [[0, "conj", 8], [60, "sextile", 4], [90, "square", 6], [120, "trine", 6], [180, "oppo", 8]];
+  const pts = planets.slice();
+  if (haveAngles) { pts.push({ body: "ASC", lon: asc }); pts.push({ body: "MC", lon: mc }); }
+  const isAngle = b => b === "ASC" || b === "MC";
+  const aspects = [];
+  for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
+    if (isAngle(pts[i].body) && isAngle(pts[j].body)) continue;
+    let d = Math.abs(pts[i].lon - pts[j].lon); if (d > 180) d = 360 - d;
+    const orbMax = (isAngle(pts[i].body) || isAngle(pts[j].body)) ? 5 : 99;
+    for (const [a, nm, orb] of ASP) if (Math.abs(d - a) <= Math.min(orb, orbMax)) { aspects.push({ a: pts[i].body, b: pts[j].body, type: nm, la: pts[i].lon, lb: pts[j].lon }); break; }
+  }
+  const moonPhase = _nrm(planets[1].lon - planets[0].lon);
+  return { planets, asc, mc, fortune, houses, aspects, haveAngles, moonPhase };
+}
+let lastWest = [], lastWheel = null, lastLuck = null;
 
-$("f-go").onclick = () => {
-  const dv = $("f-date").value; if (!dv) return;
+/* 画星盘轮 (SVG): 黄道环 + 宫位 + 上升/中天轴 + 行星按度数 + 福点 + 相位连线 */
+const WEL = ["#F2895F","#CDA268","#B7C3E0","#7DAEDD"];  // 火土风水
+function buildWheel(w) {
+  const cx = 180, cy = 180, rO = 174, rZ = 146, rP = 116, rA = 100, rI = 90, D = Math.PI / 180;
+  const base = w.asc != null ? w.asc : 0;
+  const P = (L, r) => [ (cx + r * Math.cos((180 + (L - base)) * D)).toFixed(1), (cy - r * Math.sin((180 + (L - base)) * D)).toFixed(1) ];
+  let g = [`<circle cx="180" cy="180" r="${rO}" fill="none" stroke="#D9B96C" stroke-opacity=".55"/>`,
+           `<circle cx="180" cy="180" r="${rZ}" fill="none" stroke="#D9B96C" stroke-opacity=".35"/>`,
+           `<circle cx="180" cy="180" r="${rI}" fill="none" stroke="#D9B96C" stroke-opacity=".18"/>`];
+  // 黄道 12 宫: 刻度 + 星座字形
+  for (let k = 0; k < 12; k++) {
+    const a = P(k * 30, rZ), b = P(k * 30, rO);
+    g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#D9B96C" stroke-opacity=".3"/>`);
+    const m = P(k * 30 + 15, (rZ + rO) / 2);
+    g.push(`<text x="${m[0]}" y="${m[1]}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="${WEL[k % 4]}">${SIGN_GLYPH[SIGNS[k]]}</text>`);
+  }
+  // 宫位分隔 + 编号 (整宫制)
+  if (w.houses) {
+    w.houses.forEach((cusp, i) => {
+      const a = P(cusp, rI), b = P(cusp, rZ);
+      g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#7E8EDC" stroke-opacity=".16"/>`);
+      const n = P(cusp + 15, rI + 9);
+      g.push(`<text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="#96A0B8">${i + 1}</text>`);
+    });
+  }
+  // 上升/中天 轴
+  if (w.asc != null) {
+    const al = P(w.asc, rO), ar = P(w.asc + 180, rO);
+    g.push(`<line x1="${al[0]}" y1="${al[1]}" x2="${ar[0]}" y2="${ar[1]}" stroke="#D9B96C" stroke-width="1.4" stroke-opacity=".65"/>`);
+    const ml = P(w.mc, rO), mr = P(w.mc + 180, rO);
+    g.push(`<line x1="${ml[0]}" y1="${ml[1]}" x2="${mr[0]}" y2="${mr[1]}" stroke="#D9B96C" stroke-width="1.1" stroke-opacity=".45"/>`);
+    const at = P(w.asc, rO + 9), mt = P(w.mc, rO + 9);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="asc"><text x="${at[0]}" y="${at[1]}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#D9B96C">AC</text></g>`);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="mc"><text x="${mt[0]}" y="${mt[1]}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#D9B96C">MC</text></g>`);
+  }
+  // 相位连线
+  (w.aspects || []).forEach(x => {
+    const col = ASPECT_META[x.type][0], a = P(x.la, rA), b = P(x.lb, rA);
+    g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${col}" stroke-width=".9" stroke-opacity=".5"/>`);
+  });
+  // 行星
+  w.planets.forEach(pl => {
+    const p = P(pl.lon, rP);
+    g.push(`<g class="clk wpg" role="button" tabindex="0" data-t="planet" data-c="${pl.body}">
+      <circle cx="${p[0]}" cy="${p[1]}" r="11" fill="rgba(8,12,28,.55)"/>
+      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#EDE0BB">${PLANET_GLYPH[pl.body]}${pl.retro ? "" : ""}</text>
+      <title>${PLANET_NAME[lang][pl.body]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}</title></g>`);
+  });
+  // 福点
+  if (w.fortune != null) {
+    const p = P(w.fortune, rP - 26);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="fortune"><circle cx="${p[0]}" cy="${p[1]}" r="10" fill="rgba(8,12,28,.55)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#D9B96C">${FORTUNE_GLYPH}</text></g>`);
+  }
+  return `<svg viewBox="0 0 360 360" class="wheel" role="img" aria-label="natal wheel">${g.join("")}</svg>`;
+}
+function aspectList(w, L) {
+  if (!w.aspects || !w.aspects.length) return "";
+  const rows = w.aspects.map(x => `<span class="asp" style="border-color:${ASPECT_META[x.type][0]}66;color:${ASPECT_META[x.type][0]}">${PLANET_GLYPH[x.a]}${ASPECT_ABBR[x.type]}${PLANET_GLYPH[x.b]}</span>`).join("");
+  return `<div class="asp-row"><span class="label" style="display:block;margin-bottom:5px">${WEXTRA[L].aspects}</span>${rows}</div>`;
+}
+
+function esc(t) { return (t || "").replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;" }[c])); }
+const ROSTER_KEY = "duosky_roster_v1";
+function loadRoster() { try { return JSON.parse(localStorage.getItem(ROSTER_KEY)) || []; } catch (e) { return []; } }
+function storeRoster() { try { localStorage.setItem(ROSTER_KEY, JSON.stringify(roster.slice(0, 4))); } catch (e) {} }
+let roster = loadRoster();
+
+function readForm() {
+  const dv = $("f-date").value; if (!dv) return null;
   const [y, m, d] = dv.split("-").map(Number);
   const notime = $("f-notime").checked;
-  const tv = $("f-time").value || "12:00";
-  const [hh, mi] = tv.split(":").map(Number);
-  const tz = +$("f-tz").value;
-  const r = computeChart(TERMS, { y, m, d, hh, mi, tzMin: tz, timeKnown: !notime });
-  if (r.error) { alert(lang === "zh" ? "原型支持 1931–2029 年出生。" : "Prototype supports 1931–2029 births."); return; }
-  lastChart = { r, inp: { y, m, d, hh, mi, tz, notime } };
+  const [hh, mi] = ($("f-time").value || "12:00").split(":").map(Number);
+  const rc = resolveCity(false);
+  return { name: ($("f-name").value || "").trim(), y, m, d, hh, mi, tz: +$("f-tz").value, notime, gender, city: rc.city, lat: rc.lat, lon: rc.lon, cityNote: rc.note };
+}
+function showChart(e) {
+  gender = e.gender;
+  const r = computeChart(TERMS, { y: e.y, m: e.m, d: e.d, hh: e.hh, mi: e.mi, tzMin: e.tz, timeKnown: !e.notime });
+  if (r.error) { alert(lang === "zh" ? "支持 1901–2149 年出生。" : "Births supported: 1901–2149."); return; }
+  lastChart = { r, inp: { y: e.y, m: e.m, d: e.d, hh: e.hh, mi: e.mi, tz: e.tz, notime: e.notime, lat: e.lat, lon: e.lon, name: e.name, city: e.city, cityNote: e.cityNote } };
   renderCard(r, lastChart.inp);
   $("screen-input").classList.add("hidden");
   $("screen-card").classList.remove("hidden");
-  $("btn-back").classList.remove("hidden");
+  $("cardnav").classList.remove("hidden");
   window.scrollTo(0, 0);
-};
+}
+function applyEntry(e) {
+  $("f-name").value = e.name || "";
+  $("f-date").value = `${e.y}-${String(e.m).padStart(2, "0")}-${String(e.d).padStart(2, "0")}`;
+  $("f-time").value = `${String(e.hh).padStart(2, "0")}:${String(e.mi).padStart(2, "0")}`;
+  $("f-notime").checked = !!e.notime; $("f-time").disabled = !!e.notime;
+  gender = e.gender;
+  document.querySelectorAll("#f-gender button").forEach(x => x.classList.toggle("on", x.dataset.v === e.gender));
+  $("f-city").value = e.city || ""; if (e.tz != null) $("f-tz").value = String(e.tz);
+  cityLL = { lat: e.lat, lon: e.lon };
+  if ($("city-note")) $("city-note").textContent = e.cityNote || "";
+}
+function rosterName(e, i) { return esc(e.name || (lang === "zh" ? `命盘${i + 1}` : `Chart ${i + 1}`)); }
+function renderRoster() {
+  const el = $("roster"); if (!el) return;
+  if (!roster.length) { el.innerHTML = ""; el.classList.add("hidden"); return; }
+  el.classList.remove("hidden");
+  el.innerHTML = `<span class="roster-label">${lang === "zh" ? "名册" : "Saved"} · ${roster.length}/4</span>` +
+    roster.map((e, i) => `<span class="rchip" role="button" tabindex="0" data-ri="${i}"><span class="rchip-nm">${rosterName(e, i)}</span><span class="rchip-x" data-rx="${i}" role="button" tabindex="0" aria-label="delete">\u2715</span></span>`).join("");
+}
+function saveCurrent() {
+  const e = lastChart ? { name: ($("f-name").value || "").trim() || lastChart.inp.name, y: lastChart.inp.y, m: lastChart.inp.m, d: lastChart.inp.d, hh: lastChart.inp.hh, mi: lastChart.inp.mi, tz: lastChart.inp.tz, notime: lastChart.inp.notime, gender, city: lastChart.inp.city, lat: lastChart.inp.lat, lon: lastChart.inp.lon, cityNote: lastChart.inp.cityNote } : null;
+  if (!e) return;
+  if (!e.name) e.name = lang === "zh" ? `命盘${roster.length + 1}` : `Chart ${roster.length + 1}`;
+  roster = roster.filter(x => !(x.y === e.y && x.m === e.m && x.d === e.d && x.hh === e.hh && x.mi === e.mi && x.tz === e.tz && x.notime === e.notime));
+  roster.unshift(e);
+  const full = roster.length > 4; roster = roster.slice(0, 4);
+  storeRoster(); renderRoster();
+  const btn = $("btn-save"), on = btn.querySelector(".i-en"), zh = btn.querySelector(".i-zh");
+  const oe = on.textContent, oz = zh.textContent;
+  on.textContent = full ? "Saved (oldest dropped)" : "✓ Saved"; zh.textContent = full ? "已存(挤掉最早)" : "✓ 已存";
+  setTimeout(() => { on.textContent = oe; zh.textContent = oz; }, 1600);
+}
+$("f-go").onclick = () => { const e = readForm(); if (e) showChart(e); };
+$("btn-save").onclick = saveCurrent;
 $("btn-back").onclick = () => {
   $("screen-card").classList.add("hidden");
-  $("btn-back").classList.add("hidden");
+  $("cardnav").classList.add("hidden");
   $("screen-input").classList.remove("hidden");
+  document.body.classList.remove("west");
+  if (westObserver) { westObserver.disconnect(); westObserver = null; }
+  renderRoster();
 };
+$("roster").onkeydown = (ev) => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); ev.target.click(); } };
+$("roster").onclick = (ev) => {
+  const x = ev.target.closest(".rchip-x");
+  if (x) { ev.stopPropagation(); roster.splice(+x.dataset.rx, 1); storeRoster(); renderRoster(); return; }
+  const chip = ev.target.closest(".rchip");
+  if (chip) { const e = roster[+chip.dataset.ri]; if (e) { applyEntry(e); showChart(e); } }
+};
+if ($("f-name")) $("f-name").placeholder = lang === "zh" ? "如:小明 / 我自己" : "e.g. Ann / me";
+renderRoster();
 
+const ELEM_CHAR = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+const STG = {
+  zh:{ strong:"身强", weak:"身弱", balanced:"中和",
+    support:"同党 · 印+比劫", drain:"异党 · 食伤+财+官杀", score:"五行得分", favor:"喜用", avoid:"忌神", use:"用神首选", hidden:"藏干计分(本/中/余)",
+    strongNote:"日主偏旺——喜泄、耗、克:以食伤生财、财官制身;忌再添印比。",
+    weakNote:"日主偏弱——喜生、扶:以印生身、比劫帮身;忌食伤财官再泄再克。",
+    balNote:"日主中和——五行较均,顺其气机,看大运流年引动即可。" },
+  en:{ strong:"Strong self", weak:"Weak self", balanced:"Balanced",
+    support:"Self party · Resource+Peer", drain:"Opposing · Output+Wealth+Authority", score:"Element scores", favor:"Favorable", avoid:"Avoid", use:"Primary useful phase", hidden:"Hidden-stem scoring (main/mid/residual)",
+    strongNote:"The self is strong — favor draining, spending, controlling; avoid adding more Resource/Peer.",
+    weakNote:"The self is weak — favor generating & supporting (Resource, Peer); avoid more Output/Wealth/Authority.",
+    balNote:"The self is balanced — phases fairly even; let the luck cycles tip it." } };
+function elName(e) { return ELEM_TXT[lang][e] + (lang === "zh" ? ELEM_CHAR[e] : ""); }
+function strengthDrawer(r) {
+  const s = computeStrength(r), L = STG[lang], T = UI[lang];
+  const maxS = Math.max(...Object.values(s.score), 1);
+  const order = ["metal", "wood", "water", "fire", "earth"];
+  const bars = order.map(e => {
+    const isFav = s.favor.includes(e), isAvo = s.avoid.includes(e), isDm = e === s.dmElement;
+    const tag = isDm ? (lang === "zh" ? "日主" : "self") : isFav ? "✓" : isAvo ? "×" : "";
+    return `<div class="sbar-row"><span class="sbar-nm" style="color:${ELEM_COLOR[e]}">${elName(e)}</span>` +
+      `<span class="sbar-track"><span class="sbar-fill" style="width:${(s.score[e] / maxS * 100).toFixed(0)}%;background:${ELEM_COLOR[e]}"></span></span>` +
+      `<span class="sbar-val">${s.score[e]}${tag ? ` <b class="gold">${tag}</b>` : ""}</span></div>`;
+  }).join("");
+  const supPct = (s.support / (s.total || 1) * 100).toFixed(0);
+  const balance = `<div class="sbal"><span class="sbal-s" style="width:${supPct}%">${lang === "zh" ? "扶" : "support"} ${s.support}</span><span class="sbal-d">${lang === "zh" ? "抑" : "drain"} ${s.drain}</span></div>`;
+  const favTxt = s.favor.length ? s.favor.map(e => `<b style="color:${ELEM_COLOR[e]}">${elName(e)}</b>`).join("、") : "—";
+  const avoTxt = s.avoid.length ? s.avoid.map(e => `<span style="color:${ELEM_COLOR[e]};opacity:.85">${elName(e)}</span>`).join("、") : "—";
+  const useTxt = s.useGod ? `<b style="color:${ELEM_COLOR[s.useGod]}">${elName(s.useGod)}</b>` : "—";
+  const roleC = lang === "zh" ? ["本", "中", "余"] : ["main", "mid", "res"];
+  const posName = { year: T.year, month: T.month, day: T.day, hour: T.hour };
+  const byBranch = {};
+  s.detail.filter(d => d.kind === "branch").forEach(d => { (byBranch[d.pos] = byBranch[d.pos] || { br: d.branch, items: [] }).items.push(d); });
+  const hidRows = Object.keys(byBranch).map(pos => {
+    const g = byBranch[pos];
+    const items = g.items.map(d => `<span style="color:${STEM_COLOR[d.stem]}">${d.stem}</span><span style="opacity:.55">${roleC[d.role] || ""} ${d.pts}</span>`).join("　");
+    return `<div class="hid-row"><span class="hid-pos">${posName[pos]} ${g.br}${pos === "month" ? (lang === "zh" ? " · 月令×2" : " · cmd×2") : ""}</span><span>${items}</span></div>`;
+  }).join("");
+  const note = s.level === "strong" ? L.strongNote : s.level === "weak" ? L.weakNote : L.balNote;
+  const rows = [
+    [DW[lang].whatIs, `<b class="gold">${lang === "zh" ? "日主 " + r.dayMaster + ELEM_CHAR[s.dmElement] : "Day Master " + r.dayMaster}</b> · <b>${L[s.level]}</b>(${lang === "zh" ? "扶抑比" : "ratio"} ${(s.ratio * 100).toFixed(0)}%)。${note}`],
+    [L.support + " / " + L.drain, balance],
+    [L.score, bars],
+    [L.favor + " / " + L.avoid, `${L.favor}:${favTxt}　${L.avoid}:${avoTxt}<br>${L.use}:${useTxt}`],
+    [L.hidden, hidRows]
+  ];
+  return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "旺衰 · 喜用神" : "Strength & Useful Phase", lang === "zh" ? "扶抑加权打分 · 藏干分本中余" : "weighted scoring · hidden stems split", rows);
+}
+let westObserver = null;
+function setupWestBg() {
+  if (westObserver) { westObserver.disconnect(); westObserver = null; }
+  document.body.classList.remove("west");
+  const el = $("west-scene");
+  if (!el || !("IntersectionObserver" in window)) return;
+  westObserver = new IntersectionObserver(
+    es => es.forEach(e => document.body.classList.toggle("west", e.isIntersecting)),
+    { rootMargin: "-42% 0px -42% 0px" });
+  westObserver.observe(el);
+}
 function renderCard(r, inp) {
   const T = UI[lang];
   const yStem = r.year[0], yBranch = r.year[1];
-  const sign = r.sign, elem = GAN_WX[yStem];
+  const dStem = r.day[0], dBranch = r.day[1];
+  const sign = r.sign, yElem = GAN_WX[yStem], dElem = GAN_WX[dStem], elem = yElem;
   const title = lang === "zh"
-    ? `${MATERIAL.zh[yStem]} · ${ROLE.zh[sign]}`
-    : `The ${MATERIAL.en[yStem]} ${ROLE.en[sign]}`;
+    ? `${MATERIAL.zh[dStem]} · ${ROLE.zh[sign]}`
+    : `The ${MATERIAL.en[dStem]} ${ROLE.en[sign]}`;
   const genderTag = inp.notime ? "" : " · " + (gender === "m" ? T.maleChart : T.femaleChart);
   const pairLine = lang === "zh"
-    ? `${ELEM_TXT.zh[elem]}${ANIMAL_TXT.zh[yBranch]} × ${SIGN_TXT.zh[sign]}${genderTag}`
-    : `${ELEM_TXT.en[elem]} ${ANIMAL_TXT.en[yBranch]} × ${SIGN_TXT.en[sign]}${genderTag}`.toUpperCase();
-  const subLine = `${SIGN_GLYPH[sign]} · ${ANIMAL_TRAD[yBranch]}`;
+    ? `${ELEM_TXT.zh[yElem]}${ANIMAL_TXT.zh[yBranch]}年 · ${ELEM_TXT.zh[dElem]}${ANIMAL_TXT.zh[dBranch]}${genderTag}`
+    : `${ELEM_TXT.en[yElem]} ${ANIMAL_TXT.en[yBranch]} year · a ${ELEM_TXT.en[dElem]} ${ANIMAL_TXT.en[dBranch]}${genderTag}`.toUpperCase();
+  const subLine = lang === "zh"
+    ? `${SIGN_GLYPH[sign]} · 日主 ${dStem}(${ELEM_TXT.zh[dElem]})`
+    : `${SIGN_GLYPH[sign]} · Day Master ${MATERIAL.en[dStem]} (${ELEM_TXT.en[dElem]})`;
+  const dmVoice = lang === "zh"
+    ? `<b class="gold">日主 ${dStem}${ELEM_TXT.zh[dElem]}</b>——${DM_LINE.zh[dStem]}<br><span class="voice-yr">生于${ELEM_TXT.zh[yElem]}${ANIMAL_TXT.zh[yBranch]}年:${EAST_LINE.zh[yBranch]}</span>`
+    : `<b class="gold">Day Master — ${MATERIAL.en[dStem]} (${ELEM_TXT.en[dElem]})</b>. ${DM_LINE.en[dStem]}<br><span class="voice-yr">Born in the ${ELEM_TXT.en[yElem]} ${ANIMAL_TXT.en[yBranch]} year: ${EAST_LINE.en[yBranch]}</span>`;
   const ac = pickAgreeClash(yBranch, sign);
+  const stg = computeStrength(r);
+  const stgSum = lang === "zh"
+    ? `日主 ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${STG.zh[stg.level]}</b>${stg.favor.length ? ` · 喜用 <b>${stg.favor.map(e => ELEM_CHAR[e]).join("")}</b>` : ""}${stg.avoid.length ? ` · 忌 ${stg.avoid.map(e => ELEM_CHAR[e]).join("")}` : ""} <span class="stg-tap">点开详解 ›</span>`
+    : `Day Master ${r.dayMaster} · <b class="gold">${STG.en[stg.level]}</b>${stg.favor.length ? ` · favor <b>${stg.favor.map(e => ELEM_TXT.en[e]).join(", ")}</b>` : ""} <span class="stg-tap">details ›</span>`;
 
   const tgTxt = (stem) => TEN_GOD_NAME[lang][tenGod(r.dayMaster, stem)];
   const glossTxt = (gz) => lang === "zh"
@@ -666,14 +1180,15 @@ function renderCard(r, inp) {
     : `${ELEM_TXT.en[GAN_WX[gz[0]]]} ${ANIMAL_TXT.en[gz[1]]}`;
   const tile = (labelKey, gz, isDm) => `
     <div class="pillar ${isDm ? "dm" : ""}">
-      <div class="p-label">${T[labelKey]}</div>
-      <div class="tgline ${isDm ? "dmx" : ""}">${isDm ? T.dm : tgTxt(gz[0])}</div>
-      <div class="gz serif">${colored(gz)}</div>
+      <div class="p-label clk" role="button" tabindex="0" data-t="pillar" data-p="${labelKey}">${T[labelKey]}</div>
+      <div class="tgline ${isDm ? "dmx" : ""}">${isDm ? T.dm : `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${gz[0]}">${tgTxt(gz[0])}</span>`}</div>
+      <div class="gz serif">${colored(gz, labelKey)}</div>
       <div class="gloss">${glossTxt(gz)}</div>
+      <div class="ny">${nyLabel(gz)}</div>
       ${cgChips(gz[1])}
     </div>`;
   const hourTile = r.hour ? tile("hour", r.hour, false)
-    : `<div class="pillar ghost"><div class="p-label">${T.hour}</div><div class="tgline"></div>
+    : `<div class="pillar ghost"><div class="p-label clk" role="button" tabindex="0" data-t="pillar" data-p="hour">${T.hour}</div><div class="tgline"></div>
        <div class="gz serif" style="color:var(--muted)">？</div><div class="gloss">${T.needsTime}</div><div class="cg"></div></div>`;
 
   const maxC = Math.max(...Object.values(r.count));
@@ -696,6 +1211,25 @@ function renderCard(r, inp) {
        <div class="drow"><span class="d-label">${T.dLabelSoon}</span><p>${T.soon}</p></div></div>`
     : `<div class="deeper"><div class="locked">${T.locked}</div></div>`;
 
+  const utcMs = Date.UTC(inp.y, inp.m - 1, inp.d, inp.notime ? 12 : inp.hh, inp.notime ? 0 : inp.mi) - inp.tz * 60000;
+  const wheel = computeWheel(utcMs, inp.lat, inp.lon, !inp.notime);
+  lastWheel = wheel; lastWest = wheel ? wheel.planets : [];
+  const W = WUI[lang], WX = WEXTRA[lang];
+  const sgOf = (L) => `${SIGN_GLYPH[SIGNS[Math.floor(L / 30)]]} ${SIGN_TXT[lang][SIGNS[Math.floor(L / 30)]]} ${Math.floor(L % 30)}\u00b0`;
+  const legend = wheel ? wheel.planets.map(pl => `<div class="wp clk" role="button" tabindex="0" data-t="planet" data-c="${pl.body}"><span class="wp-gl">${PLANET_GLYPH[pl.body]}</span><span class="wp-nm">${PLANET_NAME[lang][pl.body]}</span><span class="wp-sg">${SIGN_GLYPH[pl.sign]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}</span></div>`).join("") : "";
+  const angles = wheel && wheel.haveAngles ? `<div class="wp clk" role="button" tabindex="0" data-t="asc"><span class="wp-gl">AC</span><span class="wp-nm">${WX.asc}</span><span class="wp-sg">${sgOf(wheel.asc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="mc"><span class="wp-gl">MC</span><span class="wp-nm">${WX.mc}</span><span class="wp-sg">${sgOf(wheel.mc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="fortune"><span class="wp-gl">${FORTUNE_GLYPH}</span><span class="wp-nm">${WX.fortune}</span><span class="wp-sg">${sgOf(wheel.fortune)}</span></div>` : "";
+  const sunS = wheel.planets[0].sign, moonS = wheel.planets[1].sign, ascS = wheel.haveAngles ? SIGNS[Math.floor(wheel.asc / 30)] : null;
+  const wsum = lang === "zh"
+    ? `<div class="wsum"><b>速读</b>:太阳在${SIGN_TXT.zh[sunS]} = 你的内核;月亮在${SIGN_TXT.zh[moonS]} = 你的情绪底色;${ascS ? `上升在${SIGN_TXT.zh[ascS]} = 别人第一眼看到的你` : `上升(第一印象)需出生时间+地点`}。<span class="wsum-tip">点任意行星 / 相位,看它对你意味着什么。</span></div>`
+    : `<div class="wsum"><b>Quick read</b>: Sun in ${SIGN_TXT.en[sunS]} = your core; Moon in ${SIGN_TXT.en[moonS]} = your emotional baseline; ${ascS ? `Rising in ${SIGN_TXT.en[ascS]} = the you others meet first` : `Rising (first impression) needs birth time + place`}. <span class="wsum-tip">Tap any planet or aspect to see what it means for you.</span></div>`;
+  const western = wheel ? `<div class="deeper" id="west-scene"><div class="d-head"><span class="label gold">${W.chart}</span><span class="unlock">${W.sub}</span></div>
+    ${wsum}
+    <div class="wheel-wrap">${buildWheel(wheel)}</div>
+    ${wheel.haveAngles ? "" : `<div class="wnote">${WX.needLoc}</div>`}
+    <div class="wgrid">${legend}${angles}</div>
+    <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span></div>
+    <div class="wnote">${W.note}${inp.notime ? " " + W.approx : ""}</div></div>` : "";
+
   const born = lang === "zh"
     ? `${T.born} ${inp.y} 年 ${inp.m} 月 ${inp.d} 日${inp.notime ? "" : ` ${String(inp.hh).padStart(2,"0")}:${String(inp.mi).padStart(2,"0")}`} · UTC${inp.tz >= 0 ? "+" : ""}${inp.tz / 60}`
     : `${T.born} ${inp.y}-${String(inp.m).padStart(2,"0")}-${String(inp.d).padStart(2,"0")}${inp.notime ? "" : " · " + String(inp.hh).padStart(2,"0") + ":" + String(inp.mi).padStart(2,"0")} · UTC${inp.tz >= 0 ? "+" : ""}${inp.tz / 60}`;
@@ -710,11 +1244,11 @@ function renderCard(r, inp) {
     : "";
   const hq = lang === "en" ? `<div class="hquote">"Observe the heavens; read the seasons." — I Ching</div>` : "";
   $("screen-card").innerHTML = `
-    <div class="watermark serif">${ANIMAL_TRAD[yBranch]}</div>
-    <div class="seal serif">命</div>
+    <div class="watermark serif">${ANIMAL_TRAD[dBranch]}</div>
     ${dipper}${quote}
-    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.7.1" : "Prototype v0.7.1"}</span></div>
+    <div class="topbar"><span class="label">${lang === "zh" ? "八字 × 星座" : "Bazi × Zodiac"}</span><span class="label gold">${lang === "zh" ? "原型 v0.8" : "Prototype v0.8"}</span></div>
     <div class="hero">
+      ${inp.name ? `<div class="cardname serif">${esc(inp.name)}</div>` : ""}
       <div class="label">${pairLine}</div>
       <h1 class="serif">${title}</h1>
       <div class="pair">${subLine}</div>
@@ -729,16 +1263,310 @@ function renderCard(r, inp) {
     <div class="pillars-note">${T.hiddenNote}</div>
     <div class="elements">${pills}</div>
     <div class="elements-note">${elemNoteTxt}</div>
+    <div class="stg-sum clk" role="button" tabindex="0" data-t="strength">${stgSum}</div>
+    <div class="detail-bar">
+      <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
+      <span class="dbtn clk" role="button" tabindex="0" data-t="relations">${T.btnRel}</span>
+      <span class="dbtn clk" role="button" tabindex="0" data-t="strength">${T.btnStg}</span>
+      <span class="dbtn clk" role="button" tabindex="0" data-t="shensha">${T.btnShen}</span>
+      <span class="dbtn clk" role="button" tabindex="0" data-t="luck">${T.btnLuck}</span>
+    </div>
     <div class="voice" style="border-top:1px solid var(--hairline);padding-top:14px">
-      <span class="label">${T.east}</span><p>${EAST_LINE[lang][yBranch]}</p></div>
+      <span class="label">${lang === "zh" ? "日主 · 本命" : "Day Master · your core"}</span><p>${dmVoice}</p></div>
     <div class="voice"><span class="label">${T.west}</span><p>${WEST_LINE[lang][sign]}</p></div>
     <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
     <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
     ${deeper}
+    ${western}
     <div class="footer">
-      <div class="meta">${born}<br>${T.disclaimer}</div>
+      <div class="meta">${born}${inp.city ? " · " + esc(inp.city) : ""}${inp.cityNote ? `<br><span class="cityblurb">${esc(inp.cityNote)}</span>` : ""}<br>${T.disclaimer}</div>
     </div>`;
+  setupWestBg();
 }
+
+function posLabel(pk, kind) {
+  const k = lang === "zh" ? (kind === "stem" ? "天干" : "地支") : (kind === "stem" ? "stem" : "branch");
+  return lang === "zh" ? `${DWPOS.zh[pk]}柱·${k}` : `${DWPOS.en[pk]} ${k}`;
+}
+function drawerShell(glyph, color, title, sub, rows) {
+  const body = rows.map(([lbl, txt]) => `<div class="drow"><span class="d-label">${lbl}</span><p>${txt}</p></div>`).join("");
+  return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:${color};text-shadow:0 0 18px ${color}88">${glyph}</span>
+      <div><div class="dw-title serif">${title}</div><div class="dw-sub">${sub}</div></div></div>
+    <div style="margin-top:8px">${body}</div>`;
+}
+function tgRel(dm, stem) {
+  const tg = tenGod(dm, stem);
+  return lang === "zh" ? `${TEN_GOD_FULL.zh[tg]}——${TEN_GOD_GLOSS.zh[tg]}` : `${TEN_GOD_FULL.en[tg]}: ${TEN_GOD_GLOSS.en[tg]}`;
+}
+function stemDrawer(stem, type, pk, host, r) {
+  const c = STEM_COLOR[stem];
+  const yy = GAN.indexOf(stem) % 2 === 0 ? (lang === "zh" ? "阳" : "Yang") : (lang === "zh" ? "阴" : "Yin");
+  const rows = [[DW[lang].whatIs, DM_LINE[lang][stem]]];
+  if (type === "hidden") {
+    const pos = lang === "zh" ? `藏于 ${host} 支` : `hidden in the ${host} branch`;
+    rows.push([DW[lang].inChart, `<b class="gold">${pos}</b> · ${tgRel(r.dayMaster, stem)}`]);
+  } else if (pk === "day") {
+    rows.push([DW[lang].inChart, `<b class="gold">${posLabel(pk, "stem")}</b> · ${DW[lang].dayMaster}`]);
+  } else {
+    rows.push([DW[lang].inChart, `<b class="gold">${posLabel(pk, "stem")}</b> · ${tgRel(r.dayMaster, stem)}`]);
+  }
+  return drawerShell(stem, c, `${stem} · ${MATERIAL[lang][stem]}`, `${yy} ${ELEM_TXT[lang][GAN_WX[stem]]}`, rows);
+}
+function branchDrawer(branch, pk, r) {
+  const hid = CANGGAN[branch].map(hs => {
+    const tg = tenGod(r.dayMaster, hs);
+    return `<span style="color:${STEM_COLOR[hs]}">${hs}</span> <span style="opacity:.65">(${ELEM_TXT[lang][GAN_WX[hs]]} · ${TEN_GOD_NAME[lang][tg]})</span>`;
+  }).join(lang === "zh" ? "　" : " · ");
+  return drawerShell(branch, STEM_COLOR[ZHI_MAIN[branch]], `${branch} · ${ANIMAL_TXT[lang][branch]}`, ELEM_TXT[lang][GAN_WX[ZHI_MAIN[branch]]],
+    [[DW[lang].whatIs, BRANCH_LINE[lang][branch]], [DW[lang].inChart, `<b class="gold">${posLabel(pk, "branch")}</b>`], [DW[lang].hidden, hid]]);
+}
+function westDrawer(id) {
+  const WX = WEXTRA[lang], sg = L => SIGNS[Math.floor(L / 30)];
+  if (id === "fortune" && lastWheel && lastWheel.fortune != null) {
+    const L = lastWheel.fortune;
+    return drawerShell(FORTUNE_GLYPH, "#D9B96C", `${WX.fortune} ${WUI[lang].inSign} ${SIGN_TXT[lang][sg(L)]}`, `${SIGN_GLYPH[sg(L)]} ${Math.floor(L % 30)}\u00b0`, [[DW[lang].whatIs, WX.fortuneLine]]);
+  }
+  if ((id === "asc" || id === "mc") && lastWheel && lastWheel[id] != null) {
+    const L = lastWheel[id];
+    return drawerShell(id === "asc" ? "AC" : "MC", "#D9B96C", `${id === "asc" ? WX.asc : WX.mc} ${WUI[lang].inSign} ${SIGN_TXT[lang][sg(L)]}`, `${SIGN_GLYPH[sg(L)]} ${Math.floor(L % 30)}\u00b0`, [[DW[lang].whatIs, id === "asc" ? WX.ascLine : WX.mcLine]]);
+  }
+  const pl = lastWest.find(p => p.body === id); if (!pl) return "";
+  const dom = PLANET_DOM[lang][id];
+  const reading = lang === "zh"
+    ? `这颗星管你的<b class="gold">${dom}</b>——${PLANET_ARCH.zh[id]}。它落在${SIGN_TXT.zh[pl.sign]},表现得<b>${SIGN_MANNER.zh[pl.sign]}</b>。${pl.retro ? "逆行:这股劲更向内,常要反复回看才通。" : ""}`
+    : `This planet runs your <b class="gold">${dom}</b> — ${PLANET_ARCH.en[id]}. In ${SIGN_TXT.en[pl.sign]} it comes through <b>${SIGN_MANNER.en[pl.sign]}</b>.${pl.retro ? " Retrograde: the energy turns inward and asks to be revisited." : ""}`;
+  const rows = [[DW[lang].whatIs, reading]];
+  if (pl.house) rows.push([lang === "zh" ? "落宫" : "House", lang === "zh" ? `第 ${pl.house} 宫 · ${HOUSE_NAME.zh[pl.house]}——最受它影响的人生领域。` : `House ${pl.house} · ${HOUSE_NAME.en[pl.house]} — the life area it shapes most.`]);
+  return drawerShell(PLANET_GLYPH[id], "#D9B96C", `${PLANET_GLYPH[id]} ${PLANET_NAME[lang][id]} ${WUI[lang].inSign} ${SIGN_TXT[lang][pl.sign]}`,
+    `${SIGN_GLYPH[pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " · " + WUI[lang].retro : ""}`, rows);
+}
+function pillarDrawer(pk) {
+  const m = PILLAR_MEAN[lang][pk], T = UI[lang], r = lastChart.r, gz = r[pk];
+  return drawerShell(gz || "?", "#D9B96C", `${T[pk]}${gz ? " · " + gz : ""}`, lang === "zh" ? "这根柱子代表什么" : "what this pillar means",
+    [[lang === "zh" ? "代表" : "Represents", m.who],
+     [lang === "zh" ? "主管阶段" : "Life stage", m.stage],
+     [lang === "zh" ? "主管领域" : "Governs", m.gov],
+     [DW[lang].whatIs, m.line]]);
+}
+const LK = {
+  en:{title:"Luck Cycles",sub:"大运 · ten-year fortune",fwd:"forward",bwd:"reverse",begins:"begins at age",note:"Each pillar rules ~10 years — read its stem as a Ten God against your Day Master. Start age is approximate (3 days to the next solar term ≈ 1 year).",oor:"Out of computable range."},
+  zh:{title:"大运",sub:"十年一运",fwd:"顺行",bwd:"逆行",begins:"起运",note:"每柱主约十年——以大运天干对日主取十神来读。起运岁数为约数(数至节气,三日折一年)。",oor:"超出可算范围。"} };
+function tenGodDrawer(stem, r) {
+  const tg = tenGod(r.dayMaster, stem), c = STEM_COLOR[stem];
+  const sub = lang === "zh" ? `${stem} 对 日主 ${r.dayMaster}` : `${stem} to Day Master ${r.dayMaster}`;
+  return drawerShell(stem, c, TEN_GOD_FULL[lang][tg], sub,
+    [[DW[lang].whatIs, TEN_GOD_GLOSS[lang][tg]],
+     [lang === "zh" ? "取象" : "Ten God", `<b class="gold">${TEN_GOD_FULL[lang][tg]}</b> · ${ELEM_TXT[lang][GAN_WX[stem]]}`]]);
+}
+function tenGodsDrawer(r) {
+  const T = UI[lang];
+  const srcs = [[r.year[0], T.year], [r.month[0], T.month]];
+  if (r.hour) srcs.push([r.hour[0], T.hour]);
+  const brs = [[r.year[1], T.year], [r.month[1], T.month], [r.day[1], T.day]];
+  if (r.hour) brs.push([r.hour[1], T.hour]);
+  brs.forEach(([b, w]) => CANGGAN[b].forEach(hs => srcs.push([hs, w + (lang === "zh" ? "藏" : "-h")])));
+  const map = {};
+  srcs.forEach(([ch, w]) => { if (ch === r.dayMaster) return; const tg = tenGod(r.dayMaster, ch); (map[tg] = map[tg] || []).push(`${ch}${w}`); });
+  const rows = [[DW[lang].whatIs, lang === "zh" ? `日主 <b class="gold">${r.dayMaster}</b>——${DM_LINE[lang][r.dayMaster]}` : `Day Master <b class="gold">${r.dayMaster}</b>. ${DM_LINE[lang][r.dayMaster]}`]];
+  Object.keys(map).forEach(tg => rows.push([TEN_GOD_FULL[lang][tg], `${TEN_GOD_GLOSS[lang][tg]} <span style="opacity:.5">(${map[tg].join(" · ")})</span>`]));
+  return drawerShell(r.dayMaster, STEM_COLOR[r.dayMaster], lang === "zh" ? "十神" : "Ten Gods", lang === "zh" ? `日主 ${r.dayMaster} · 全盘取象` : `Day Master ${r.dayMaster}`, rows);
+}
+function luckDrawer(r) {
+  const inp = lastChart.inp;
+  const lk = computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
+  if (!lk || lk.error) return drawerShell("運", "#D9B96C", LK[lang].title, LK[lang].sub, [[DW[lang].whatIs, LK[lang].oor]]);
+  lastLuck = lk;
+  const dir = lk.forward ? LK[lang].fwd : LK[lang].bwd;
+  const startTxt = lang === "zh"
+    ? `${dir} · ${LK[lang].begins} ${lk.startAge} 岁 ${lk.startMonths} 个月 ${lk.startDays} 天`
+    : `${dir} · ${LK[lang].begins} ${lk.startAge}y ${lk.startMonths}m ${lk.startDays}d`;
+  const sg = computeStrength(r);
+  const cols = lk.list.map((x, i) => {
+    const st = x.ganzhi[0], br = x.ganzhi[1], tg = tenGod(r.dayMaster, st), ny = nayin(x.ganzhi);
+    const fo = luckFortune(x.ganzhi, sg.favor, sg.avoid);
+    return `<div class="lkc clk" role="button" tabindex="0" data-t="luckstep" data-i="${i}"><div class="lk-age">${x.startAge}${lang === "zh" ? "岁" : ""}</div>` +
+      `<div class="lk-gz serif"><span style="color:${STEM_COLOR[st]}">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]}">${br}</span></div>` +
+      `<div class="lk-tg">${TEN_GOD_NAME[lang][tg]}</div><div class="lk-ny">${lang === "zh" ? ny.name : ELEM_TXT.en[ny.elem]}</div><div class="lk-yr">${x.startYear}</div><span class="fo-dot ${fo}"></span></div>`;
+  }).join("");
+  return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:#D9B96C;text-shadow:0 0 18px #D9B96C88">運</span>
+      <div><div class="dw-title serif">${LK[lang].title}</div><div class="dw-sub">${LK[lang].sub}</div></div></div>
+    <div class="lk-meta">${startTxt}</div>
+    <div class="lk-strip">${cols}</div>
+    <div class="lk-legend">${lang === "zh" ? "吉凶(依喜用):" : "fortune (by useful phase):"} <span class="fo-dot good"></span>${lang === "zh" ? "吉" : "good"} <span class="fo-dot neutral"></span>${lang === "zh" ? "平" : "mixed"} <span class="fo-dot bad"></span>${lang === "zh" ? "忌" : "adverse"}</div>
+    <div class="wnote">${lang === "zh" ? "点任意大运看该十年详解。" : "Tap any pillar for the decade reading."} ${LK[lang].note}</div>`;
+}
+const SIGN_ELEM = { Aries:"fire",Leo:"fire",Sagittarius:"fire",Taurus:"earth",Virgo:"earth",Capricorn:"earth",Gemini:"air",Libra:"air",Aquarius:"air",Cancer:"water",Scorpio:"water",Pisces:"water" };
+const SIGN_MODE = { Aries:"cardinal",Cancer:"cardinal",Libra:"cardinal",Capricorn:"cardinal",Taurus:"fixed",Leo:"fixed",Scorpio:"fixed",Aquarius:"fixed",Gemini:"mutable",Virgo:"mutable",Sagittarius:"mutable",Pisces:"mutable" };
+const WEL_TXT = { zh:{ fire:"火", earth:"土", air:"风", water:"水" }, en:{ fire:"Fire", earth:"Earth", air:"Air", water:"Water" } };
+const WEL_COLOR = { fire:"#F2895F", earth:"#CDA268", air:"#B7C3E0", water:"#7DAEDD" };
+const MODE_TXT = { zh:{ cardinal:"开创", fixed:"固定", mutable:"变动" }, en:{ cardinal:"Cardinal", fixed:"Fixed", mutable:"Mutable" } };
+const ELEM4_NOTE = { zh:{ fire:"热情、行动,点火就着。", earth:"务实、稳靠,看得见摸得着。", air:"思辨、社交,活在概念里。", water:"情感、直觉,感受先行。" },
+  en:{ fire:"passion and action — quick to ignite.", earth:"grounded and reliable — show me the real thing.", air:"ideas and connection — lives in concepts.", water:"feeling and intuition — senses first." } };
+const MODE_NOTE = { zh:{ cardinal:"擅发起、开局。", fixed:"能坚持、守成。", mutable:"善适应、转弯。" }, en:{ cardinal:"you start things.", fixed:"you sustain things.", mutable:"you adapt to things." } };
+const MOON_PHASE = [
+  { zh:["新月","从零开始——本能、播种、全新周期。"], en:["New Moon","beginnings — instinct, sowing, a fresh cycle."] },
+  { zh:["娥眉月","萌芽——带着冲劲往外闯。"], en:["Waxing Crescent","sprouting — pushing outward with drive."] },
+  { zh:["上弦月","行动——闯关,危机即转机。"], en:["First Quarter","action — crisis becomes momentum."] },
+  { zh:["盈凸月","打磨——调整,临门一脚。"], en:["Waxing Gibbous","refining — adjust, almost there."] },
+  { zh:["满月","圆满——对立、关系、豁然照见。"], en:["Full Moon","fullness — opposition, relationship, clear sight."] },
+  { zh:["亏凸月","分享——传播、给予、教学。"], en:["Disseminating","sharing — spreading, giving back."] },
+  { zh:["下弦月","重整——放手、反思、结算。"], en:["Last Quarter","re-orienting — release and reflect."] },
+  { zh:["残月","收束——休整,酝酿下一轮。"], en:["Balsamic","closing — rest, and seed the next round."] } ];
+function westBalance(planets) {
+  const el = { fire:0, earth:0, air:0, water:0 }, mo = { cardinal:0, fixed:0, mutable:0 };
+  planets.forEach(p => { el[SIGN_ELEM[p.sign]]++; mo[SIGN_MODE[p.sign]]++; });
+  return { el, mo, domElem: Object.keys(el).sort((a, b) => el[b] - el[a])[0], domMode: Object.keys(mo).sort((a, b) => mo[b] - mo[a])[0] };
+}
+function westBalanceDrawer() {
+  const w = lastWheel; if (!w) return "";
+  const b = westBalance(w.planets), tot = w.planets.length;
+  const elBars = ["fire", "earth", "air", "water"].map(e =>
+    `<div class="sbar-row"><span class="sbar-nm" style="color:${WEL_COLOR[e]}">${WEL_TXT[lang][e]}</span><span class="sbar-track"><span class="sbar-fill" style="width:${(b.el[e] / tot * 100).toFixed(0)}%;background:${WEL_COLOR[e]}"></span></span><span class="sbar-val">${b.el[e]}</span></div>`).join("");
+  const modeTxt = ["cardinal", "fixed", "mutable"].map(m => `${MODE_TXT[lang][m]} ${b.mo[m]}`).join(" · ");
+  const ph = MOON_PHASE[Math.floor(w.moonPhase / 45) % 8][lang];
+  const read = lang === "zh"
+    ? `你以 <b class="gold">${WEL_TXT.zh[b.domElem]}象</b>为主——${ELEM4_NOTE.zh[b.domElem]}行事偏 <b>${MODE_TXT.zh[b.domMode]}</b>:${MODE_NOTE.zh[b.domMode]}`
+    : `You lean <b class="gold">${WEL_TXT.en[b.domElem]}</b> — ${ELEM4_NOTE.en[b.domElem]} Your mode is <b>${MODE_TXT.en[b.domMode]}</b>: ${MODE_NOTE.en[b.domMode]}`;
+  return drawerShell(lang === "zh" ? "象" : "✦", "#D9B96C", lang === "zh" ? "元素气质 · 月相" : "Temperament · Moon", lang === "zh" ? "四象 · 三模式 · 月相" : "elements · modalities · lunar phase",
+    [[DW[lang].whatIs, read],
+     [lang === "zh" ? "四象分布" : "Elements", elBars],
+     [lang === "zh" ? "三模式" : "Modalities", modeTxt],
+     [lang === "zh" ? "出生月相" : "Moon phase", `<b class="gold">${ph[0]}</b> — ${ph[1]}`]]);
+}
+function aspectDrawer() {
+  const WX = WEXTRA[lang], w = lastWheel;
+  if (!w || !w.aspects || !w.aspects.length) return drawerShell("\u25b3", "#D9B96C", WX.aspects, "", [[DW[lang].whatIs, lang === "zh" ? "未见明显相位。" : "No major aspects."]]);
+  const rows = w.aspects.map(x => {
+    const c = ASPECT_META[x.type][0], domA = PLANET_DOM[lang][x.a], domB = PLANET_DOM[lang][x.b];
+    const flavor = ASPECT_READ[x.type][lang].replace("{A}", domA).replace("{B}", domB);
+    const head = `<span style="color:${c}">${PLANET_GLYPH[x.a]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.b]}</span> ${PLANET_NAME[lang][x.a]}<span style="opacity:.55">(${domA})</span> \u2014 ${PLANET_NAME[lang][x.b]}<span style="opacity:.55">(${domB})</span>`;
+    return [head, `<span style="color:${c}">${ASPECT_META[x.type][1][lang]}</span><br>${flavor}`];
+  });
+  return drawerShell("\u25b3", "#D9B96C", WX.aspects, lang === "zh" ? "你身上两股能量如何互动" : "how your energies interact", rows);
+}
+const NAYIN_EN = ["Sea Gold","Furnace Fire","Forest Wood","Roadside Earth","Sword Metal","Peak Fire","Gully Water","Rampart Earth","Wax Metal","Willow Wood","Spring Water","Rooftop Earth","Thunder Fire","Pine Wood","Flowing Water","Sand Gold","Foothill Fire","Plain Wood","Wall Earth","Gold Foil","Lamp Fire","Sky-river Water","Post-road Earth","Ornament Metal","Mulberry Wood","Stream Water","Sandy Earth","Heaven Fire","Pomegranate Wood","Ocean Water"];
+function nyLabel(gz) { const n = nayin(gz); return lang === "zh" ? n.name : NAYIN_EN[Math.floor(n.idx / 2)]; }
+function natalPillars(r) {
+  const P = [{ k:"year", stem:r.year[0], branch:r.year[1] }, { k:"month", stem:r.month[0], branch:r.month[1] }, { k:"day", stem:r.day[0], branch:r.day[1] }];
+  if (r.hour) P.push({ k:"hour", stem:r.hour[0], branch:r.hour[1] });
+  return P;
+}
+const POSN = k => ({ zh:{ year:"年", month:"月", day:"日", hour:"时", luck:"大运" }, en:{ year:"Yr", month:"Mo", day:"Dy", hour:"Hr", luck:"Luck" } })[lang][k] || k;
+const REL = {
+  he:{ zh:["天干五合","两干相合,情意相牵——合化则从其气。"], en:["Stem union","two stems bond — if transformed, they follow the fused element."] },
+  chong:{ zh:["相冲","正面对冲——主动荡、迁移、决裂或突破。"], en:["Clash","head-on — upheaval, moves, breaks or breakthroughs."] },
+  liuhe:{ zh:["六合","地支相合——亲近、结缘、稳住。"], en:["Six-union","branches bond — closeness, ties, stability."] },
+  hai:{ zh:["六害","暗里相损——猜忌、拖累、暗耗。"], en:["Harm","quiet damage — suspicion, drag, hidden loss."] },
+  xing:{ zh:["相刑","刑伤磨折——是非反复,须自律。"], en:["Punishment","friction — disputes, setbacks; discipline helps."] },
+  selfxing:{ zh:["自刑","自我纠缠——内耗、钻牛角尖。"], en:["Self-punishment","turned inward — self-conflict, overthinking."] },
+  sanhe:{ zh:["三合局","三支合成一气,力量汇聚。"], en:["Triple harmony","three branches fuse into one force."] },
+  banhe:{ zh:["半合","半会成局,该气渐旺。"], en:["Half harmony","a partial fusion; the element gathers."] },
+  sanhui:{ zh:["三会方","同方会气,该行极旺。"], en:["Directional union","same-season branches; the element peaks."] }
+};
+function relColored(chars, scope) {
+  return chars.split("").map(ch => { const c = scope === "stem" ? STEM_COLOR[ch] : STEM_COLOR[ZHI_MAIN[ch]]; return `<span style="color:${c}">${ch}</span>`; }).join("");
+}
+function relRow(x) {
+  const [name, mean] = REL[x.type][lang];
+  const elemTxt = x.elem ? ` <span class="gold">\u2192 ${ELEM_TXT[lang][x.elem]}</span>` : "";
+  const pos = x.members.map(POSN).join(lang === "zh" ? "·" : "–");
+  return [`${relColored(x.chars, x.scope)} <b>${name}</b>`, `<span style="opacity:.6">${pos}</span>${elemTxt}<br>${mean}`];
+}
+function relationDrawer(r) {
+  const rels = computeRelations(natalPillars(r));
+  const glyph = lang === "zh" ? "合" : "\u26b9";
+  if (!rels.length) return drawerShell(glyph, "#D9B96C", lang === "zh" ? "合冲刑害" : "Relations", lang === "zh" ? "四柱之间" : "between the pillars", [[DW[lang].whatIs, lang === "zh" ? "四柱之间无明显合冲刑害——各安其位。" : "No major interactions — the pillars sit independently."]]);
+  return drawerShell(glyph, "#D9B96C", lang === "zh" ? "合冲刑害会" : "Stem & Branch Relations", lang === "zh" ? `四柱之间 · ${rels.length} 组` : `between the pillars · ${rels.length}`, rels.map(relRow));
+}
+function luckStepDrawer(i) {
+  const r = lastChart.r, lk = lastLuck;
+  if (!lk || !lk.list[i]) return luckDrawer(r);
+  const x = lk.list[i], st = x.ganzhi[0], br = x.ganzhi[1];
+  const tg = tenGod(r.dayMaster, st), ny = nayin(x.ganzhi);
+  const hid = CANGGAN[br].map(hs => `<span style="color:${STEM_COLOR[hs]}">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(lang === "zh" ? "　" : " · ");
+  const rels = computeRelations([...natalPillars(r), { k:"luck", stem:st, branch:br }]).filter(z => z.members.includes("luck"));
+  const relTxt = rels.length
+    ? rels.map(z => `${relColored(z.chars, z.scope)} ${REL[z.type][lang][0]}<span style="opacity:.6">(${z.members.filter(m => m !== "luck").map(POSN).join("·") || "\u2014"})</span>${z.elem ? " \u2192 " + ELEM_TXT[lang][z.elem] : ""}`).join("<br>")
+    : (lang === "zh" ? "与原局无明显合冲刑害。" : "no major interaction with the natal chart.");
+  const ageR = lang === "zh" ? `${x.startAge}\u2013${x.startAge + 9} 岁 · ${x.startYear}\u2013${x.startYear + 9}` : `age ${x.startAge}\u2013${x.startAge + 9} · ${x.startYear}\u2013${x.startYear + 9}`;
+  const sg = computeStrength(r);
+  const foStep = luckFortune(x.ganzhi, sg.favor, sg.avoid);
+  const foTxt = { good: lang === "zh" ? "吉 · 扶喜用" : "favorable", bad: lang === "zh" ? "忌 · 伤喜用" : "adverse", neutral: lang === "zh" ? "平 · 参半" : "mixed" }[foStep];
+  const favStr = lang === "zh" ? sg.favor.map(e => ELEM_CHAR[e]).join("") : sg.favor.map(e => ELEM_TXT.en[e]).join(", ");
+  const fleetRows = computeFleetYears(x.startYear, 10).map(fy => {
+    const fg = luckFortune(fy.ganzhi, sg.favor, sg.avoid), tgy = tenGod(r.dayMaster, fy.ganzhi[0]);
+    return `<div class="fy-row"><span class="fy-yr">${fy.year}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[fy.ganzhi[0]]}">${fy.ganzhi[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[fy.ganzhi[1]]]}">${fy.ganzhi[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tgy]}</span><span class="fo-dot ${fg}"></span></div>`;
+  }).join("");
+  const lead = lang === "zh"
+    ? `这十年以 <b class="gold">${TEN_GOD_FULL.zh[tg]}</b> 当运——${TEN_GOD_GLOSS.zh[tg]}纳音「${ny.name}」,属${ELEM_TXT.zh[ny.elem]}。`
+    : `A decade under <b class="gold">${TEN_GOD_FULL.en[tg]}</b> — ${TEN_GOD_GLOSS.en[tg]} Sound-element ${NAYIN_EN[Math.floor(ny.idx / 2)]} (${ELEM_TXT.en[ny.elem]}).`;
+  const rows = [
+    [DW[lang].whatIs, lead],
+    [lang === "zh" ? "十神" : "Ten God", `<b class="gold">${TEN_GOD_FULL[lang][tg]}</b> · ${st} ${lang === "zh" ? "对日主" : "to"} ${r.dayMaster}`],
+    [lang === "zh" ? "藏干" : "Hidden", hid],
+    [lang === "zh" ? "纳音" : "Sound element", `${ny.name}${lang === "zh" ? "" : " · " + NAYIN_EN[Math.floor(ny.idx / 2)]} · ${ELEM_TXT[lang][ny.elem]}`],
+    [lang === "zh" ? "与原局" : "vs natal", relTxt],
+    [lang === "zh" ? "吉凶" : "Fortune", `<span class="fo-dot ${foStep}"></span> <b>${foTxt}</b> — ${lang === "zh" ? "喜用 " + favStr : "favor " + favStr}`],
+    [lang === "zh" ? "运程" : "Span", ageR],
+    [lang === "zh" ? "流年 · 十年" : "Yearly · this decade", fleetRows]
+  ];
+  const c = STEM_COLOR[st];
+  return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
+    <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:36px">${x.ganzhi}</span>
+      <div><div class="dw-title serif">${x.ganzhi} · ${ny.name}</div><div class="dw-sub">${ageR}</div></div></div>
+    <div style="margin-top:8px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
+}
+const SHEN = {
+  tianyi:{ zh:["天乙贵人","逢凶化吉、贵人相助的第一吉星。"], en:["Nobleman","the luckiest star — help arrives, danger softens."] },
+  wenchang:{ zh:["文昌","利读书、考试、文思与才名。"], en:["Academic Star","favors study, exams, wit and reputation."] },
+  lu:{ zh:["禄神","衣禄、财源与自立之力。"], en:["Prosperity","livelihood, income, self-reliance."] },
+  yangren:{ zh:["羊刃","刚烈锋芒——魄力极大,亦易招伤。"], en:["Blade","a fierce edge — great drive, but it cuts both ways."] },
+  taohua:{ zh:["桃花 · 咸池","魅力、人缘与情感,异性缘旺。"], en:["Peach Blossom","charm, magnetism, romance."] },
+  yima:{ zh:["驿马","奔波、迁移、出行与变动。"], en:["Traveling Horse","movement, relocation, travel, change."] },
+  huagai:{ zh:["华盖","孤高玄思——艺术、宗教与灵性之缘。"], en:["Canopy","solitary brilliance — art, mind, the mystical."] },
+  jiangxing:{ zh:["将星","领导、掌权、统御之力。"], en:["General Star","leadership and command."] },
+  jiesha:{ zh:["劫煞","争夺、破耗、突发之险,宜稳守。"], en:["Robbery Star","conflict, loss, sudden risk — hold steady."] },
+  kongwang:{ zh:["空亡","落空虚化——该柱之力打折,得而复失。"], en:["Void","emptiness — that pillar's force is discounted."] } };
+function shenshaDrawer(r) {
+  const list = computeShensha(r), T = UI[lang];
+  const posName = { year:T.year, month:T.month, day:T.day, hour:T.hour };
+  const glyph = lang === "zh" ? "煞" : "★";
+  if (!list.length) return drawerShell(glyph, "#D9B96C", lang === "zh" ? "神煞" : "Symbolic Stars", "", [[DW[lang].whatIs, lang === "zh" ? "未见常见神煞。" : "No common symbolic stars found."]]);
+  const rows = list.map(x => {
+    const [nm, line] = SHEN[x.key][lang];
+    const pos = x.positions.map(p => posName[p]).join(lang === "zh" ? "·" : "/");
+    return [`<b class="gold">${nm}</b>`, `<span style="opacity:.6">${lang === "zh" ? pos + "柱" : pos} · ${x.targets.join("")}</span><br>${line}`];
+  });
+  return drawerShell(glyph, "#D9B96C", lang === "zh" ? "神煞" : "Symbolic Stars", lang === "zh" ? `命带 ${list.length} 星` : `${list.length} stars`, rows);
+}
+const drawerBg = $("drawer-bg"), drawerEl = $("drawer");
+function openDrawer(html) { drawerEl.innerHTML = html; drawerBg.classList.add("open"); drawerEl.classList.add("open"); const cb = $("dw-close"); if (cb) cb.onclick = closeDrawer; }
+function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); }
+drawerBg.onclick = closeDrawer;
+function onPick(el) {
+  const r = lastChart && lastChart.r; if (!r) return;
+  const t = el.dataset.t;
+  if (t === "planet") openDrawer(westDrawer(el.dataset.c));
+  else if (t === "fortune" || t === "asc" || t === "mc") openDrawer(westDrawer(t));
+  else if (t === "branch") openDrawer(branchDrawer(el.dataset.c, el.dataset.p, r));
+  else if (t === "tengod") openDrawer(tenGodDrawer(el.dataset.c, r));
+  else if (t === "tengods") openDrawer(tenGodsDrawer(r));
+  else if (t === "relations") openDrawer(relationDrawer(r));
+  else if (t === "strength") openDrawer(strengthDrawer(r));
+  else if (t === "shensha") openDrawer(shenshaDrawer(r));
+  else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
+  else if (t === "luck") openDrawer(luckDrawer(r));
+  else if (t === "luckstep") openDrawer(luckStepDrawer(+el.dataset.i));
+  else if (t === "aspects") openDrawer(aspectDrawer());
+  else if (t === "wbalance") openDrawer(westBalanceDrawer());
+  else openDrawer(stemDrawer(el.dataset.c, el.dataset.t, el.dataset.p, el.dataset.host, r));
+}
+document.addEventListener("click", e => { const el = e.target.closest(".clk"); if (el) onPick(el); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer();
+  else if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("clk")) { e.preventDefault(); onPick(e.target); } });
 
 /* ============ 星野 ============ */
 (function makeSky() {

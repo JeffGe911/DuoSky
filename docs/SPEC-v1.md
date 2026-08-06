@@ -1,4 +1,4 @@
-# DuoSky 双天 — 完整构建规格书 & 主提示词
+# DuoSky 双星 — 完整构建规格书 & 主提示词
 
 > 版本 SPEC-1.0 · 2026-08-05 · 作者: Jeff Ge × Claude
 > 用途: 交给 Claude Code 从零重建 DuoSky。本文档 + 参考实现包 (DuoSky-repo.zip / github.com/JeffGe911/DuoSky) 共同构成完整输入。
@@ -9,7 +9,7 @@
 ## §0 · Claude Code 主启动提示词 (直接粘贴使用)
 
 ```
-你要构建 DuoSky(双天): 一个"八字 × 西方占星"双盘对照网站。核心理念:
+你要构建 DuoSky(双星): 一个"八字 × 西方占星"双盘对照网站。核心理念:
 一次出生信息输入, 同时排出完整八字命盘和完整西方星盘, 两边都做到专业级
 信息密度(可点击逐项解析), 然后在两盘之间做交叉对照——"两盘同断/两盘相争"。
 交叉的价值密度取决于两边各自的深度, 所以两边都不许浅。
@@ -38,7 +38,7 @@
 
 **一句话**: 你出生的那一刻, 用世界两大命理体系同时解读——并让它们对话。
 
-**名称**: DuoSky(双天) · Tagline: *Two skies. One you. / 两片星空, 一个你*
+**名称**: DuoSky(双星) · Tagline: *Two skies. One you. / 两片星空, 一个你*
 **品牌声线**: 非宿命, 是天气(For reflection & entertainment — not fate, just weather)。有学识但不装神弄鬼; 精确但不吓人; 幽默克制。
 **目标用户**(按优先级): ① 海外华人/华裔(有文化认同, 要现代可信的产品) ② 西方玄学爱好者(占星原生, 对东方体系好奇)。产品对两类人都成立的原因: 星座对两边都是通用语, 八字对一边是传承、对另一边是新大陆。
 **差异化**: 市面上有无数八字计算器和无数占星 app, 但没有一个把两套体系放在同一屏、以同等深度、做逐项交叉对照。交叉对照是唯一护城河, 深度是交叉的前提。
@@ -58,7 +58,7 @@
 | 框架 | **Astro + TypeScript** | 组件化、静态输出、天然多页(将来 144 个 SEO 落地页)、零运行时依赖膨胀 |
 | 交互 | 原生 TS islands, 不引 React | 交互面有限(表单/抽屉/切换), 保持轻 |
 | 星历 | **astronomy-engine**(npm, MIT) | 纯 JS 行星位置, ~100KB, 精度对"星座+宫位"绰绰有余; 不用 Swiss Ephemeris WASM(太重) |
-| 八字数据 | 预计算节气表(见 §4.1) | 参考实现已有 1930–2030; **重新生成为 1900–2050**(流年/流日要看未来) |
+| 八字数据 | 预计算节气表(见 §4.1) | 参考实现已有 1930–2030; **重新生成为 1900–2150**(大运/流年/流日要看未来) |
 | 部署 | GitHub Pages + Actions 自动构建 | 免费、够用; 域名后配 |
 | 隐私 | v1 纯前端零上传, 出生数据不离开设备 | 写进产品文案作为卖点; v2 档案功能再设计后端(§11) |
 | 统计 | 暂无; 预留 Plausible 挂点 | 用户选择"将来要存档", 统计到时一起上 |
@@ -74,7 +74,7 @@ duosky/
   src/engine/astro.ts # 行星/宫位/相位 (astronomy-engine 封装)
   src/engine/cross.ts # 交叉对照引擎 (§8)
   src/content/        # 内容原子 JSON (§7) + i18n 包
-  data/terms.json     # 节气表 1900-2050
+  data/terms.json     # 节气表 1900-2150
   data/cities.json    # 城市库 (名称/经纬度/时区)
   tools/              # gen_terms.py, 对拍测试
   tests/
@@ -100,7 +100,7 @@ duosky/
 
 ### 4.1 节气表
 - swisseph(Moshier)对太阳视黄经 15° 整倍数交角二分, 分钟精度, 存 UTC
-- 范围 **1900–2050**, 每年 24 项, 格式 `{year: [[deg, "MMDDHHMM"], ×24]}`
+- 范围 **1900–2150**, 每年 24 项(上界为大运/流年预留未来节气: 生于~2049 者大运可数到 2130+), 格式 `{year: [[deg, "MMDDHHMM"], ×24]}`
 - 十二**节**(315,345,15,…,285°)定八字月; **整 30° 倍数**(中气+分至)定星座边界——两套体系共用一张天文表(品牌叙事写进 About)
 
 ### 4.2 四柱
@@ -299,6 +299,6 @@ type CrossFinding = { rule: string; side: "agree"|"clash"|"echo";
 - 我会逐条改写打回, 保留修改痕迹重交
 ```
 ### 12.3 参考实现资产索引
-engine.js(四柱引擎, 已验证)· terms.json(节气表, 需扩至 1900–2050)· template.html 内: STEM_COLOR/TEN_GOD_*/EAST_LINE/WEST_LINE/DM_LINE/AGREE_LINE/CLASH_LINE/A_TAG/S_TAG(四轴标签)/i18n UI 包 · tools/gen_terms.py(表生成器)· tests/(对拍套件)
+engine.js(四柱引擎, 已验证)· terms.json(节气表, 已扩至 1900–2150)· template.html 内: STEM_COLOR/TEN_GOD_*/EAST_LINE/WEST_LINE/DM_LINE/AGREE_LINE/CLASH_LINE/A_TAG/S_TAG(四轴标签)/i18n UI 包 · tools/gen_terms.py(表生成器)· tests/(对拍套件)
 
 — 完 —

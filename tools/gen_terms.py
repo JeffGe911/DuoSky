@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""生成 1930-2030 每年 24 节气的 UTC 时刻(分钟精度), 太阳黄经 15° 整倍数交角二分法"""
+import os
+"""生成 1900-2150 每年 24 节气(上界给大运/流年留足未来)的 UTC 时刻(分钟精度), 太阳黄经 15° 整倍数交角二分法"""
 import swisseph as swe, json, datetime as dt
 
 def sunlon(jd):
@@ -13,7 +14,7 @@ def jd_to_dt(jd):
     return base
 
 result = {}
-for year in range(1930, 2031):
+for year in range(1900, 2151):
     jd0 = swe.julday(year, 1, 1, 0.0)
     jd1 = swe.julday(year + 1, 1, 1, 0.0)
     terms = []
@@ -48,19 +49,23 @@ for year in range(1930, 2031):
     assert len(terms) == 24, (year, len(terms))
     result[str(year)] = terms
 
-with open("/home/claude/terms.json", "w") as f:
+OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "terms.json")
+with open(OUT, "w") as f:
     json.dump(result, f, separators=(",", ":"))
 print("years:", len(result), "| size:", len(json.dumps(result, separators=(',', ':'))), "bytes")
 
-# 抽查验证: 与 sxtwl 的节气日期对拍 (sxtwl 按北京时间日界)
-import sxtwl
+# 抽查验证: 与 sxtwl 的节气日期对拍 (sxtwl 按北京时间日界) — 可选, 未装则跳过
+try:
+    import sxtwl
+except ImportError:
+    print("(sxtwl not installed — skipping cross-check)"); sxtwl = None
 jqmc = ["冬至","小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种",
         "夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪"]
 name_by_deg = {285:"小寒",300:"大寒",315:"立春",330:"雨水",345:"惊蛰",0:"春分",15:"清明",30:"谷雨",
                45:"立夏",60:"小满",75:"芒种",90:"夏至",105:"小暑",120:"大暑",135:"立秋",150:"处暑",
                165:"白露",180:"秋分",195:"寒露",210:"霜降",225:"立冬",240:"小雪",255:"大雪",270:"冬至"}
 bad = 0; checked = 0
-for year in (1943, 1969, 2000, 2017, 2026):
+for year in ([] if sxtwl is None else (1943, 1969, 2000, 2017, 2026)):
     # sxtwl 扫全年节气日
     sx = {}
     d = dt.date(year, 1, 1)

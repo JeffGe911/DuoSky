@@ -1102,15 +1102,17 @@ function computeYongshen(r, s) {
       else { use = "shi"; why = "cai_shi"; }
       break;
     case "zhengyin": case "pianyin":
-      if (!cheng) { use = "bi"; why = "yin_bi"; }
-      else if (strong) { use = "shi"; why = "yin_shi"; }
+      if (strong) { use = "cai"; why = "yin_strong"; }
+      else if (!cheng) { use = "bi"; why = "yin_bi"; }
       else { use = "guan"; why = "yin_guan"; }
       break;
     case "shishen":
-      use = "cai"; why = cheng ? "shi_cai" : "shi_zhi";
+      if (!cheng) { use = "cai"; why = "shi_zhi"; }
+      else if (weak) { use = "bi"; why = "shi_weak"; }
+      else { use = "cai"; why = "shi_cai"; }
       break;
     case "qisha":
-      use = "shi"; why = "sha_shi";
+      if (weak) { use = "yin"; why = "sha_yin"; } else { use = "shi"; why = "sha_shi"; }
       break;
     case "shangguan":
       if (weak) { use = "yin"; why = "shang_yin"; }
@@ -1174,6 +1176,7 @@ const DRY_EARTH = new Set(["未", "戌"]);   // 燥土(藏火木气,能暖上)
  */
 function luckAssess(r, ganzhi, s, cl) {
   cl = cl || computeClimate(r, s);
+  const ys = computeYongshen(r, s);
   const favor = s.favor, avoid = s.avoid;
   const st = ganzhi[0], br = ganzhi[1];
   let score = 0; const reasons = [];
@@ -1222,6 +1225,7 @@ function luckAssess(r, ganzhi, s, cl) {
     if (others.length === 2) { addEl(elem, 2); reasons.push({ t:"sanhe", chars: grp.join(""), elem }); }
     else if (others.length === 1 && (br === SANHE_WANG[elem] || others[0] === SANHE_WANG[elem])) { addEl(elem, 1); reasons.push({ t:"banhe", chars: br + others[0], elem }); }
   }
+  if (ys.element && (stemEl === ys.element || GAN_WX[ZHI_MAIN[br]] === ys.element)) { score += 1.2; reasons.push({ t:"yongshen", elem: ys.element }); }
   const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
   return { score: +score.toFixed(1), level, reasons };
 }
@@ -2141,6 +2145,7 @@ const YS_WHY = { zh:{
   yin_bi:"财来坏印,取比劫制财护印", yin_shi:"印旺身强,取食伤泄其秀气", yin_guan:"取官杀生印,官印相生",
   shi_cai:"食神生财,取财为用,福厚", shi_zhi:"枭来夺食,取财制枭护食",
   sha_shi:"七杀格首取食神制杀(最贵)", shang_yin:"伤官配印,取印制伤兼生身", shang_cai:"伤官生财,取财泄伤秀为富",
+  yin_strong:"印旺身强,取财损印为用", shi_weak:"食神泄身、身弱,取比劫帮身", sha_yin:"身弱杀重,取印化杀而生身",
   ren_guan:"阳刃逢官杀制刃,刃杀两停", lu_out:"禄旺无依,取官杀/财发泄", bi_guan:"比劫重,取官杀约束、食伤泄秀"
 }, en:{
   guan_yin:"Officer hurt — Resource curbs the Hurting Officer & guards the Officer", guan_weak:"weak self can't hold office — Resource to strengthen it", guan_cai:"strong self — Wealth to feed the Officer",
@@ -2148,6 +2153,7 @@ const YS_WHY = { zh:{
   yin_bi:"Wealth harms Resource — Peer to curb Wealth & protect it", yin_shi:"strong self, heavy Resource — Output to vent", yin_guan:"Officer to generate Resource",
   shi_cai:"Eating God feeds Wealth — Wealth is the aim", shi_zhi:"the owl devours it — Wealth restrains the owl",
   sha_shi:"Seven Killings — Eating God tames them (best)", shang_yin:"pair with Resource to restrain the talent & feed self", shang_cai:"channel the talent into Wealth",
+  yin_strong:"strong self, heavy Resource — Wealth trims it", shi_weak:"Output drains a weak self — Peer to bolster", sha_yin:"weak self, heavy Killings — Resource channels them & feeds you",
   ren_guan:"Officer/Killings to tame the Blade", lu_out:"strong rank — outlet via Officer/Wealth", bi_guan:"heavy peers — Officer to rein, Output to vent"
 } };
 const TG_POS = {
@@ -2275,7 +2281,7 @@ function synthReadings(r) {
   const s = computeStrength(r), g = tenGodTally(r), zh = lang === "zh";
   const roles = s.roles, avg = s.total / 5;
   const has = k => computeShensha(r).some(x => x.key === k);
-  const pt = computePattern(r), cl = computeClimate(r, s);
+  const pt = computePattern(r), cl = computeClimate(r, s), ys = computeYongshen(r, s);
   const present = new Set();
   const chs = [r.year[0], r.month[0]]; if (r.hour) chs.push(r.hour[0]);
   [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []).forEach(b => CANGGAN[b].forEach(h => chs.push(h)));
@@ -2317,6 +2323,7 @@ function synthReadings(r) {
     : (s.score[spouseStar] < avg * 0.6) ? (zh ? " 配偶星偏弱,缘分宜主动把握、择人贵稳重。" : " Partner star is light — take initiative and choose steadiness.") : "";
   if (hasTG("正官") && hasTG("七杀")) love += zh ? " 官杀混杂,情缘选择多、易反复,贵在专一。" : " Mixed Officer/Killings — many options; steadiness serves you.";
   if (has("taohua")) love += (s.avoid.indexOf(roles.cai) >= 0 || s.avoid.indexOf(roles.guan) >= 0) ? (zh ? " 命带桃花,魅力足、异性缘旺——也防烂桃花。" : " Peach Blossom: strong charm — mind the wrong kind too.") : (zh ? " 命带桃花,魅力足、人缘与异性缘俱旺。" : " Peach Blossom: real charm and magnetism.");
+  love += zh ? ` 宜配:另一半若带 <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b> 气最补你——这类人${PARTNER.zh[ys.element]};生${ELEM_CHAR[ys.element]}的${ELEM_CHAR[GEN_EL[ys.element]]}气之人亦佳。` : ` Best match: a partner who carries <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_TXT.en[ys.element]}</b> — ${PARTNER.en[ys.element]}; someone ${ELEM_TXT.en[GEN_EL[ys.element]]}-natured (which feeds it) also suits.`;
   const missing = s.score[weak] === 0;
   let health = zh ? `五行以${EN[weak]}最${missing ? "缺(全无)" : "弱"}——留意${ELEM_ORGAN.zh[weak]}。` : `${EN[weak]} is your ${missing ? "missing" : "weakest"} phase — mind ${ELEM_ORGAN.en[weak]}.`;
   if (s.score[strong] > avg * 1.6) health += zh ? ` ${EN[strong]}偏旺,相关之处易过用、上火,注意疏泄平衡。` : ` ${EN[strong]} runs high — that system can overwork; keep it balanced.`;
@@ -2808,7 +2815,11 @@ function tenGodsDrawer(r) {
 const LREASON = {
   hua:{ zh:"合化", en:"transforms→" }, bind:{ zh:"合绊·减力", en:"bound" }, wet:{ zh:"湿土润局·调候", en:"wet earth (moistens)" }, dry:{ zh:"燥土暖局·调候", en:"dry earth (warms)" },
   liuhe:{ zh:"六合", en:"six-harmony" }, chongJi:{ zh:"冲去忌神·吉", en:"clashes out an avoid (good)" }, chongYong:{ zh:"冲损用神·凶", en:"clashes the useful (bad)" }, chong:{ zh:"相冲·主变动", en:"clash (change)" },
-  xing:{ zh:"相刑", en:"punishment" }, hai:{ zh:"相害", en:"harm" }, sanhe:{ zh:"三合成局", en:"triad" }, banhe:{ zh:"半合", en:"half-triad" } };
+  xing:{ zh:"相刑", en:"punishment" }, hai:{ zh:"相害", en:"harm" }, sanhe:{ zh:"三合成局", en:"triad" }, banhe:{ zh:"半合", en:"half-triad" },
+  yongshen:{ zh:"行用神运·大吉", en:"useful-god luck (very favorable)" } };
+const GEN_EL = { wood:"water", fire:"wood", earth:"fire", metal:"earth", water:"metal" };
+const PARTNER = { zh:{ wood:"上进有生气、能陪你成长", fire:"热情行动、给你温暖与动力", earth:"踏实包容、给你安定依靠", metal:"果决有条理、给你规矩与助力", water:"灵活有智慧、给你滋润与变通" },
+  en:{ wood:"driven and growing", fire:"warm and active", earth:"steady and supportive", metal:"decisive and orderly", water:"adaptable and wise" } };
 function luckReasonText(reasons) {
   if (!reasons.length) return lang === "zh" ? "无特别引动,平顺。" : "nothing notable — steady.";
   return reasons.map(z => { const L = LREASON[z.t] ? LREASON[z.t][lang] : z.t; return `${z.chars || ""} ${L}${z.elem ? (lang === "zh" ? ELEM_CHAR[z.elem] : " " + ELEM_TXT.en[z.elem]) : ""}`.trim(); }).join(lang === "zh" ? " · " : "; ");

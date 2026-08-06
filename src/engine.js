@@ -212,15 +212,17 @@ function computeYongshen(r, s) {
       else { use = "shi"; why = "cai_shi"; }
       break;
     case "zhengyin": case "pianyin":
-      if (!cheng) { use = "bi"; why = "yin_bi"; }
-      else if (strong) { use = "shi"; why = "yin_shi"; }
+      if (strong) { use = "cai"; why = "yin_strong"; }
+      else if (!cheng) { use = "bi"; why = "yin_bi"; }
       else { use = "guan"; why = "yin_guan"; }
       break;
     case "shishen":
-      use = "cai"; why = cheng ? "shi_cai" : "shi_zhi";
+      if (!cheng) { use = "cai"; why = "shi_zhi"; }
+      else if (weak) { use = "bi"; why = "shi_weak"; }
+      else { use = "cai"; why = "shi_cai"; }
       break;
     case "qisha":
-      use = "shi"; why = "sha_shi";
+      if (weak) { use = "yin"; why = "sha_yin"; } else { use = "shi"; why = "sha_shi"; }
       break;
     case "shangguan":
       if (weak) { use = "yin"; why = "shang_yin"; }
@@ -284,6 +286,7 @@ const DRY_EARTH = new Set(["未", "戌"]);   // 燥土(藏火木气,能暖上)
  */
 function luckAssess(r, ganzhi, s, cl) {
   cl = cl || computeClimate(r, s);
+  const ys = computeYongshen(r, s);
   const favor = s.favor, avoid = s.avoid;
   const st = ganzhi[0], br = ganzhi[1];
   let score = 0; const reasons = [];
@@ -332,6 +335,7 @@ function luckAssess(r, ganzhi, s, cl) {
     if (others.length === 2) { addEl(elem, 2); reasons.push({ t:"sanhe", chars: grp.join(""), elem }); }
     else if (others.length === 1 && (br === SANHE_WANG[elem] || others[0] === SANHE_WANG[elem])) { addEl(elem, 1); reasons.push({ t:"banhe", chars: br + others[0], elem }); }
   }
+  if (ys.element && (stemEl === ys.element || GAN_WX[ZHI_MAIN[br]] === ys.element)) { score += 1.2; reasons.push({ t:"yongshen", elem: ys.element }); }
   const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
   return { score: +score.toFixed(1), level, reasons };
 }

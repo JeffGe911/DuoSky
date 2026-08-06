@@ -154,6 +154,20 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 调候 (寒暖燥湿) ============
+const SEASON = { 寅:"spring",卯:"spring",辰:"spring", 巳:"summer",午:"summer",未:"summer", 申:"autumn",酉:"autumn",戌:"autumn", 亥:"winter",子:"winter",丑:"winter" };
+function computeClimate(r, s) {
+  s = s || computeStrength(r);
+  const season = SEASON[r.month[1]], total = s.total || 1;
+  const fire = s.score.fire, water = s.score.water;
+  let need = null, urgent = false;
+  if (season === "winter") { need = "fire"; urgent = fire < total * 0.12; }
+  else if (season === "summer") { need = "water"; urgent = water < total * 0.12; }
+  else if (season === "spring") { if (fire < total * 0.08) need = "fire"; }
+  else { if (water < total * 0.10) need = "water"; }   // 秋:金旺燥,喜水润
+  return { season, need, urgent };
+}
+
 // ============ 格局 (月令取格) ============
 function computePattern(r) {
   const dm = r.dayMaster, mb = r.month[1], hid = HIDDEN[mb];
@@ -438,4 +452,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computeClimate, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

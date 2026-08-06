@@ -1042,6 +1042,20 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 调候 (寒暖燥湿) ============
+const SEASON = { 寅:"spring",卯:"spring",辰:"spring", 巳:"summer",午:"summer",未:"summer", 申:"autumn",酉:"autumn",戌:"autumn", 亥:"winter",子:"winter",丑:"winter" };
+function computeClimate(r, s) {
+  s = s || computeStrength(r);
+  const season = SEASON[r.month[1]], total = s.total || 1;
+  const fire = s.score.fire, water = s.score.water;
+  let need = null, urgent = false;
+  if (season === "winter") { need = "fire"; urgent = fire < total * 0.12; }
+  else if (season === "summer") { need = "water"; urgent = water < total * 0.12; }
+  else if (season === "spring") { if (fire < total * 0.08) need = "fire"; }
+  else { if (water < total * 0.10) need = "water"; }   // 秋:金旺燥,喜水润
+  return { season, need, urgent };
+}
+
 // ============ 格局 (月令取格) ============
 function computePattern(r) {
   const dm = r.dayMaster, mb = r.month[1], hid = HIDDEN[mb];
@@ -1326,7 +1340,7 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, computeClimate, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
 
 
 /* ============ 十干配色 (星夜版: 色相由五行取象, 深浅由阴阳) ============ */
@@ -1963,6 +1977,11 @@ function elName(e) { return ELEM_TXT[lang][e] + (lang === "zh" ? ELEM_CHAR[e] : 
 function strengthDrawer(r) {
   const s = computeStrength(r), L = STG[lang], T = UI[lang];
   const pt = computePattern(r), PT = PATTERN[pt.key][lang];
+  const cl = computeClimate(r, s);
+  const SEA = { zh:{ spring:"春", summer:"夏", autumn:"秋", winter:"冬" }, en:{ spring:"spring", summer:"summer", autumn:"autumn", winter:"winter" } };
+  const climTxt = lang === "zh"
+    ? `生于${SEA.zh[cl.season]}月${cl.need ? ` · 调候喜 <b style="color:${ELEM_COLOR[cl.need]}">${ELEM_CHAR[cl.need]}</b>(${cl.need === "fire" ? "暖局" : "润局"})${cl.urgent ? " · 尤为要紧" : ""}` : " · 寒暖尚可,无急"}`
+    : `Born in ${SEA.en[cl.season]}${cl.need ? ` · climate favors <b style="color:${ELEM_COLOR[cl.need]}">${ELEM_TXT.en[cl.need]}</b> (${cl.need === "fire" ? "warmth" : "moisture"})${cl.urgent ? " · urgent" : ""}` : " · temperate, no urgent need"}`;
   const maxS = Math.max(...Object.values(s.score), 1);
   const order = ["metal", "wood", "water", "fire", "earth"];
   const bars = order.map(e => {
@@ -2000,7 +2019,8 @@ function strengthDrawer(r) {
   rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "格局取月令、扶抑为简化模型(藏干本中余、月令加权、含合化);流派众多,仅供参考。" : "Pattern from the month; simplified 扶抑 scoring (incl. 合化) — schools differ, for reference."]);
   rows.unshift(
     [lang === "zh" ? "格局" : "Pattern", `<b class="gold">${PT[0]}</b> · ${pt.type === "ji" ? (lang === "zh" ? "吉格 · 顺用" : "benefic · flow with") : (lang === "zh" ? "凶格 · 逆用" : "malefic · tame it")}${pt.transparent ? "" : (lang === "zh" ? " <span style=\"opacity:.55\">(月令本气取格)</span>" : " <span style=\"opacity:.55\">(from month qi)</span>")}<br>${PT[1]}`],
-    [lang === "zh" ? "格局喜忌" : "Pattern needs", `${lang === "zh" ? "喜:" : "favors: "}${PT[2]}<br>${lang === "zh" ? "忌:" : "avoids: "}${PT[3]}`]
+    [lang === "zh" ? "格局喜忌" : "Pattern needs", `${lang === "zh" ? "喜:" : "favors: "}${PT[2]}<br>${lang === "zh" ? "忌:" : "avoids: "}${PT[3]}`],
+    [lang === "zh" ? "调候" : "Climate", climTxt]
   );
   return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "格局 · 旺衰 · 喜用" : "Pattern · Strength", lang === "zh" ? "月令取格 · 扶抑打分 · 藏干本中余" : "pattern · weighted scoring", rows);
 }

@@ -1044,7 +1044,7 @@ function computeWheel(utcMs, lat, lon, timeKnown) {
     if (isAngle(pts[i].body) && isAngle(pts[j].body)) continue;
     let d = Math.abs(pts[i].lon - pts[j].lon); if (d > 180) d = 360 - d;
     const orbMax = (isAngle(pts[i].body) || isAngle(pts[j].body)) ? 5 : 99;
-    for (const [a, nm, orb] of ASP) if (Math.abs(d - a) <= Math.min(orb, orbMax)) { aspects.push({ a: pts[i].body, b: pts[j].body, type: nm, la: pts[i].lon, lb: pts[j].lon }); break; }
+    for (const [a, nm, orb] of ASP) if (Math.abs(d - a) <= Math.min(orb, orbMax)) { aspects.push({ a: pts[i].body, b: pts[j].body, type: nm, la: pts[i].lon, lb: pts[j].lon, orb: +Math.abs(d - a).toFixed(1) }); break; }
   }
   const moonPhase = _nrm(planets[1].lon - planets[0].lon);
   return { planets, asc, mc, fortune, houses, aspects, haveAngles, moonPhase };
@@ -1577,6 +1577,19 @@ function renderCard(r, inp) {
     ? `<b class="gold">日主 ${dStem}${ELEM_TXT.zh[dElem]}</b>——${DM_LINE.zh[dStem]}<br><span class="voice-yr">生于${ELEM_TXT.zh[yElem]}${ANIMAL_TXT.zh[yBranch]}年:${EAST_LINE.zh[yBranch]}</span>`
     : `<b class="gold">Day Master — ${MATERIAL.en[dStem]} (${ELEM_TXT.en[dElem]})</b>. ${DM_LINE.en[dStem]}<br><span class="voice-yr">Born in the ${ELEM_TXT.en[yElem]} ${ANIMAL_TXT.en[yBranch]} year: ${EAST_LINE.en[yBranch]}</span>`;
   const ac = pickAgreeClash(yBranch, sign);
+  let crossLine = "";
+  {
+    const dmEl = GAN_WX[dStem];
+    const wheelPeek = computeWheel(Date.UTC(inp.y, inp.m - 1, inp.d, inp.notime ? 12 : inp.hh, inp.notime ? 0 : inp.mi) - inp.tz * 60000, inp.lat, inp.lon, !inp.notime);
+    if (wheelPeek) {
+      const sunEl = SIGN_ELEM[wheelPeek.planets[0].sign];
+      const dmAct = dmEl === "fire" || dmEl === "wood", sunAct = sunEl === "fire" || sunEl === "air";
+      const dmW = XW_DM[lang][dmEl], sunW = XW_SUN[lang][sunEl];
+      crossLine = dmAct === sunAct
+        ? (lang === "zh" ? `两盘同气——八字的你「${dmW}」,星盘的你「${sunW}」,同一方向:内外都偏${dmAct ? "外放、行动" : "内收、沉静"},活得表里如一,认准了就使劲。` : `Both charts agree — your BaZi self is ${dmW} and your Sun is ${sunW}: inner and outer pull the same way (${dmAct ? "active/outward" : "receptive/inward"}). What you feel is what you show.`)
+        : (lang === "zh" ? `两盘互补——八字里你「${dmW}」(偏${dmAct ? "动" : "静"}),星盘里你「${sunW}」(偏${sunAct ? "动" : "静"}):内在与外在两种节奏,像有两个开关,是张力也是层次,懂得切换最占便宜。` : `The two charts complement — your BaZi self is ${dmW} (${dmAct ? "active" : "receptive"}) while your Sun is ${sunW} (${sunAct ? "active" : "receptive"}): two tempos, inner and outer. Learn to switch between them.`);
+    }
+  }
   const hintSeen = (() => { try { return localStorage.getItem("duosky_hint"); } catch (e) { return 1; } })();
   const hint = hintSeen ? "" : `<div class="hint-bar"><span>${lang === "zh" ? "✦ 轻点任意 干支 · 藏干 · 柱 · 行星 · 大运 —— 都有解读" : "✦ Tap any pillar, stem, planet or luck cycle — all open a reading"}</span><span class="hint-x clk" role="button" tabindex="0" data-t="hintclose" aria-label="dismiss">✕</span></div>`;
   const stg = computeStrength(r);
@@ -1704,6 +1717,7 @@ function renderCard(r, inp) {
     <div class="voice"><span class="label">${T.west}</span><p>${WEST_LINE[lang][sign]}</p></div>
     <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
     <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
+    ${crossLine ? `<div class="voice"><span class="label gold">${lang === "zh" ? "东西合参 · 核心" : "East × West · core"}</span><p>${crossLine}</p></div>` : ""}
     ${deeper}
     ${western}
     <div class="footer">
@@ -1838,6 +1852,8 @@ function luckDrawer(r) {
 const SIGN_ELEM = { Aries:"fire",Leo:"fire",Sagittarius:"fire",Taurus:"earth",Virgo:"earth",Capricorn:"earth",Gemini:"air",Libra:"air",Aquarius:"air",Cancer:"water",Scorpio:"water",Pisces:"water" };
 const SIGN_MODE = { Aries:"cardinal",Cancer:"cardinal",Libra:"cardinal",Capricorn:"cardinal",Taurus:"fixed",Leo:"fixed",Scorpio:"fixed",Aquarius:"fixed",Gemini:"mutable",Virgo:"mutable",Sagittarius:"mutable",Pisces:"mutable" };
 const WEL_TXT = { zh:{ fire:"火", earth:"土", air:"风", water:"水" }, en:{ fire:"Fire", earth:"Earth", air:"Air", water:"Water" } };
+const XW_DM = { zh:{ wood:"生发进取", fire:"热情外放", earth:"敦厚务实", metal:"刚毅果决", water:"灵动善变" }, en:{ wood:"growth-seeking", fire:"warm and outgoing", earth:"solid and practical", metal:"decisive and firm", water:"fluid and adaptive" } };
+const XW_SUN = { zh:{ fire:"热情行动", earth:"务实稳靠", air:"思辨社交", water:"情感直觉" }, en:{ fire:"fiery & active", earth:"grounded", air:"cerebral & social", water:"feeling & intuitive" } };
 const WEL_COLOR = { fire:"#F2895F", earth:"#CDA268", air:"#B7C3E0", water:"#7DAEDD" };
 const MODE_TXT = { zh:{ cardinal:"开创", fixed:"固定", mutable:"变动" }, en:{ cardinal:"Cardinal", fixed:"Fixed", mutable:"Mutable" } };
 const ELEM4_NOTE = { zh:{ fire:"热情、行动,点火就着。", earth:"务实、稳靠,看得见摸得着。", air:"思辨、社交,活在概念里。", water:"情感、直觉,感受先行。" },
@@ -1890,10 +1906,11 @@ function housesDrawer() {
 function aspectDrawer() {
   const WX = WEXTRA[lang], w = lastWheel;
   if (!w || !w.aspects || !w.aspects.length) return drawerShell("\u25b3", "#D9B96C", WX.aspects, "", [[DW[lang].whatIs, lang === "zh" ? "未见明显相位。" : "No major aspects."]]);
-  const rows = w.aspects.map(x => {
+  const rows = w.aspects.slice().sort((p, q) => (p.orb || 9) - (q.orb || 9)).map(x => {
     const c = ASPECT_META[x.type][0], domA = PLANET_DOM[lang][x.a], domB = PLANET_DOM[lang][x.b];
     const flavor = ASPECT_READ[x.type][lang].replace("{A}", domA).replace("{B}", domB);
-    const head = `<span style="color:${c}">${PLANET_GLYPH[x.a]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.b]}</span> ${PLANET_NAME[lang][x.a]}<span style="opacity:.55">(${domA})</span> \u2014 ${PLANET_NAME[lang][x.b]}<span style="opacity:.55">(${domB})</span>`;
+    const tight = x.orb != null ? (x.orb <= 2 ? (lang === "zh" ? "紧密·强" : "tight · strong") : x.orb <= 4 ? (lang === "zh" ? "中等" : "moderate") : (lang === "zh" ? "宽松·弱" : "wide · weak")) : "";
+    const head = `<span style="color:${c}">${PLANET_GLYPH[x.a]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.b]}</span> ${PLANET_NAME[lang][x.a]}<span style="opacity:.55">(${domA})</span> \u2014 ${PLANET_NAME[lang][x.b]}<span style="opacity:.55">(${domB})</span>${x.orb != null ? ` <span style="opacity:.5;font-size:10px">${x.orb}\u00b0 ${tight}</span>` : ""}`;
     return [head, `<span style="color:${c}">${ASPECT_META[x.type][1][lang]}</span><br>${flavor}`];
   });
   return drawerShell("\u25b3", "#D9B96C", WX.aspects, lang === "zh" ? "你身上两股能量如何互动" : "how your energies interact", rows);

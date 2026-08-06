@@ -45,6 +45,7 @@ function computeChart(termsTable, p) {
   const t0 = yearTerms(termsTable, y);
   if (!t0) return { error: "out_of_range" };
   const lichun = t0.find(t => t.deg === 315);
+  if (!lichun) return { error: "out_of_range" };
   const gzYearNum = utcMs >= lichun.ms ? y : y - 1;
   const ys = GAN[(gzYearNum - 4) % 10 < 0 ? ((gzYearNum - 4) % 10) + 10 : (gzYearNum - 4) % 10];
   const yb = ZHI[(gzYearNum - 4) % 12 < 0 ? ((gzYearNum - 4) % 12) + 12 : (gzYearNum - 4) % 12];
@@ -58,6 +59,7 @@ function computeChart(termsTable, p) {
   pool.sort((a, b) => a.ms - b.ms);
   let lastJie = null;
   for (const t of pool) if (t.ms <= utcMs) lastJie = t;
+  if (!lastJie) return { error: "out_of_range" };
   const mbIdx = JIE_DEG_TO_BRANCH[lastJie.deg];
   const mb = ZHI[mbIdx];
   const monthsFromYin = (mbIdx - 2 + 12) % 12;
@@ -90,6 +92,7 @@ function computeChart(termsTable, p) {
   pool2.sort((a, b) => a.ms - b.ms);
   let lastCusp = null;
   for (const t of pool2) if (t.ms <= utcMs) lastCusp = t;
+  if (!lastCusp) return { error: "out_of_range" };
   const sign = SIGNS[(lastCusp.deg / 30) % 12];
 
   // --- 五行统计 (天干 + 地支本气) ---
@@ -106,6 +109,214 @@ function computeChart(termsTable, p) {
   };
 }
 
+// 十二节 (只用节, 不用中气) —— 用于大运起运
+const JIE_SET = new Set([315, 345, 15, 45, 75, 105, 135, 165, 195, 225, 255, 285]);
+function jiaziIndex(stem, branch) {
+  const si = GAN.indexOf(stem), bi = ZHI.indexOf(branch);
+  for (let n = 0; n < 60; n++) if (n % 10 === si && n % 12 === bi) return n;
+  return -1;
+}
+/**
+ * 大运 (子平): 阳年男/阴年女顺行, 阴年男/阳年女逆行;
+ * 起运 = 出生到最近一个节(顺)或上一个节(逆)的天数 / 3 (三日折一年);
+ * 干支从月柱起, 顺行取次干支/逆行取前干支, 每步十年。
+ * @param opts {yearStem, monthGZ:"干支", gender:"m"|"f"}
+ */
+function computeLuck(termsTable, p, opts) {
+  const { yearStem, monthGZ, gender } = opts;
+  const timeKnown = p.timeKnown !== false;
+  const hh = timeKnown ? p.hh : 12, mi = timeKnown ? p.mi : 0;
+  const utcMs = Date.UTC(p.y, p.m - 1, p.d, hh, mi) - p.tzMin * 60000;
+  const yangYear = GAN.indexOf(yearStem) % 2 === 0;
+  const forward = yangYear === (gender === "m");
+  const jies = [];
+  for (const yr of [p.y - 1, p.y, p.y + 1]) {
+    const arr = termsTable[String(yr)];
+    if (arr) for (const [deg, str] of arr) if (JIE_SET.has(deg)) jies.push(termUTCms(termsTable, yr, str));
+  }
+  jies.sort((a, b) => a - b);
+  let target = null;
+  if (forward) { for (const t of jies) if (t > utcMs) { target = t; break; } }
+  else { for (let i = jies.length - 1; i >= 0; i--) if (jies[i] <= utcMs) { target = jies[i]; break; } }
+  if (target == null) return { error: "out_of_range" };
+  const daysDiff = Math.abs(target - utcMs) / 86400000;   // 三日折一年 / 一日四月 / 一时五日
+  const startAge = Math.floor(daysDiff / 3);
+  let rem = daysDiff - startAge * 3;                      // 0..3 天
+  const startMonths = Math.floor(rem * 4);               // 一天=四个月
+  const startDays = Math.round((rem * 4 - startMonths) * 30);
+  const n0 = jiaziIndex(monthGZ[0], monthGZ[1]);
+  const list = [];
+  for (let i = 0; i < 9; i++) {
+    const n = ((n0 + (forward ? 1 : -1) * (i + 1)) % 60 + 60) % 60;
+    const age = startAge + i * 10;
+    list.push({ ganzhi: GAN[n % 10] + ZHI[n % 12], startAge: age, startYear: p.y + age });
+  }
+  return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
+}
+
+// ============ 流年 / 神煞 / 吉凶 ============
+// 流年干支: 1984=甲子(index0)
+function computeFleetYears(fromYear, count) {
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const Y = fromYear + i, idx = ((Y - 1984) % 60 + 60) % 60;
+    out.push({ year: Y, ganzhi: GAN[idx % 10] + ZHI[idx % 12] });
+  }
+  return out;
+}
+// 干支吉凶: 看天干五行 + 地支本气五行 落在 喜用 / 忌 的多寡
+function luckFortune(gz, favor, avoid) {
+  const es = [GAN_WX[gz[0]], GAN_WX[ZHI_MAIN[gz[1]]]];
+  let f = 0, a = 0;
+  es.forEach(e => { if (favor.indexOf(e) >= 0) f++; if (avoid.indexOf(e) >= 0) a++; });
+  return f > a ? "good" : a > f ? "bad" : "neutral";
+}
+// 神煞 (日干起: 天乙/文昌/禄/羊刃; 年支三合起: 桃花/驿马/华盖/将星/劫煞; 日柱旬空)
+const SS_TIANYI = { 甲:["丑","未"],乙:["子","申"],丙:["亥","酉"],丁:["亥","酉"],戊:["丑","未"],己:["子","申"],庚:["丑","未"],辛:["寅","午"],壬:["卯","巳"],癸:["卯","巳"] };
+const SS_WENCHANG = { 甲:"巳",乙:"午",丙:"申",丁:"酉",戊:"申",己:"酉",庚:"亥",辛:"子",壬:"寅",癸:"卯" };
+const SS_LU = { 甲:"寅",乙:"卯",丙:"巳",丁:"午",戊:"巳",己:"午",庚:"申",辛:"酉",壬:"亥",癸:"子" };
+const SS_YANGREN = { 甲:"卯",丙:"午",戊:"午",庚:"酉",壬:"子" };
+const SS_TRINE = { 申:"申子辰",子:"申子辰",辰:"申子辰",寅:"寅午戌",午:"寅午戌",戌:"寅午戌",巳:"巳酉丑",酉:"巳酉丑",丑:"巳酉丑",亥:"亥卯未",卯:"亥卯未",未:"亥卯未" };
+const SS_TAOHUA = { 申子辰:"酉",寅午戌:"卯",巳酉丑:"午",亥卯未:"子" };
+const SS_YIMA = { 申子辰:"寅",寅午戌:"申",巳酉丑:"亥",亥卯未:"巳" };
+const SS_HUAGAI = { 申子辰:"辰",寅午戌:"戌",巳酉丑:"丑",亥卯未:"未" };
+const SS_JIANGXING = { 申子辰:"子",寅午戌:"午",巳酉丑:"酉",亥卯未:"卯" };
+const SS_JIESHA = { 申子辰:"巳",寅午戌:"亥",巳酉丑:"寅",亥卯未:"申" };
+function computeShensha(r) {
+  const P = [{ k:"year", b:r.year[1] }, { k:"month", b:r.month[1] }, { k:"day", b:r.day[1] }];
+  if (r.hour) P.push({ k:"hour", b:r.hour[1] });
+  const dgan = r.dayMaster, ybr = r.year[1], grp = SS_TRINE[ybr];
+  const out = [];
+  const posOf = targets => P.filter(p => targets.indexOf(p.b) >= 0).map(p => p.k);
+  const add = (key, targets) => { const pos = posOf(targets); if (pos.length) out.push({ key, targets, positions: pos }); };
+  add("tianyi", SS_TIANYI[dgan]);
+  add("wenchang", [SS_WENCHANG[dgan]]);
+  add("lu", [SS_LU[dgan]]);
+  if (SS_YANGREN[dgan]) add("yangren", [SS_YANGREN[dgan]]);
+  add("taohua", [SS_TAOHUA[grp]]);
+  add("yima", [SS_YIMA[grp]]);
+  add("huagai", [SS_HUAGAI[grp]]);
+  add("jiangxing", [SS_JIANGXING[grp]]);
+  add("jiesha", [SS_JIESHA[grp]]);
+  // 旬空 (以日柱)
+  const di = ((n => { const si = GAN.indexOf(r.day[0]), bi = ZHI.indexOf(r.day[1]); for (let x = 0; x < 60; x++) if (x % 10 === si && x % 12 === bi) return x; return 0; })());
+  const n0 = di - di % 10;
+  add("kongwang", [ZHI[(n0 + 10) % 12], ZHI[(n0 + 11) % 12]]);
+  return out;
+}
+
+// ============ 日主旺衰 + 喜用神 (加权打分) ============
+// 藏干全表 (本气/中气/余气)
+const HIDDEN = { 子:["癸"],丑:["己","癸","辛"],寅:["甲","丙","戊"],卯:["乙"],辰:["戊","乙","癸"],巳:["丙","戊","庚"],午:["丁","己"],未:["己","丁","乙"],申:["庚","壬","戊"],酉:["辛"],戌:["戊","辛","丁"],亥:["壬","甲"] };
+const WX_ORDER = ["wood","fire","earth","metal","water"];   // 相生序: 木→火→土→金→水→木
+const shengOf = e => WX_ORDER[(WX_ORDER.indexOf(e) + 1) % 5];  // e 生 —>
+const keOf = e => WX_ORDER[(WX_ORDER.indexOf(e) + 2) % 5];     // e 克 —>
+/**
+ * 扶抑法打分: 天干按位置计分; 地支藏干按 本气/中气/余气 分权重; 月支(月令)基数加倍。
+ * 同党(印+比劫) vs 异党(食伤+财+官杀) 定日主强弱, 据此定喜用/忌神。
+ */
+function computeStrength(r) {
+  const score = { wood:0, fire:0, earth:0, metal:0, water:0 };
+  const detail = [];
+  // 天干: 年10 月15 日15 时10
+  const stems = [["year", r.year[0], 10], ["month", r.month[0], 15], ["day", r.day[0], 15], ["hour", r.hour ? r.hour[0] : null, 10]];
+  for (const [pos, st, w] of stems) if (st) { score[GAN_WX[st]] += w; detail.push({ pos, kind:"stem", stem:st, role:-1, pts:w }); }
+  // 地支藏干: 基数 年30 月60(得令) 日30 时30; 本:中:余 权重
+  const RATIO = { 1:[1], 2:[0.7, 0.3], 3:[0.6, 0.3, 0.1] };
+  const branches = [["year", r.year[1], 30], ["month", r.month[1], 60], ["day", r.day[1], 30], ["hour", r.hour ? r.hour[1] : null, 30]];
+  for (const [pos, br, base] of branches) {
+    if (!br) continue;
+    const hid = HIDDEN[br], rs = RATIO[hid.length] || RATIO[3];
+    hid.forEach((hs, i) => { const pts = +(base * rs[i]).toFixed(1); score[GAN_WX[hs]] += pts; detail.push({ pos, kind:"branch", branch:br, stem:hs, role:i, pts }); });
+  }
+  const dmE = GAN_WX[r.dayMaster];
+  const yin = WX_ORDER.find(e => shengOf(e) === dmE);   // 生我=印
+  const bi = dmE;                                        // 同我=比劫
+  const shi = shengOf(dmE);                              // 我生=食伤
+  const cai = keOf(dmE);                                 // 我克=财
+  const guan = WX_ORDER.find(e => keOf(e) === dmE);      // 克我=官杀
+  const support = +(score[yin] + score[bi]).toFixed(1);
+  const drain = +(score[shi] + score[cai] + score[guan]).toFixed(1);
+  const total = +(support + drain).toFixed(1);
+  const ratio = total ? +(support / total).toFixed(3) : 0.5;
+  const level = ratio >= 0.56 ? "strong" : ratio <= 0.44 ? "weak" : "balanced";
+  let favor = [], avoid = [];
+  if (level === "strong") { favor = [shi, cai, guan]; avoid = [yin, bi]; }
+  else if (level === "weak") { favor = [yin, bi]; avoid = [shi, cai, guan]; }
+  // 用神: 喜用五行中当前分数最低者(最需引入/补强的平衡点)
+  const useGod = favor.length ? favor.slice().sort((a, b) => score[a] - score[b])[0] : null;
+  return { score, dmElement:dmE, roles:{ yin, bi, shi, cai, guan }, support, drain, total, ratio, level, favor, avoid, useGod, detail };
+}
+
+// ============ 六十甲子纳音 (30 组, 每组辖两干支) ============
+const NAYIN = [["海中金","metal"],["炉中火","fire"],["大林木","wood"],["路旁土","earth"],["剑锋金","metal"],
+  ["山头火","fire"],["涧下水","water"],["城头土","earth"],["白蜡金","metal"],["杨柳木","wood"],
+  ["泉中水","water"],["屋上土","earth"],["霹雳火","fire"],["松柏木","wood"],["长流水","water"],
+  ["沙中金","metal"],["山下火","fire"],["平地木","wood"],["壁上土","earth"],["金箔金","metal"],
+  ["覆灯火","fire"],["天河水","water"],["大驿土","earth"],["钗钏金","metal"],["桑柘木","wood"],
+  ["大溪水","water"],["沙中土","earth"],["天上火","fire"],["石榴木","wood"],["大海水","water"]];
+function jiaziIndexGZ(gz) {
+  const si = GAN.indexOf(gz[0]), bi = ZHI.indexOf(gz[1]);
+  for (let n = 0; n < 60; n++) if (n % 10 === si && n % 12 === bi) return n;
+  return -1;
+}
+// 纳音: 传入干支(如"甲子") -> {idx, name, elem}
+function nayin(gz) {
+  const n = jiaziIndexGZ(gz); if (n < 0) return null;
+  const [name, elem] = NAYIN[Math.floor(n / 2)];
+  return { idx: n, name, elem };
+}
+
+// ============ 干支关系: 合 冲 刑 害 会 ============
+const STEM_HE = { 甲:"己",己:"甲",乙:"庚",庚:"乙",丙:"辛",辛:"丙",丁:"壬",壬:"丁",戊:"癸",癸:"戊" };
+const STEM_HE_ELEM = { 甲己:"earth",乙庚:"metal",丙辛:"water",丁壬:"wood",戊癸:"fire" };
+const STEM_CHONG = { 甲:"庚",庚:"甲",乙:"辛",辛:"乙",丙:"壬",壬:"丙",丁:"癸",癸:"丁" };
+const ZHI_CHONG = { 子:"午",午:"子",丑:"未",未:"丑",寅:"申",申:"寅",卯:"酉",酉:"卯",辰:"戌",戌:"辰",巳:"亥",亥:"巳" };
+const ZHI_LIUHE = { 子:"丑",丑:"子",寅:"亥",亥:"寅",卯:"戌",戌:"卯",辰:"酉",酉:"辰",巳:"申",申:"巳",午:"未",未:"午" };
+const ZHI_LIUHE_ELEM = { 子丑:"earth",寅亥:"wood",卯戌:"fire",辰酉:"metal",巳申:"water",午未:"fire" };
+const ZHI_HAI = { 子:"未",未:"子",丑:"午",午:"丑",寅:"巳",巳:"寅",卯:"辰",辰:"卯",申:"亥",亥:"申",酉:"戌",戌:"酉" };
+const XING_PAIRS = new Set(["寅巳","巳寅","巳申","申巳","丑戌","戌丑","戌未","未戌","子卯","卯子"]);
+const SELF_XING = new Set(["辰","午","酉","亥"]);
+const SANHE = [["申","子","辰","water"],["亥","卯","未","wood"],["寅","午","戌","fire"],["巳","酉","丑","metal"]];
+const SANHE_WANG = { water:"子",wood:"卯",fire:"午",metal:"酉" };
+const SANHUI = [["寅","卯","辰","wood"],["巳","午","未","fire"],["申","酉","戌","metal"],["亥","子","丑","water"]];
+
+/**
+ * 扫描四柱(或含大运/流年)之间的干支关系。
+ * @param pillars [{k, stem, branch}]  k: year|month|day|hour|luck|fleet
+ * @returns [{scope, type, chars, elem, members:[k...]}]
+ */
+function computeRelations(pillars) {
+  const P = pillars.filter(Boolean);
+  const out = [];
+  // ---- 天干: 五合 / 相冲 ----
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    const a = P[i].stem, b = P[j].stem; if (!a || !b) continue;
+    if (STEM_HE[a] === b) out.push({ scope:"stem", type:"he", chars:a+b, elem:STEM_HE_ELEM[a+b]||STEM_HE_ELEM[b+a], members:[P[i].k,P[j].k] });
+    if (STEM_CHONG[a] === b) out.push({ scope:"stem", type:"chong", chars:a+b, elem:null, members:[P[i].k,P[j].k] });
+  }
+  // ---- 地支: 六冲 / 六合 / 六害 / 刑 / 自刑 ----
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    const a = P[i].branch, b = P[j].branch, m = [P[i].k, P[j].k]; if (!a || !b) continue;
+    if (ZHI_CHONG[a] === b) out.push({ scope:"branch", type:"chong", chars:a+b, elem:null, members:m });
+    if (ZHI_LIUHE[a] === b) out.push({ scope:"branch", type:"liuhe", chars:a+b, elem:ZHI_LIUHE_ELEM[a+b]||ZHI_LIUHE_ELEM[b+a], members:m });
+    if (ZHI_HAI[a] === b) out.push({ scope:"branch", type:"hai", chars:a+b, elem:null, members:m });
+    if (XING_PAIRS.has(a+b)) out.push({ scope:"branch", type:"xing", chars:a+b, elem:null, members:m });
+    if (a === b && SELF_XING.has(a)) out.push({ scope:"branch", type:"selfxing", chars:a+b, elem:null, members:m });
+  }
+  // ---- 地支三合 / 半合 / 三会 (按不同字判断) ----
+  const membersOf = chars => P.filter(p => chars.includes(p.branch)).map(p => p.k);
+  for (const [x, y, z, elem] of SANHE) {
+    const present = [x, y, z].filter(c => P.some(p => p.branch === c));
+    if (present.length === 3) out.push({ scope:"branch", type:"sanhe", chars:x+y+z, elem, members:membersOf([x,y,z]) });
+    else if (present.length === 2 && present.includes(SANHE_WANG[elem])) out.push({ scope:"branch", type:"banhe", chars:present.join(""), elem, members:membersOf(present) });
+  }
+  for (const [x, y, z, elem] of SANHUI) {
+    if ([x, y, z].every(c => P.some(p => p.branch === c))) out.push({ scope:"branch", type:"sanhui", chars:x+y+z, elem, members:membersOf([x,y,z]) });
+  }
+  return out;
+}
+
 // 十神
 function tenGod(dm, other) {
   const ORDER = "wood,fire,earth,metal,water".split(",");
@@ -118,4 +329,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

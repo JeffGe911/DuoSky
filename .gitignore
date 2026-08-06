@@ -4,3 +4,6 @@ node_modules/
 .DS_Store
 tests/cases.json
 *.png
+.venv/
+logo-options.html
+!public/images/duosky-celestial-palace-red-gold-source.png

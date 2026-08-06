@@ -1,0 +1,28 @@
+{
+  "name": "duosky",
+  "version": "1.0.0",
+  "description": "> **Two skies. One you.** — Your birth moment, read by the world's two great astrologies: Chinese BaZi and the Western zodiac, side by side.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JeffGe911/DuoSky.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/JeffGe911/DuoSky/issues"
+  },
+  "homepage": "https://github.com/JeffGe911/DuoSky#readme",
+  "dependencies": {
+    "astronomy-engine": "^2.1.19"
+  }
+}

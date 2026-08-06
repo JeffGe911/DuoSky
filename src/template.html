@@ -1235,6 +1235,18 @@ window.addEventListener("scroll", () => { const t = $("totop"); if (t) t.classLi
 })();
 
 const ELEM_CHAR = { wood:"木", fire:"火", earth:"土", metal:"金", water:"水" };
+const PATTERN = {
+  zhengguan:{ zh:["正官格","重规矩、有责任、端方自律,宜体制与管理。","财生官、印护官(财官印相生),身能任官","伤官见官(破格·主是非)、七杀混杂"], en:["Proper Officer","principled, responsible, orderly — suited to institutions & management.","wealth feeding the officer, resource protecting it; a self strong enough to hold office","the Hurting Officer clashing it; mixed Seven Killings"] },
+  qisha:{ zh:["七杀格","魄力强、扛得住压、开创力猛,亦刚烈。","食神制杀(最上)、印星化杀、身强敌杀","财党助杀而身弱、制杀太过"], en:["Seven Killings","forceful, pressure-proof, pioneering — and fierce.","the Eating God taming it, resource channeling it, a strong self","wealth feeding it while the self is weak"] },
+  zhengcai:{ zh:["正财格","务实勤俭、重稳定积累,靠劳获财。","食伤生财、身旺任财","比劫夺财、身弱财旺担不起"], en:["Proper Wealth","pragmatic and thrifty — wealth earned by effort.","output feeding wealth, a strong self to hold it","peers robbing wealth; a weak self under heavy wealth"] },
+  piancai:{ zh:["偏财格","大方善经营、财源活络,长袖善舞。","食伤生财、身旺;适度官星护财","比劫争夺"], en:["Windfall Wealth","generous, enterprising — lively cash flow.","output feeding wealth, a strong self; some officer to guard it","peers competing for the wealth"] },
+  zhengyin:{ zh:["正印格","好学仁厚、有靠山与名声,重内涵。","官杀生印、印以护身","财星破印(重利则败名)"], en:["Proper Resource","studious, kind, backed and reputable — values substance.","officer/killings feeding the resource","wealth breaking the resource"] },
+  pianyin:{ zh:["偏印格","思路奇、直觉强、偏才与专业,略孤高。","官杀生印、见财制枭得中和","枭神夺食(压食神与福气)"], en:["Indirect Resource","unconventional, intuitive, a specialist — a touch aloof.","officer feeding it, some wealth to balance the 'owl'","the 'owl' devouring the Eating God"] },
+  shishen:{ zh:["食神格","有才情、口福食禄、从容生财,温和。","财星(食神生财)、身旺","偏印夺食(枭印)、泄身太过"], en:["Eating God","talented, easygoing, well-fed — creates by enjoying.","wealth (output feeds it), a strong self","Indirect Resource devouring it; over-draining a weak self"] },
+  shangguan:{ zh:["伤官格","聪明外露、才华横溢、不服管束,锋芒毕露。","印制伤(伤官配印·贵)、财泄伤(伤官生财·富)","正官(伤官见官·主官非婚变)"], en:["Hurting Officer","brilliant, expressive, defiant — sharp-edged.","resource restraining it (noble), wealth channeling it (rich)","the Proper Officer (a classic hazard)"] },
+  jianlu:{ zh:["建禄格","自立自强、靠本事、独当一面,身旺。","财官食伤(有处发泄与成就)","再逢印比(身过旺无制)"], en:["Established Rank","self-made, self-reliant, stands alone — strong self.","wealth/officer/output to spend the strength","more resource/peers (over-strong, unchecked)"] },
+  yangren:{ zh:["阳刃格","刚猛果决、爆发力强、能成大事亦易生变,极端。","官杀制刃(刃杀两停·大贵)","刃旺无制、财旺引刃"], en:["Yang Blade","bold, explosive, capable of great feats — and volatile.","officer/killings taming the blade (great honor)","an unchecked blade; wealth provoking it"] },
+  bijie:{ zh:["比劫格","自我、重义气、竞争心强,朋友多助也多争。","官杀约束、食伤泄秀、财官","印比再助身"], en:["Peer","self-driven, loyal, competitive — friends both help and vie.","officer to rein in, output to vent, wealth/officer","more resource/peers"] } };
 const STG = {
   zh:{ strong:"身强", weak:"身弱", balanced:"中和",
     support:"同党 · 印+比劫", drain:"异党 · 食伤+财+官杀", score:"五行得分", favor:"喜用", avoid:"忌神", use:"用神首选", hidden:"藏干计分(本/中/余)",
@@ -1249,6 +1261,7 @@ const STG = {
 function elName(e) { return ELEM_TXT[lang][e] + (lang === "zh" ? ELEM_CHAR[e] : ""); }
 function strengthDrawer(r) {
   const s = computeStrength(r), L = STG[lang], T = UI[lang];
+  const pt = computePattern(r), PT = PATTERN[pt.key][lang];
   const maxS = Math.max(...Object.values(s.score), 1);
   const order = ["metal", "wood", "water", "fire", "earth"];
   const bars = order.map(e => {
@@ -1283,8 +1296,12 @@ function strengthDrawer(r) {
     [L.hidden, hidRows]
   ];
   if (huaTxt) rows.splice(1, 0, [lang === "zh" ? "合化影响" : "Combinations", `${huaTxt}<br><span style="opacity:.6">${lang === "zh" ? "合化改变五行力量、合绊减力,已计入下方得分。" : "Transformations/bindings reshape the element scores below."}</span>`]);
-  rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "扶抑加权为简化模型(藏干本中余、月令加权、含合化);流派众多,仅供参考。" : "Simplified 扶抑 weighting (hidden-stem tiers, month weight, incl. 合化); schools differ — for reference."]);
-  return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "旺衰 · 喜用神" : "Strength & Useful Phase", lang === "zh" ? "扶抑加权打分 · 藏干分本中余" : "weighted scoring · hidden stems split", rows);
+  rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "格局取月令、扶抑为简化模型(藏干本中余、月令加权、含合化);流派众多,仅供参考。" : "Pattern from the month; simplified 扶抑 scoring (incl. 合化) — schools differ, for reference."]);
+  rows.unshift(
+    [lang === "zh" ? "格局" : "Pattern", `<b class="gold">${PT[0]}</b> · ${pt.type === "ji" ? (lang === "zh" ? "吉格 · 顺用" : "benefic · flow with") : (lang === "zh" ? "凶格 · 逆用" : "malefic · tame it")}${pt.transparent ? "" : (lang === "zh" ? " <span style=\"opacity:.55\">(月令本气取格)</span>" : " <span style=\"opacity:.55\">(from month qi)</span>")}<br>${PT[1]}`],
+    [lang === "zh" ? "格局喜忌" : "Pattern needs", `${lang === "zh" ? "喜:" : "favors: "}${PT[2]}<br>${lang === "zh" ? "忌:" : "avoids: "}${PT[3]}`]
+  );
+  return drawerShell(ELEM_CHAR[s.dmElement], ELEM_COLOR[s.dmElement], lang === "zh" ? "格局 · 旺衰 · 喜用" : "Pattern · Strength", lang === "zh" ? "月令取格 · 扶抑打分 · 藏干本中余" : "pattern · weighted scoring", rows);
 }
 const ELEM_ORGAN = {
   zh:{ wood:"肝胆、筋络、眼", fire:"心、小肠、血脉与睡眠", earth:"脾胃、消化", metal:"肺、大肠、呼吸与皮肤", water:"肾、膀胱、泌尿与骨" },
@@ -1537,6 +1554,7 @@ function renderCard(r, inp) {
   const hintSeen = (() => { try { return localStorage.getItem("duosky_hint"); } catch (e) { return 1; } })();
   const hint = hintSeen ? "" : `<div class="hint-bar"><span>${lang === "zh" ? "✦ 轻点任意 干支 · 藏干 · 柱 · 行星 · 大运 —— 都有解读" : "✦ Tap any pillar, stem, planet or luck cycle — all open a reading"}</span><span class="hint-x clk" role="button" tabindex="0" data-t="hintclose" aria-label="dismiss">✕</span></div>`;
   const stg = computeStrength(r);
+  const pt = computePattern(r);
   const stgSum = lang === "zh"
     ? `日主 ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${STG.zh[stg.level]}</b>${stg.favor.length ? ` · 喜用 <b>${stg.favor.map(e => ELEM_CHAR[e]).join("")}</b>` : ""}${stg.avoid.length ? ` · 忌 ${stg.avoid.map(e => ELEM_CHAR[e]).join("")}` : ""} <span class="stg-tap">点开详解 ›</span>`
     : `Day Master ${r.dayMaster} · <b class="gold">${STG.en[stg.level]}</b>${stg.favor.length ? ` · favor <b>${stg.favor.map(e => ELEM_TXT.en[e]).join(", ")}</b>` : ""} <span class="stg-tap">details ›</span>`;
@@ -1615,7 +1633,7 @@ function renderCard(r, inp) {
     ? `<div class="op-line"><b>星盘</b> ☉${SIGN_TXT.zh[wheel.planets[0].sign]} · ☽${SIGN_TXT.zh[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.zh[SIGNS[Math.floor(wheel.asc / 30)]] : "待出生时地"}</div>`
     : `<div class="op-line"><b>Chart</b> ☉${SIGN_TXT.en[wheel.planets[0].sign]} · ☽${SIGN_TXT.en[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.en[SIGNS[Math.floor(wheel.asc / 30)]] : "—"}</div>`) : "";
   const opening = `<div class="opening">
-    <div class="op-line"><b>${lang === "zh" ? "八字" : "BaZi"}</b> ${lang === "zh" ? "日主" : "DM"} ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <span class="gold">${STG[lang][stg.level]}</span>${favC ? ` · ${lang === "zh" ? "喜" : "favor"} ${favC}` : ""}${avoC ? ` · ${lang === "zh" ? "忌" : "avoid"} ${avoC}` : ""}</div>
+    <div class="op-line"><b>${lang === "zh" ? "八字" : "BaZi"}</b> ${lang === "zh" ? "日主" : "DM"} ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${PATTERN[pt.key][lang][0]}</b> · <span class="gold">${STG[lang][stg.level]}</span>${favC ? ` · ${lang === "zh" ? "喜" : "favor"} ${favC}` : ""}${avoC ? ` · ${lang === "zh" ? "忌" : "avoid"} ${avoC}` : ""}</div>
     ${opAstro}
     <div class="op-take">${DM_LINE[lang][r.dayMaster]}</div></div>`;
   const navbar = `<div class="cardnavbar"><span class="navtab" role="button" tabindex="0" data-jump="sec-bazi">${lang === "zh" ? "八字" : "BaZi"}</span><span class="navtab" role="button" tabindex="0" data-jump="sec-elem">${lang === "zh" ? "五行·解读" : "Elements"}</span>${wheel ? `<span class="navtab" role="button" tabindex="0" data-jump="west-scene">${lang === "zh" ? "星盘" : "Chart"}</span>` : ""}</div>`;

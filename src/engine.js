@@ -154,6 +154,27 @@ function computeLuck(termsTable, p, opts) {
   return { forward, startAge, startMonths, startDays, startYear: p.y + startAge, list };
 }
 
+// ============ 格局 (月令取格) ============
+function computePattern(r) {
+  const dm = r.dayMaster, mb = r.month[1], hid = HIDDEN[mb];
+  const outs = [r.year[0], r.month[0]]; if (r.hour) outs.push(r.hour[0]);   // 天干(不含日主)
+  let geStem = null, via = -1;
+  for (let i = 0; i < hid.length; i++) if (outs.indexOf(hid[i]) >= 0) { geStem = hid[i]; via = i; break; }  // 藏干透出(本>中>余)
+  const transparent = geStem != null;
+  if (!geStem) { geStem = hid[0]; via = 0; }   // 无透干 -> 取月令本气
+  const tg = tenGod(dm, geStem);
+  let key;
+  if (tg === "比肩" || tg === "劫财") {
+    if (mb === SS_LU[dm]) key = "jianlu";
+    else if (SS_YANGREN[dm] === mb) key = "yangren";
+    else key = "bijie";
+  } else {
+    key = { 正官:"zhengguan", 七杀:"qisha", 正财:"zhengcai", 偏财:"piancai", 正印:"zhengyin", 偏印:"pianyin", 食神:"shishen", 伤官:"shangguan" }[tg];
+  }
+  const JI = ["zhengguan", "zhengcai", "piancai", "zhengyin", "shishen", "jianlu"];  // 吉格(顺用)
+  return { key, geStem, geTenGod: tg, via, transparent, type: JI.indexOf(key) >= 0 ? "ji" : "xiong" };
+}
+
 // ============ 双人合盘 (八字合婚) ============
 function branchRel2(a, b) {
   if (ZHI_CHONG[a] === b) return "chong";
@@ -417,4 +438,4 @@ function tenGod(dm, other) {
   return T[rel][same ? 0 : 1];
 }
 
-if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };
+if (typeof module !== "undefined") module.exports = { computeChart, computeLuck, computeRelations, computeStrength, computeFleetYears, computeShensha, luckFortune, trueSolarDelta, computeCompat, computePattern, nayin, tenGod, GAN, ZHI, GAN_WX, ZHI_MAIN, SIGNS };

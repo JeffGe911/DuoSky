@@ -232,7 +232,7 @@
   .wnote{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
   @media (prefers-reduced-motion:reduce){.drawer,.drawer-bg{transition:none}}
   .wheel-wrap{display:flex;justify-content:center;margin:10px 0 12px}
-  .wheel{width:100%;max-width:340px;height:auto}
+  .wheel{width:100%;max-width:390px;height:auto}
   .wheel .clk{cursor:pointer} .wheel .wpg:hover circle{fill:rgba(217,185,108,.28)}
   .asp-row{margin:10px 0 4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
   .asp{font-size:13px;border:1px solid;border-radius:6px;padding:1px 7px;background:rgba(8,12,28,.4)}
@@ -401,8 +401,10 @@
   #reveal-fx{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
     background:radial-gradient(62% 60% at 50% 45%, rgba(30,16,15,.78), rgba(8,6,10,.45) 68%, transparent);transition:opacity .45s ease}
   #reveal-fx.on{opacity:1}
-  .xy-cloud{width:min(72vw,380px);height:auto;filter:drop-shadow(0 0 20px rgba(217,185,108,.6));transform:scale(.7);opacity:0;transition:transform .6s cubic-bezier(.2,.7,.2,1), opacity .5s ease}
-  #reveal-fx.on .xy-cloud{transform:scale(1);opacity:1}
+  .rv-mark{display:flex;align-items:center;gap:.12em;font-size:46px;letter-spacing:.14em;color:#E8CE86;font-family:"Songti SC","STSong",Georgia,serif;
+    filter:drop-shadow(0 0 24px rgba(217,185,108,.65));transform:scale(.72);opacity:0;transition:transform .6s cubic-bezier(.2,.7,.2,1), opacity .5s ease}
+  .rv-mark svg{vertical-align:-.08em}
+  #reveal-fx.on .rv-mark{transform:scale(1);opacity:1}
   @media (prefers-reduced-motion:reduce){#reveal-fx{display:none}}
   .wheel-guide{font-size:12px;line-height:1.75;color:var(--soft);background:rgba(255,255,255,.03);border:1px solid var(--hairline);border-radius:10px;padding:11px 13px;margin:10px 0 4px}
   .wheel-guide b{color:var(--gold);font-weight:600}
@@ -630,7 +632,7 @@
   <button class="back" id="btn-print"><span class="i-en">🖨 Print</span><span class="i-zh">🖨 打印</span></button>
 </div>
 <button id="totop" class="totop hidden" aria-label="back to top">↑</button>
-<div id="reveal-fx" aria-hidden="true"><svg class="xy-cloud" viewBox="-120 -62 240 124"><g fill="none" stroke="#E8CE86" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path fill="rgba(217,185,108,.06)" d="M-96,26 C-96,-6 -60,-14 -50,10 C-44,-22 -6,-26 4,4 C10,-30 52,-30 58,2 C64,-16 96,-14 96,20 C96,40 78,44 60,44 L-78,44 C-92,44 -96,36 -96,26 Z"/><path d="M-96,26 C-108,22 -108,6 -96,4"/><path d="M96,20 C108,18 108,2 96,0"/><circle cx="-58" cy="20" r="3"/><circle cx="2" cy="16" r="3"/><circle cx="60" cy="18" r="3"/></g></svg></div>
+<div id="reveal-fx" aria-hidden="true"><div class="rv-mark serif">命 ✕ <svg viewBox="-50 -50 100 100" width="46" height="46" aria-hidden="true"><path d="M0,-46 C7,-13 13,-7 46,0 C13,7 7,13 0,46 C-7,13 -13,7 -46,0 C-13,-7 -7,-13 0,-46 Z" fill="#E8CE86"/></svg></div></div>
 <div class="drawer-bg" id="drawer-bg"></div>
 <div class="drawer" id="drawer" role="dialog" aria-modal="true"></div>
 
@@ -1941,7 +1943,7 @@ function buildWheel(w) {
     const a = P(k * 30, rZ), b = P(k * 30, rO);
     g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#D9B96C" stroke-opacity=".3"/>`);
     const m = P(k * 30 + 15, (rZ + rO) / 2);
-    g.push(`<text x="${m[0]}" y="${m[1]}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="${WEL[k % 4]}">${SIGN_GLYPH[SIGNS[k]]}</text>`);
+    g.push(`<text x="${m[0]}" y="${m[1]}" text-anchor="middle" dominant-baseline="central" font-size="18" fill="${WEL[k % 4]}">${SIGN_GLYPH[SIGNS[k]]}</text>`);
   }
   // 宫位分隔 + 编号 (整宫制)
   if (w.houses) {
@@ -1949,7 +1951,7 @@ function buildWheel(w) {
       const a = P(cusp, rI), b = P(cusp, rZ);
       g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#7E8EDC" stroke-opacity=".16"/>`);
       const n = P(cusp + 15, rI + 9);
-      g.push(`<g class="clk" role="button" tabindex="0" data-t="houses"><text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="8" fill="#96A0B8">${i + 1}</text></g>`);
+      g.push(`<g class="clk" role="button" tabindex="0" data-t="houses"><text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#96A0B8">${i + 1}</text></g>`);
     });
   }
   // 上升/中天 轴
@@ -1959,8 +1961,8 @@ function buildWheel(w) {
     const ml = P(w.mc, rO), mr = P(w.mc + 180, rO);
     g.push(`<line x1="${ml[0]}" y1="${ml[1]}" x2="${mr[0]}" y2="${mr[1]}" stroke="#D9B96C" stroke-width="1.1" stroke-opacity=".45"/>`);
     const at = P(w.asc, rO + 9), mt = P(w.mc, rO + 9);
-    g.push(`<g class="clk" role="button" tabindex="0" data-t="asc"><text x="${at[0]}" y="${at[1]}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#D9B96C">AC</text></g>`);
-    g.push(`<g class="clk" role="button" tabindex="0" data-t="mc"><text x="${mt[0]}" y="${mt[1]}" text-anchor="middle" dominant-baseline="central" font-size="9" fill="#D9B96C">MC</text></g>`);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="asc"><text x="${at[0]}" y="${at[1]}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#D9B96C">AC</text></g>`);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="mc"><text x="${mt[0]}" y="${mt[1]}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#D9B96C">MC</text></g>`);
   }
   // 相位连线
   (w.aspects || []).forEach(x => {
@@ -1971,19 +1973,19 @@ function buildWheel(w) {
   w.planets.forEach(pl => {
     const p = P(pl.lon, rP);
     g.push(`<g class="clk wpg" role="button" tabindex="0" data-t="planet" data-c="${pl.body}">
-      <circle cx="${p[0]}" cy="${p[1]}" r="11" fill="rgba(8,12,28,.55)"/>
-      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="${pl.retro ? "#E6A9A0" : "#EDE0BB"}">${PLANET_GLYPH[pl.body]}</text>
-      ${pl.retro ? `<text x="${(+p[0] + 8).toFixed(1)}" y="${(+p[1] - 7).toFixed(1)}" text-anchor="middle" font-size="7" fill="#E6A9A0">\u211e</text>` : ""}
+      <circle cx="${p[0]}" cy="${p[1]}" r="13" fill="rgba(8,12,28,.6)"/>
+      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="16" fill="${pl.retro ? "#E6A9A0" : "#EDE0BB"}">${PLANET_GLYPH[pl.body]}</text>
+      ${pl.retro ? `<text x="${(+p[0] + 9).toFixed(1)}" y="${(+p[1] - 8).toFixed(1)}" text-anchor="middle" font-size="8" fill="#E6A9A0">\u211e</text>` : ""}
       <title>${PLANET_NAME[lang][pl.body]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}</title></g>`);
   });
   // 福点
   if (w.fortune != null) {
     const p = P(w.fortune, rP - 26);
-    g.push(`<g class="clk" role="button" tabindex="0" data-t="fortune"><circle cx="${p[0]}" cy="${p[1]}" r="10" fill="rgba(8,12,28,.55)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="13" fill="#D9B96C">${FORTUNE_GLYPH}</text></g>`);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="fortune"><circle cx="${p[0]}" cy="${p[1]}" r="12" fill="rgba(8,12,28,.6)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="15" fill="#D9B96C">${FORTUNE_GLYPH}</text></g>`);
   }
   if (w.node != null) {
     const p = P(w.node, rP - 26);
-    g.push(`<g class="clk" role="button" tabindex="0" data-t="node"><circle cx="${p[0]}" cy="${p[1]}" r="9" fill="rgba(8,12,28,.55)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="12" fill="#B7C3E0">\u260a</text></g>`);
+    g.push(`<g class="clk" role="button" tabindex="0" data-t="node"><circle cx="${p[0]}" cy="${p[1]}" r="11" fill="rgba(8,12,28,.6)"/><text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="14" fill="#B7C3E0">\u260a</text></g>`);
   }
   return `<svg viewBox="0 0 360 360" class="wheel" role="img" aria-label="natal wheel">${g.join("")}</svg>`;
 }

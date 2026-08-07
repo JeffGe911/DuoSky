@@ -3003,7 +3003,26 @@ function renderCard(r, inp) {
   const angles = wheel && wheel.haveAngles ? `<div class="wp clk" role="button" tabindex="0" data-t="asc"><span class="wp-gl">AC</span><span class="wp-nm">${WX.asc}</span><span class="wp-sg">${sgOf(wheel.asc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="mc"><span class="wp-gl">MC</span><span class="wp-nm">${WX.mc}</span><span class="wp-sg">${sgOf(wheel.mc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="fortune"><span class="wp-gl">${FORTUNE_GLYPH}</span><span class="wp-nm">${WX.fortune}</span><span class="wp-sg">${sgOf(wheel.fortune)}</span></div>` : "";
   const nodeRow = wheel && wheel.node != null ? `<div class="wp clk" role="button" tabindex="0" data-t="node"><span class="wp-gl">\u260a</span><span class="wp-nm">${NODE_TXT[lang][0]}</span><span class="wp-sg">${sgOf(wheel.node)}</span></div>` : "";
   const sunS = wheel.planets[0].sign, moonS = wheel.planets[1].sign, ascS = wheel.haveAngles ? SIGNS[Math.floor(wheel.asc / 30)] : null;
+  const ASTRO_ELN = { zh:{ fire:"火", earth:"土", air:"风", water:"水" }, en:{ fire:"Fire", earth:"Earth", air:"Air", water:"Water" } };
+  const ASTRO_ELT = { zh:{ fire:"热情、行动快、直来直往", earth:"务实、稳重、看重结果", air:"善思善言、重关系与点子", water:"敏感、共情、凭直觉" }, en:{ fire:"warm, fast, direct", earth:"grounded, steady, results-first", air:"thinking, talking, ideas & bonds", water:"sensitive, empathic, intuitive" } };
+  const westReading = wheel ? (() => {
+    const P = wheel.planets, sunSg = P[0].sign, moonSg = P[1].sign;
+    const cnt = {}; P.forEach(pl => { const e = SIGN_ELEM[pl.sign]; cnt[e] = (cnt[e] || 0) + 1; });
+    const domEl = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a])[0];
+    const rising = wheel.haveAngles ? (lang === "zh" ? `,上升 <b>${SIGN_TXT.zh[ascS]}</b>(别人第一眼看到的你偏${SIGN_MANNER.zh[ascS]})` : `, rising <b>${SIGN_TXT.en[ascS]}</b> (first impression: ${SIGN_MANNER.en[ascS]})`) : "";
+    let asp = "";
+    if (wheel.aspects && wheel.aspects.length) {
+      const t = wheel.aspects.slice().sort((x, y) => x.orb - y.orb)[0];
+      const tense = t.type === "square" || t.type === "oppo";
+      const hw = tense ? (lang === "zh" ? "是张力也是动力,磨合好就是本事" : "a tension that becomes drive once handled") : (lang === "zh" ? "是天生的顺势与助力" : "an easy, supportive flow");
+      asp = lang === "zh" ? ` 最紧的相位是 <b>${PLANET_NAME.zh[t.a]}</b> ${ASPECT_ABBR[t.type]} <b>${PLANET_NAME.zh[t.b]}</b>——${hw}。` : ` Tightest aspect: <b>${PLANET_NAME.en[t.a]}</b> ${ASPECT_ABBR[t.type]} <b>${PLANET_NAME.en[t.b]}</b> — ${hw}.`;
+    }
+    return lang === "zh"
+      ? `<div class="wsum">太阳在 <b>${SIGN_TXT.zh[sunSg]}</b>(核心与人生动力偏${SIGN_MANNER.zh[sunSg]}),月亮在 <b>${SIGN_TXT.zh[moonSg]}</b>(情绪与内在需求偏${SIGN_MANNER.zh[moonSg]})${rising}。本命以 <b>${ASTRO_ELN.zh[domEl]}</b> 象为主——气质偏${ASTRO_ELT.zh[domEl]}。${asp}</div>`
+      : `<div class="wsum">Sun in <b>${SIGN_TXT.en[sunSg]}</b> (${SIGN_MANNER.en[sunSg]}), Moon in <b>${SIGN_TXT.en[moonSg]}</b> (${SIGN_MANNER.en[moonSg]})${rising}. The chart is <b>${ASTRO_ELN.en[domEl]}</b>-dominant — ${ASTRO_ELT.en[domEl]}.${asp}</div>`;
+  })() : "";
   const western = wheel ? `<div class="deeper" id="west-scene"><div class="d-head"><span class="label gold">${W.chart}</span><span class="unlock">${W.sub}</span></div>
+    ${westReading}
     ${wheel.haveAngles ? (() => { const rp = RULER[ascS], pd = wheel.planets.find(p => p.body === rp); return pd ? `<div class="wnote" style="color:var(--gold);opacity:.9">${lang === "zh" ? `命主星:<b>${PLANET_NAME.zh[rp]}</b>(上升${SIGN_TXT.zh[ascS]}守护)落 ${SIGN_TXT.zh[pd.sign]}${pd.house ? " 第" + pd.house + "宫" : ""}——你这一生的总钥匙。` : `Chart ruler: <b>${PLANET_NAME.en[rp]}</b> (rules your ${SIGN_TXT.en[ascS]} Ascendant) in ${SIGN_TXT.en[pd.sign]}${pd.house ? ", house " + pd.house : ""} — the key to the whole chart.`}</div>` : ""; })() : ""}
     <div class="wheel-wrap">${buildWheel(wheel)}</div>
     <div class="wheel-guide">${lang === "zh"

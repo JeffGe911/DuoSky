@@ -1885,26 +1885,30 @@ function tgRel(dm, stem) {
   const tg = tenGod(dm, stem);
   return lang === "zh" ? `${TEN_GOD_FULL.zh[tg]}——${TEN_GOD_GLOSS.zh[tg]}` : `${TEN_GOD_FULL.en[tg]}: ${TEN_GOD_GLOSS.en[tg]}`;
 }
+const PINYIN = { 甲:"Jiǎ",乙:"Yǐ",丙:"Bǐng",丁:"Dīng",戊:"Wù",己:"Jǐ",庚:"Gēng",辛:"Xīn",壬:"Rén",癸:"Guǐ",
+  子:"Zǐ",丑:"Chǒu",寅:"Yín",卯:"Mǎo",辰:"Chén",巳:"Sì",午:"Wǔ",未:"Wèi",申:"Shēn",酉:"Yǒu",戌:"Xū",亥:"Hài" };
+function py(x) { return x.split("").map(c => PINYIN[c] || c).join(" "); }
+function cnEn(x) { return lang === "zh" ? x : `${x} <span style="opacity:.6;font-size:.82em">${py(x)}</span>`; }
 function stemDrawer(stem, type, pk, host, r) {
   const c = STEM_COLOR[stem];
   const yy = GAN.indexOf(stem) % 2 === 0 ? (lang === "zh" ? "阳" : "Yang") : (lang === "zh" ? "阴" : "Yin");
   const rows = [[DW[lang].whatIs, DM_LINE[lang][stem]]];
   if (type === "hidden") {
-    const pos = lang === "zh" ? `藏于 ${host} 支` : `hidden in the ${host} branch`;
+    const pos = lang === "zh" ? `藏于 ${host} 支` : `hidden in the ${cnEn(host)} branch`;
     rows.push([DW[lang].inChart, `<b class="gold">${pos}</b> · ${tgRel(r.dayMaster, stem)}`]);
   } else if (pk === "day") {
     rows.push([DW[lang].inChart, `<b class="gold">${posLabel(pk, "stem")}</b> · ${DW[lang].dayMaster}`]);
   } else {
     rows.push([DW[lang].inChart, `<b class="gold">${posLabel(pk, "stem")}</b> · ${tgRel(r.dayMaster, stem)}`]);
   }
-  return drawerShell(stem, c, `${stem} · ${MATERIAL[lang][stem]}`, `${yy} ${ELEM_TXT[lang][GAN_WX[stem]]}`, rows);
+  return drawerShell(stem, c, `${cnEn(stem)} · ${MATERIAL[lang][stem]}`, `${yy} ${ELEM_TXT[lang][GAN_WX[stem]]}`, rows);
 }
 function branchDrawer(branch, pk, r) {
   const hid = CANGGAN[branch].map(hs => {
     const tg = tenGod(r.dayMaster, hs);
-    return `<span style="color:${STEM_COLOR[hs]}">${hs}</span> <span style="opacity:.65">(${ELEM_TXT[lang][GAN_WX[hs]]} · ${TEN_GOD_NAME[lang][tg]})</span>`;
+    return `<span style="color:${STEM_COLOR[hs]}">${cnEn(hs)}</span> <span style="opacity:.65">(${ELEM_TXT[lang][GAN_WX[hs]]} · ${TEN_GOD_NAME[lang][tg]})</span>`;
   }).join(lang === "zh" ? "　" : " · ");
-  return drawerShell(branch, STEM_COLOR[ZHI_MAIN[branch]], `${branch} · ${ANIMAL_TXT[lang][branch]}`, ELEM_TXT[lang][GAN_WX[ZHI_MAIN[branch]]],
+  return drawerShell(branch, STEM_COLOR[ZHI_MAIN[branch]], `${cnEn(branch)} · ${ANIMAL_TXT[lang][branch]}`, ELEM_TXT[lang][GAN_WX[ZHI_MAIN[branch]]],
     [[DW[lang].whatIs, BRANCH_LINE[lang][branch]], [DW[lang].inChart, `<b class="gold">${posLabel(pk, "branch")}</b>`], [DW[lang].hidden, hid]]);
 }
 const RULER = { Aries:"Mars",Taurus:"Venus",Gemini:"Mercury",Cancer:"Moon",Leo:"Sun",Virgo:"Mercury",Libra:"Venus",Scorpio:"Mars",Sagittarius:"Jupiter",Capricorn:"Saturn",Aquarius:"Saturn",Pisces:"Jupiter" };
@@ -1969,7 +1973,7 @@ function pillarDrawer(pk) {
   ];
   const POS = lang === "zh" ? TG_POS : TG_POSE;
   if (ptg && POS[ptg] && POS[ptg][pk]) rows.push([lang === "zh" ? "此宫十神" : "Ten God here", `<b class="gold">${TEN_GOD_FULL[lang][ptg]}</b>${pk === "day" ? (lang === "zh" ? "(配偶宫本气)" : " (spouse-palace qi)") : ""}——${POS[ptg][pk]}`]);
-  return drawerShell(gz || "?", "#D9B96C", `${T[pk]}${gz ? " · " + gz : ""}`, lang === "zh" ? "这根柱子代表什么" : "what this pillar means", rows);
+  return drawerShell(gz || "?", "#D9B96C", `${T[pk]}${lang === "en" ? " Pillar" : ""}${gz ? " · " + cnEn(gz) : ""}`, lang === "zh" ? "这根柱子代表什么" : "what this pillar means", rows);
 }
 const LK = {
   en:{title:"Luck Cycles",sub:"大运 · ten-year fortune",fwd:"forward",bwd:"reverse",begins:"begins at age",note:"Each pillar rules ~10 years — read its stem as a Ten God against your Day Master. Start age is approximate (3 days to the next solar term ≈ 1 year).",oor:"Out of computable range."},
@@ -2265,7 +2269,7 @@ function luckStepDrawer(i) {
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
     <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:36px">${x.ganzhi}</span>
-      <div><div class="dw-title serif">${x.ganzhi} · ${ny.name}</div><div class="dw-sub">${ageR}</div></div></div>
+      <div><div class="dw-title serif">${cnEn(x.ganzhi)} · ${lang === "zh" ? ny.name : NAYIN_EN[Math.floor(ny.idx / 2)]}</div><div class="dw-sub">${ageR}</div></div></div>
     <div style="margin-top:8px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
 }
 const SHEN = {

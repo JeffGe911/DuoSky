@@ -1506,38 +1506,35 @@ function readingDrawer(r) {
   rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "由规则从旺衰·十神·神煞·宫位合成,是启发而非断言;仅供自省与娱乐。" : "Synthesized by rules from your chart — a prompt for reflection, not a verdict."]);
   return drawerShell("读", "#D9B96C", lang === "zh" ? "综合解读" : "Life Reading", lang === "zh" ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart", rows);
 }
-function todayDrawer() {
+function todayDrawer(scope) {
+  scope = scope || "all";
   const r = lastChart.r, inp = lastChart.inp, zh = lang === "zh";
-  const now = new Date();
-  const ty = now.getFullYear(), tm = now.getMonth() + 1, td = now.getDate();
-  const localTz = -now.getTimezoneOffset();
-  const sg = computeStrength(r);
-  const tR = computeChart(TERMS, { y:ty, m:tm, d:td, hh:12, mi:0, tzMin:localTz, timeKnown:false });
-  const cycRows = [[zh?"流年":"Year", tR.year], [zh?"流月":"Month", tR.month], [zh?"流日":"Day", tR.day]].map(([lbl, gz]) => {
-    const a = luckAssess(r, gz, sg), tg = tenGod(r.dayMaster, gz[0]);
-    const rs = a.reasons.length ? " · " + luckReasonText(a.reasons.slice(0, 1)) : "";
-    return `<div class="fy-row"><span class="fy-yr">${lbl}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tg]} <b style="opacity:.7">${GRADE[lang][a.grade]}</b><span class="fy-rs">${rs}</span></span><span class="fo-dot ${gradeDot(a.grade)}"></span></div>`;
-  }).join("");
-  const dayFo = luckAssess(r, tR.day, sg).level;
-  const dayWord = { good: zh?"今日干支扶你喜用——宜进取、办正事、见贵人。":"Today feeds your useful phase — push forward, handle key matters.",
-    bad: zh?"今日干支冲你喜用——宜守成、缓决策、避冲突。":"Today works against your useful phase — hold steady, delay big calls.",
-    neutral: zh?"今日干支不偏不倚——平顺度日即可。":"A neutral day — steady as she goes." }[dayFo];
-  const dateStr = zh?`${ty} 年 ${tm} 月 ${td} 日`:`${ty}-${String(tm).padStart(2,"0")}-${String(td).padStart(2,"0")}`;
-  const rows = [
-    [zh?"今日":"Today", `${dateStr} <span class="fo-dot ${dayFo}"></span><br><b>${dayWord}</b>`],
-    [zh?"流年 · 流月 · 流日":"Year · Month · Day", cycRows]
-  ];
-  const lk = lastLuck || computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
-  if (lk && !lk.error) {
-    const age = ty - inp.y, past = lk.list.filter(x => age >= x.startAge);
-    if (past.length) {
-      const cur = past[past.length - 1], fo = luckAssess(r, cur.ganzhi, sg).level, tg = tenGod(r.dayMaster, cur.ganzhi[0]);
-      rows.push([zh?"现行大运":"Current luck", `<b class="gold">${cur.ganzhi}</b> ${zh?`(${cur.startAge}\u2013${cur.startAge+9} 岁 · ${TEN_GOD_NAME.zh[tg]})`:`(age ${cur.startAge}\u2013${cur.startAge+9} · ${TEN_GOD_NAME.en[tg]})`} <span class="fo-dot ${fo}"></span>`]);
-    } else {
-      rows.push([zh?"现行大运":"Current luck", zh?`尚未起运(约 ${lk.startAge} 岁起运)。`:`Luck cycles begin around age ${lk.startAge}.`]);
+  const now = new Date(), ty = now.getFullYear(), tm = now.getMonth() + 1, td = now.getDate(), localTz = -now.getTimezoneOffset();
+  const dateStr = zh ? `${ty} 年 ${tm} 月 ${td} 日` : `${ty}-${String(tm).padStart(2, "0")}-${String(td).padStart(2, "0")}`;
+  const rows = [];
+  if (scope !== "astro") {
+    const sg = computeStrength(r);
+    const tR = computeChart(TERMS, { y:ty, m:tm, d:td, hh:12, mi:0, tzMin:localTz, timeKnown:false });
+    const cycRows = [[zh?"流年":"Year", tR.year], [zh?"流月":"Month", tR.month], [zh?"流日":"Day", tR.day]].map(([lbl, gz]) => {
+      const a = luckAssess(r, gz, sg), tg = tenGod(r.dayMaster, gz[0]);
+      const rs = a.reasons.length ? " · " + luckReasonText(a.reasons.slice(0, 1)) : "";
+      return `<div class="fy-row"><span class="fy-yr">${lbl}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tg]} <b style="opacity:.7">${GRADE[lang][a.grade]}</b><span class="fy-rs">${rs}</span></span><span class="fo-dot ${gradeDot(a.grade)}"></span></div>`;
+    }).join("");
+    const dayFo = luckAssess(r, tR.day, sg).level;
+    const dayWord = { good: zh?"今日干支扶你喜用——宜进取、办正事、见贵人。":"Today feeds your useful phase — push forward, handle key matters.", bad: zh?"今日干支冲你喜用——宜守成、缓决策、避冲突。":"Today works against your useful phase — hold steady, delay big calls.", neutral: zh?"今日干支不偏不倚——平顺度日即可。":"A neutral day — steady as she goes." }[dayFo];
+    rows.push([zh?"今日":"Today", `${dateStr} <span class="fo-dot ${dayFo}"></span><br><b>${dayWord}</b>`]);
+    rows.push([zh?"流年 · 流月 · 流日":"Year · Month · Day", cycRows]);
+    const lk = lastLuck || computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
+    if (lk && !lk.error) {
+      const age = ty - inp.y, past = lk.list.filter(x => age >= x.startAge);
+      if (past.length) {
+        const cur = past[past.length - 1], fo = luckAssess(r, cur.ganzhi, sg).level, tg = tenGod(r.dayMaster, cur.ganzhi[0]);
+        rows.push([zh?"现行大运":"Current luck", `<b class="gold">${cur.ganzhi}</b> ${zh?`(${cur.startAge}\u2013${cur.startAge+9} 岁 · ${TEN_GOD_NAME.zh[tg]})`:`(age ${cur.startAge}\u2013${cur.startAge+9} · ${TEN_GOD_NAME.en[tg]})`} <span class="fo-dot ${fo}"></span>`]);
+      } else rows.push([zh?"现行大运":"Current luck", zh?`尚未起运(约 ${lk.startAge} 岁起运)。`:`Luck cycles begin around age ${lk.startAge}.`]);
     }
   }
-  if (window.Astronomy && lastWheel) {
+  if (scope !== "bazi" && window.Astronomy && lastWheel) {
+    if (scope === "astro") rows.push([zh?"今日":"Today", dateStr]);
     const tw = computeWheel(now.getTime(), inp.lat, inp.lon, !inp.notime);
     if (tw) {
       const mSign = tw.planets[1].sign, mph = MOON_PHASE[Math.floor(tw.moonPhase / 45) % 8][lang];
@@ -1552,18 +1549,13 @@ function todayDrawer() {
         for (const [a, nm] of ASP) { const orb = Math.abs(d - a); if (orb <= 2) { hits.push({ tp:tp.body, np:np.body, type:nm, orb }); break; } }
       }));
       hits.sort((a, b) => a.orb - b.orb);
-      const tRows = hits.slice(0, 6).map(x => {
-        const c = ASPECT_META[x.type][0];
-        return `<div class="tr-row"><span style="color:${c}">${PLANET_GLYPH[x.tp]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.np]}</span> <span style="opacity:.7">${PLANET_NAME[lang][x.tp]} \u2192 ${PLANET_NAME[lang][x.np]}</span> <span style="opacity:.45;font-size:11px">${x.orb.toFixed(1)}\u00b0</span></div>`;
-      }).join("");
-      rows.push([zh?"当前行运":"Transits now", hits.length
-        ? tRows + `<div class="wnote" style="margin-top:5px">${zh?"外行星过境正与本命形成紧密相位(≤2°),影响可持续数月——是当下的大主题。":"Slow-planet transits within 2° of your natal points — themes that last months."}</div>`
-        : (zh?"此刻无紧密的外行星过境。":"No tight slow-planet transits right now.")]);
+      const tRows = hits.slice(0, 6).map(x => { const c = ASPECT_META[x.type][0]; return `<div class="tr-row"><span style="color:${c}">${PLANET_GLYPH[x.tp]} ${ASPECT_ABBR[x.type]} ${PLANET_GLYPH[x.np]}</span> <span style="opacity:.7">${PLANET_NAME[lang][x.tp]} \u2192 ${PLANET_NAME[lang][x.np]}</span> <span style="opacity:.45;font-size:11px">${x.orb.toFixed(1)}\u00b0</span></div>`; }).join("");
+      rows.push([zh?"当前行运":"Transits now", hits.length ? tRows + `<div class="wnote" style="margin-top:5px">${zh?"外行星过境正与本命形成紧密相位(≤2°),影响可持续数月——是当下的大主题。":"Slow-planet transits within 2° of your natal points — themes that last months."}</div>` : (zh?"此刻无紧密的外行星过境。":"No tight slow-planet transits right now.")]);
     }
   }
-  return drawerShell(zh?"日":"\u2609", "#D9B96C", zh?"今日 · 此刻":"Today & Now", zh?"流年·流月·流日 · 大运 · 今日星运":"cycles · luck · sky today", rows);
-}
-const CPT = {
+  const TT = { bazi:[zh?"今日运势 · 八字":"Today · BaZi", zh?"流年 · 流月 · 流日 · 大运":"cycles · luck"], astro:[zh?"今日运势 · 星盘":"Today · Chart", zh?"今日星象 · 行运":"sky today · transits"], all:[zh?"今日 · 此刻":"Today & Now", zh?"八字 + 星运":"bazi + sky"] }[scope];
+  return drawerShell(scope === "astro" ? "☽" : "運", "#D9B96C", TT[0], TT[1], rows);
+}const CPT = {
   tier:{ zh:{ great:"上等 · 天作之合", good:"中上 · 相处融洽", ok:"平 · 可经营", work:"需磨合" }, en:{ great:"Excellent", good:"Good", ok:"Workable", work:"Needs effort" } },
   dm:{ he:{ zh:"日主相合(天干五合)——情投意合、彼此吸引。", en:"Day masters in union — natural attraction and rapport." },
     sheng:{ zh:"日主相生——一方滋养一方,温柔互补。", en:"Day masters generate — one nourishes the other." },
@@ -1798,7 +1790,7 @@ function renderCard(r, inp) {
       : "<b>How to read it:</b> the outer ring is the <b>12 signs</b>; the ten inner symbols (☉Sun ☽Moon ☿Mercury ♀Venus ♂Mars ♃Jupiter ♄Saturn…) are the <b>planets</b> — the sign & house they fall in show where that energy plays out; the gold axes are <b>Asc↔Desc</b> (you & others) and <b>MC↔IC</b> (career & home); the colored lines are <b>aspects</b> between planets. The list below spells each out — <b>tap any symbol</b> for its reading."}</div>
     ${wheel.haveAngles ? "" : `<div class="wnote">${WX.needLoc}</div>`}
     <div class="wgrid">${legend}${angles}${nodeRow}</div>
-    <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span>${wheel.haveAngles ? `<span class="dbtn clk" role="button" tabindex="0" data-t="houses">${lang === "zh" ? "宫位 ✦" : "Houses ✦"}</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日运势 ☉" : "Today ☉"}</span></div>
+    <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span>${wheel.haveAngles ? `<span class="dbtn clk" role="button" tabindex="0" data-t="houses">${lang === "zh" ? "宫位 ✦" : "Houses ✦"}</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="todaywest">${lang === "zh" ? "今日星运 ☽" : "Today ☽"}</span></div>
     <div class="wnote">${W.note}${inp.notime ? " " + W.approx : ""}</div></div>` : "";
 
   const born = lang === "zh"
@@ -2321,7 +2313,8 @@ function onPick(el) {
   else if (t === "hintclose") { try { localStorage.setItem("duosky_hint", "1"); } catch (e) {} const el = document.querySelector(".hint-bar"); if (el) el.remove(); return; }
   else if (t === "reading") openDrawer(readingDrawer(r));
   else if (t === "fortunecurve") openDrawer(fortuneDrawer(r));
-  else if (t === "today") openDrawer(todayDrawer());
+  else if (t === "today") openDrawer(todayDrawer("bazi"));
+  else if (t === "todaywest") openDrawer(todayDrawer("astro"));
   else if (t === "match") openDrawer(matchDrawer());
   else if (t === "matchwith") openDrawer(compatResultDrawer(roster[+el.dataset.ri]));
   else if (t === "matchgo") { const be = readMatchForm(); if (be) openDrawer(compatResultDrawer(be)); }

@@ -1,27 +1,36 @@
 {
   "name": "duosky",
   "version": "1.0.0",
-  "description": "> **Two skies. One you.** — Your birth moment, read by the world's two great astrologies: Chinese BaZi and the Western zodiac, side by side.",
-  "main": "index.js",
+  "description": "DuoSky (双星) — a BaZi (八字) x Western-zodiac dual-chart astrology web app; a single self-contained index.html built from src/.",
+  "main": "src/engine.js",
   "directories": {
     "doc": "docs",
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "python3 build.py",
+    "test": "node tests/golden.js && node tests/reading.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JeffGe911/DuoSky.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "bazi",
+    "astrology",
+    "zodiac",
+    "chinese-astrology",
+    "natal-chart",
+    "horoscope",
+    "swiss-ephemeris"
+  ],
+  "author": "Jeff Ge",
+  "license": "MIT",
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/JeffGe911/DuoSky/issues"
   },
-  "homepage": "https://github.com/JeffGe911/DuoSky#readme",
+  "homepage": "https://jeffge911.github.io/DuoSky/",
   "dependencies": {
     "astronomy-engine": "^2.1.19"
   }

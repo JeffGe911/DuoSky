@@ -159,7 +159,7 @@ __FONTS__
   .hero .pair{font-size:13px;letter-spacing:.26em;color:var(--gold);text-transform:uppercase;font-weight:600}
   body.zh .hero .pair{letter-spacing:.3em}
   .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:8px 0 6px;position:relative;z-index:1}
-  .pillar{border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:9px 4px 8px;text-align:center;
+  .pillar{border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:9px 4px 8px;text-align:center;position:relative;
     background:rgba(255,255,255,.035)}
   .pillar.dm{border-color:var(--gold);box-shadow:0 0 0 1px rgba(217,185,108,.5) inset, 0 0 22px rgba(217,185,108,.14);
     background:rgba(217,185,108,.07)}
@@ -370,9 +370,9 @@ __FONTS__
   .hint-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:12px;color:var(--gold);
     background:rgba(217,185,108,.09);border:1px solid var(--gold-dim);border-radius:9px;padding:8px 12px;margin:0 0 16px;letter-spacing:.02em}
   .hint-x{flex:none;cursor:pointer;opacity:.7;font-size:12px} .hint-x:hover{opacity:1}
-  .cardnavbar{position:sticky;top:0;z-index:6;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:9px 0;margin:0 -36px 16px;
-    background:linear-gradient(180deg,rgba(30,16,15,.97),rgba(30,16,15,.82) 68%,transparent);backdrop-filter:blur(4px)}
-  body.west .cardnavbar{background:linear-gradient(180deg,rgba(20,18,34,.97),rgba(20,18,34,.82) 68%,transparent)}
+  .cardnavbar{position:sticky;top:0;z-index:6;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:10px 0;margin:0 -36px 16px;
+    background:rgba(40,21,19,.94);border-bottom:1px solid var(--gold-dim);backdrop-filter:blur(6px)}
+  body.west .cardnavbar{background:rgba(20,18,34,.94)}
   .navtab{font-size:12px;letter-spacing:.08em;color:var(--soft);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 15px;cursor:pointer;transition:.15s;background:rgba(217,185,108,.06)}
   .navtab:hover{border-color:var(--gold);color:var(--gold)} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
   .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.05)}
@@ -413,6 +413,7 @@ __FONTS__
   .tab:hover{color:var(--soft)} .tab-on{color:var(--gold);border-bottom-color:var(--gold);font-weight:600}
   .tab:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
   .tabpane.hidden{display:none}
+  .pill-animal{position:absolute;top:3px;right:5px;font-size:12px;opacity:.32;pointer-events:none;user-select:none;line-height:1}
   .hidden{display:none}
 </style>
 </head>
@@ -1757,6 +1758,7 @@ function renderCard(r, inp) {
     : `${ELEM_TXT.en[GAN_WX[gz[0]]]} ${ANIMAL_TXT.en[gz[1]]}`;
   const tile = (labelKey, gz, isDm) => `
     <div class="pillar ${isDm ? "dm" : ""}">
+      <span class="pill-animal serif" style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}" title="${ANIMAL_TXT[lang][gz[1]]}">${ANIMAL_TRAD[gz[1]]}</span>
       <div class="p-label clk" role="button" tabindex="0" data-t="pillar" data-p="${labelKey}">${T[labelKey]}</div>
       <div class="tgline ${isDm ? "dmx" : ""}">${isDm ? T.dm : `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${gz[0]}" title="${tenGod(r.dayMaster, gz[0])}">${tgTxt(gz[0])}</span>`}</div>
       <div class="gz serif">${colored(gz, labelKey)}</div>

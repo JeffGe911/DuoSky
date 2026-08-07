@@ -229,6 +229,14 @@
   .wp-nm{font-size:12px;color:var(--soft);flex:none;width:64px} body.zh .wp-nm{width:46px}
   .wp-sg{font-size:12px;color:var(--muted)}
   .wnote{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+  :root{--round:ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","PingFang SC","Varela Round","Nunito",system-ui,sans-serif}
+  #west-scene{font-family:var(--round);letter-spacing:.01em}
+  #west-scene .d-head .label{font-size:13.5px;letter-spacing:.1em}
+  #west-scene .wp-nm{font-size:14px} #west-scene .wp-sg{font-size:13.5px}
+  #west-scene .wheel-guide{font-size:13.5px;line-height:1.9}
+  #west-scene .wnote{font-size:12.5px;line-height:1.7}
+  #west-scene .dgn{font-size:12px} #west-scene .unlock{font-size:12px}
+  #west-scene .dbtn{font-size:13px}
   @media (prefers-reduced-motion:reduce){.drawer,.drawer-bg{transition:none}}
   .wheel-wrap{display:flex;justify-content:center;margin:10px 0 12px}
   .wheel{width:100%;max-width:390px;height:auto}
@@ -1990,7 +1998,7 @@ function buildWheel(w) {
     const a = P(k * 30, rZ), b = P(k * 30, rO);
     g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#D9B96C" stroke-opacity=".3"/>`);
     const m = P(k * 30 + 15, (rZ + rO) / 2);
-    g.push(`<text x="${m[0]}" y="${m[1]}" text-anchor="middle" dominant-baseline="central" font-size="18" fill="${WEL[k % 4]}">${SIGN_GLYPH[SIGNS[k]]}</text>`);
+    g.push(`<text x="${m[0]}" y="${m[1]}" text-anchor="middle" dominant-baseline="central" font-size="20" fill="${WEL[k % 4]}">${SIGN_GLYPH[SIGNS[k]]}</text>`);
   }
   // 宫位分隔 + 编号 (整宫制)
   if (w.houses) {
@@ -1998,7 +2006,7 @@ function buildWheel(w) {
       const a = P(cusp, rI), b = P(cusp, rZ);
       g.push(`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="#7E8EDC" stroke-opacity=".16"/>`);
       const n = P(cusp + 15, rI + 9);
-      g.push(`<g class="clk" role="button" tabindex="0" data-t="houses"><text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#96A0B8">${i + 1}</text></g>`);
+      g.push(`<g class="clk" role="button" tabindex="0" data-t="houses"><text x="${n[0]}" y="${n[1]}" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#96A0B8">${i + 1}</text></g>`);
     });
   }
   // 上升/中天 轴
@@ -2021,7 +2029,7 @@ function buildWheel(w) {
     const p = P(pl.lon, rP);
     g.push(`<g class="clk wpg" role="button" tabindex="0" data-t="planet" data-c="${pl.body}">
       <circle cx="${p[0]}" cy="${p[1]}" r="13" fill="rgba(8,12,28,.6)"/>
-      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="16" fill="${pl.retro ? "#E6A9A0" : "#EDE0BB"}">${PLANET_GLYPH[pl.body]}</text>
+      <text x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central" font-size="18" fill="${pl.retro ? "#E6A9A0" : "#EDE0BB"}">${PLANET_GLYPH[pl.body]}</text>
       ${pl.retro ? `<text x="${(+p[0] + 9).toFixed(1)}" y="${(+p[1] - 8).toFixed(1)}" text-anchor="middle" font-size="8" fill="#E6A9A0">\u211e</text>` : ""}
       <title>${PLANET_NAME[lang][pl.body]} ${SIGN_TXT[lang][pl.sign]} ${Math.floor(pl.deg)}\u00b0${pl.retro ? " \u211e" : ""}</title></g>`);
   });

@@ -215,7 +215,12 @@
       radial-gradient(120% 70% at 50% -6%, rgba(233,190,120,.10), transparent 58%),
       linear-gradient(162deg,rgba(54,27,22,.97),rgba(28,14,13,.99));border:1px solid var(--gold-dim);border-bottom:none;
     border-radius:20px 20px 0 0;padding:22px 26px 30px;box-shadow:0 -20px 60px rgba(3,5,15,.72);
-    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:90vh;min-height:38vh;overflow-y:auto;overflow-x:hidden}
+    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:90vh;min-height:38vh;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:thin;scrollbar-color:var(--gold-dim) rgba(255,255,255,.05)}
+  .drawer::-webkit-scrollbar{width:10px}
+  .drawer::-webkit-scrollbar-track{background:rgba(255,255,255,.04);border-radius:8px;margin:6px 0}
+  .drawer::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:8px;border:2px solid transparent;background-clip:padding-box}
+  .drawer::-webkit-scrollbar-thumb:hover{background:var(--gold);background-clip:padding-box;border:2px solid transparent}
   .drawer.open{transform:translate(-50%,0)}
   .dw-close{position:absolute;top:15px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--soft);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px;line-height:1;font-family:inherit}
   .dw-close:hover{border-color:var(--gold);color:var(--gold)}

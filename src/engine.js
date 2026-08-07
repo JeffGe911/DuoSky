@@ -337,7 +337,8 @@ function luckAssess(r, ganzhi, s, cl) {
   }
   if (ys.element && (stemEl === ys.element || GAN_WX[ZHI_MAIN[br]] === ys.element)) { score += 1.2; reasons.push({ t:"yongshen", elem: ys.element }); }
   const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
-  return { score: +score.toFixed(1), level, reasons };
+  const grade = score >= 2.5 ? "daji" : score >= 1 ? "ji" : score > -1 ? "ping" : score > -2.5 ? "xiong" : "daxiong";
+  return { score: +score.toFixed(1), level, grade, reasons };
 }
 
 // ============ 双人合盘 (八字合婚) ============

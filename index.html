@@ -305,6 +305,7 @@
   .hid-pos{color:var(--muted);flex:none}
   .fo-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin:2px 2px 0}
   .fo-dot.good{background:#7FC08A} .fo-dot.bad{background:var(--seal)} .fo-dot.neutral{background:var(--muted);opacity:.55}
+  .fo-dot.great{background:#4FA85F;box-shadow:0 0 5px rgba(79,168,95,.7)} .fo-dot.terrible{background:#9E2B18;box-shadow:0 0 5px rgba(158,43,24,.7)}
   .lk-legend{font-size:11px;color:var(--muted);margin:6px 0;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
   .fy-row{display:flex;align-items:center;gap:10px;font-size:12px;margin:3px 0;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.05)}
   .fy-yr{flex:none;width:52px;color:var(--muted)} .fy-gz{flex:none;width:36px;font-size:15px;letter-spacing:.02em} .fy-tg{flex:1;color:var(--soft)}
@@ -1231,7 +1232,8 @@ function luckAssess(r, ganzhi, s, cl) {
   }
   if (ys.element && (stemEl === ys.element || GAN_WX[ZHI_MAIN[br]] === ys.element)) { score += 1.2; reasons.push({ t:"yongshen", elem: ys.element }); }
   const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
-  return { score: +score.toFixed(1), level, reasons };
+  const grade = score >= 2.5 ? "daji" : score >= 1 ? "ji" : score > -1 ? "ping" : score > -2.5 ? "xiong" : "daxiong";
+  return { score: +score.toFixed(1), level, grade, reasons };
 }
 
 // ============ 双人合盘 (八字合婚) ============
@@ -2832,6 +2834,21 @@ function luckReasonText(reasons) {
   if (!reasons.length) return lang === "zh" ? "无特别引动,平顺。" : "nothing notable — steady.";
   return reasons.map(z => { const L = LREASON[z.t] ? LREASON[z.t][lang] : z.t; return `${z.chars || ""} ${L}${z.elem ? (lang === "zh" ? ELEM_CHAR[z.elem] : " " + ELEM_TXT.en[z.elem]) : ""}`.trim(); }).join(lang === "zh" ? " · " : "; ");
 }
+const GRADE = { zh:{ daji:"大吉", ji:"吉", ping:"平运", xiong:"凶", daxiong:"大凶" }, en:{ daji:"very favorable", ji:"favorable", ping:"even", xiong:"adverse", daxiong:"very adverse" } };
+function gradeDot(g) { return g === "daji" ? "great" : g === "ji" ? "good" : g === "ping" ? "neutral" : g === "xiong" ? "bad" : "terrible"; }
+const TG_LUCK = { zh:{
+  bi:"比劫运——竞争、合作、朋友多,聚散财物;身弱得帮、身旺易破财争夺。",
+  shi:"食伤运——才华外显、表达创作、花钱与享受;利技艺,伤官运忌与官非口舌。",
+  cai:"财运——重心在钱与务实经营,机会多也耗神;身旺进财、身弱为财奔忙。",
+  guan:"官杀运——地位、责任、压力与考验;身强升迁掌权、身弱受制多劳。",
+  yin:"印运——学习、靠山、名声与休养,利考学文书贵人;偏印运防清高孤僻。"
+}, en:{
+  bi:"Peer decade — rivalry, alliances, many friends; money gathers and scatters.",
+  shi:"Output decade — talent shows, expression & spending; great for craft (Hurting: mind disputes).",
+  cai:"Wealth decade — focus on money & real ventures; opportunity but draining.",
+  guan:"Officer decade — status, duty, pressure & tests; promotion if strong, strain if weak.",
+  yin:"Resource decade — study, backing, reputation, rest; good for exams & mentors."
+} };
 function luckDrawer(r) {
   const inp = lastChart.inp;
   const lk = computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
@@ -3062,10 +3079,11 @@ function luckStepDrawer(i) {
   const rows = [
     [DW[lang].whatIs, lead],
     [lang === "zh" ? "十神" : "Ten God", `<b class="gold">${TEN_GOD_FULL[lang][tg]}</b> · ${st} ${lang === "zh" ? "对日主" : "to"} ${r.dayMaster}`],
+    [lang === "zh" ? "大运十神运" : "Decade type", TG_LUCK[lang][TG_GROUP[tg]]],
     [lang === "zh" ? "藏干" : "Hidden", hid],
     [lang === "zh" ? "纳音" : "Sound element", `${ny.name}${lang === "zh" ? "" : " · " + NAYIN_EN[Math.floor(ny.idx / 2)]} · ${ELEM_TXT[lang][ny.elem]}`],
     [lang === "zh" ? "与原局" : "vs natal", relTxt],
-    [lang === "zh" ? "喜忌细批" : "Fortune (detailed)", `<span class="fo-dot ${foStep}"></span> <b>${foTxt}</b> <span style="opacity:.5">(${asmt.score})</span><br><span style="opacity:.8">${luckReasonText(asmt.reasons)}</span><br><span style="opacity:.5">${lang === "zh" ? "命局喜用 " + (favStr || "—") : "chart favors " + (favStr || "—")}</span>`],
+    [lang === "zh" ? "喜忌细批" : "Fortune (detailed)", `<span class="fo-dot ${gradeDot(asmt.grade)}"></span> <b>${GRADE[lang][asmt.grade]}</b> <span style="opacity:.5">(${asmt.score})</span><br><span style="opacity:.8">${luckReasonText(asmt.reasons)}</span><br><span style="opacity:.5">${lang === "zh" ? "命局喜用 " + (favStr || "—") : "chart favors " + (favStr || "—")}</span>`],
     [lang === "zh" ? "运程" : "Span", ageR],
     [lang === "zh" ? "流年 · 十年" : "Yearly · this decade", fleetRows]
   ];

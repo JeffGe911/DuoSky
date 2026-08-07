@@ -459,8 +459,8 @@
     .lkc{width:50px}
   }
   .dgn{font-size:10.5px;font-style:normal;color:var(--gold);opacity:.75;margin-left:2px}
-  .tg-link{cursor:pointer;border-bottom:1px dotted var(--gold-dim);transition:color .15s}
-  .tg-link:hover{color:var(--gold);border-bottom-color:var(--gold)} .tg-link:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:3px}
+  .tg-link,.term-link{cursor:pointer;border-bottom:1px dotted var(--gold-dim);transition:color .15s}
+  .tg-link:hover,.term-link:hover{color:var(--gold);border-bottom-color:var(--gold)} .tg-link:focus-visible,.term-link:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:3px}
   #reveal-fx{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
     background:radial-gradient(62% 60% at 50% 45%, rgba(30,16,15,.78), rgba(8,6,10,.45) 68%, transparent);transition:opacity .45s ease}
   #reveal-fx.on{opacity:1}
@@ -3427,7 +3427,7 @@ function luckStepDrawer(i) {
   if (!lk || !lk.list[i]) return luckDrawer(r);
   const x = lk.list[i], st = x.ganzhi[0], br = x.ganzhi[1];
   const tg = tenGod(r.dayMaster, st), ny = nayin(x.ganzhi);
-  const hid = CANGGAN[br].map(hs => `<span style="color:${STEM_COLOR[hs]}">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(lang === "zh" ? "　" : " · ");
+  const hid = CANGGAN[br].map(hs => `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${hs}" style="color:${STEM_COLOR[hs]};border-bottom:1px dotted ${STEM_COLOR[hs]}88;cursor:pointer">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(lang === "zh" ? "　" : " · ");
   const rels = computeRelations([...natalPillars(r), { k:"luck", stem:st, branch:br }]).filter(z => z.members.includes("luck"));
   const relTxt = rels.length
     ? rels.map(z => `${relColored(z.chars, z.scope)} ${REL[z.type][lang][0]}<span style="opacity:.6">(${z.members.filter(m => m !== "luck").map(POSN).join("·") || "\u2014"})</span>${z.elem ? " \u2192 " + ELEM_TXT[lang][z.elem] : ""}`).join("<br>")
@@ -3476,7 +3476,7 @@ function fleetYearDrawer(gz, year) {
   const r = lastChart.r, zh = lang === "zh";
   const st = gz[0], br = gz[1], tg = tenGod(r.dayMaster, st), ny = nayin(gz), sg = computeStrength(r);
   const asmt = luckAssess(r, gz, sg);
-  const hid = CANGGAN[br].map(hs => `<span style="color:${STEM_COLOR[hs]}">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(zh ? "\u3000" : " · ");
+  const hid = CANGGAN[br].map(hs => `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${hs}" style="color:${STEM_COLOR[hs]};border-bottom:1px dotted ${STEM_COLOR[hs]}88;cursor:pointer">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(zh ? "\u3000" : " · ");
   const rows = [
     [DW[lang].whatIs, zh ? `${year} 年 ${cnEn(gz)},流年以 <b class="gold">${TEN_GOD_FULL.zh[tg]}</b> 当值——${TEN_GOD_GLOSS.zh[tg]}` : `${year}, the year ${gz}, runs as <b class="gold">${TEN_GOD_FULL.en[tg]}</b> — ${TEN_GOD_GLOSS.en[tg]}`],
     [zh ? "十神含义" : "Ten God", TEN_GOD_DEF[lang][tg]],
@@ -3525,32 +3525,55 @@ function tenGodNameDrawer(tg) {
   ];
   return drawerShell(tg.slice(0, 1), "#D9B96C", TEN_GOD_FULL[lang][tg] || tg, zh ? "十神" : "Ten God", rows);
 }
-const TG_NAMES_ZH = ["比肩","劫财","食神","伤官","正财","偏财","正官","七杀","正印","偏印"];
-function linkifyTenGods(root) {
-  if (lang !== "zh" || !root || !document.createTreeWalker) return;
-  const re = /(比肩|劫财|食神|伤官|正财|偏财|正官|七杀|正印|偏印)(?!格)/g;
+function shenNameDrawer(key) {
+  const zh = lang === "zh", e = SHEN[key];
+  if (!e) return drawerShell("煞", "#D9B96C", zh ? "神煞" : "Symbolic Star", "", [[DW[lang].whatIs, "\u2014"]]);
+  return drawerShell("煞", "#D9B96C", e[lang][0], zh ? "神煞 · 象征星" : "Symbolic Star", [[DW[lang].whatIs, e[lang][1]]]);
+}
+function nayinNameDrawer(name) {
+  const zh = lang === "zh", hit = NAYIN.find(x => x[0] === name), el = hit ? hit[1] : null;
+  const lead = zh
+    ? `纳音「${name}」——六十甲子配纳音的古法之一,以一对干支合出一种「象」,属 <b style="color:${el ? ELEM_COLOR[el] : "#D9B96C"}">${el ? ELEM_TXT.zh[el] : "?"}</b>。纳音偏整体气质格调;断事仍以正五行为主、纳音为点睛之辅。`
+    : `Sound-element "${name}" — an old system pairing each two ganzhi into an image; element <b style="color:${el ? ELEM_COLOR[el] : "#D9B96C"}">${el ? ELEM_TXT.en[el] : "?"}</b>. It colours overall temperament; a reading still leads with the plain five phases.`;
+  const rows = [[DW[lang].whatIs, lead]];
+  if (el) rows.push([zh ? "五行 · 性情" : "Element", `<b style="color:${ELEM_COLOR[el]}">${ELEM_CHAR[el]}</b> · ${PARTNER[lang][el]}`]);
+  return drawerShell(zh ? "音" : "\u266a", el ? ELEM_COLOR[el] : "#D9B96C", name, zh ? "纳音" : "Sound element", rows);
+}
+function wrapMatches(root, re, build) {
+  if (!root || !document.createTreeWalker) return;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
   const targets = []; let node;
   while ((node = walker.nextNode())) {
     if (!node.nodeValue) continue;
     re.lastIndex = 0; if (!re.test(node.nodeValue)) continue;
-    if (node.parentElement && node.parentElement.closest("[data-t],.tg-link,.d-label,.dw-title")) continue;
+    if (node.parentElement && node.parentElement.closest("[data-t],.tg-link,.term-link,.d-label,.dw-title")) continue;
     targets.push(node);
   }
   targets.forEach(n => {
     const txt = n.nodeValue, frag = document.createDocumentFragment(); let last = 0, m; re.lastIndex = 0;
     while ((m = re.exec(txt))) {
       if (m.index > last) frag.appendChild(document.createTextNode(txt.slice(last, m.index)));
-      const sp = document.createElement("span");
-      sp.className = "tg-link clk"; sp.setAttribute("role", "button"); sp.tabIndex = 0;
-      sp.dataset.t = "tgname"; sp.dataset.g = m[1]; sp.textContent = m[1];
-      frag.appendChild(sp); last = m.index + m[1].length;
+      frag.appendChild(build(m[1])); last = m.index + m[1].length;
     }
     if (last < txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
     n.parentNode.replaceChild(frag, n);
   });
 }
-function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; try { linkifyTenGods(drawerEl); } catch (e) {} drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const _on = drawerEl.querySelector(".lkc-on"); if (_on && _on.scrollIntoView) _on.scrollIntoView({ inline: "center", block: "nearest" }); const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
+function mkTermLink(cls, dataT, dataVal, text) {
+  const sp = document.createElement("span");
+  sp.className = cls + " clk"; sp.setAttribute("role", "button"); sp.tabIndex = 0;
+  sp.dataset.t = dataT; sp.dataset.g = dataVal; sp.textContent = text;
+  return sp;
+}
+const SHEN_ALIAS = { "天乙贵人":"tianyi","贵人":"tianyi","文昌":"wenchang","禄神":"lu","羊刃":"yangren","桃花":"taohua","驿马":"yima","华盖":"huagai","将星":"jiangxing","劫煞":"jiesha","空亡":"kongwang" };
+const NAYIN_NAMES = NAYIN.map(x => x[0]);
+function linkifyTerms(root) {
+  if (lang !== "zh" || !root) return;
+  wrapMatches(root, /(比肩|劫财|食神|伤官|正财|偏财|正官|七杀|正印|偏印)(?!格)/g, t => mkTermLink("tg-link", "tgname", t, t));
+  wrapMatches(root, /(天乙贵人|贵人|文昌|禄神|羊刃|桃花|驿马|华盖|将星|劫煞|空亡)/g, t => mkTermLink("term-link", "shenname", SHEN_ALIAS[t], t));
+  wrapMatches(root, new RegExp("(" + NAYIN_NAMES.join("|") + ")", "g"), t => mkTermLink("term-link", "nayinname", t, t));
+}
+function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; try { linkifyTerms(drawerEl); } catch (e) {} drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const _on = drawerEl.querySelector(".lkc-on"); if (_on && _on.scrollIntoView) _on.scrollIntoView({ inline: "center", block: "nearest" }); const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
 function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); if (lastFocus && lastFocus.focus) { lastFocus.focus(); lastFocus = null; } }
 drawerBg.onclick = closeDrawer;
 drawerEl.addEventListener("keydown", e => {
@@ -3583,6 +3606,8 @@ function onPick(el) {
   else if (t === "luck") openDrawer(luckDrawer(r));
   else if (t === "luckstep") openDrawer(luckStepDrawer(+el.dataset.i));
   else if (t === "tgname") openDrawer(tenGodNameDrawer(el.dataset.g));
+  else if (t === "shenname") openDrawer(shenNameDrawer(el.dataset.g));
+  else if (t === "nayinname") openDrawer(nayinNameDrawer(el.dataset.g));
   else if (t === "fyear") openDrawer(fleetYearDrawer(el.dataset.gz, +el.dataset.yr));
   else if (t === "aspects") openDrawer(aspectDrawer());
   else if (t === "wbalance") openDrawer(westBalanceDrawer());

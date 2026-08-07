@@ -378,6 +378,8 @@
   .navtab{font-size:12px;letter-spacing:.08em;color:var(--soft);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 15px;cursor:pointer;transition:.15s;background:rgba(217,185,108,.06)}
   .navtab:hover{border-color:var(--gold);color:var(--gold)} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
   .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.05)}
+  .opening.clk{cursor:pointer;transition:.15s} .opening.clk:hover{border-color:var(--gold);background:rgba(217,185,108,.1)} .opening.clk:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .op-tap{color:var(--gold);font-style:normal;white-space:nowrap}
   .op-line{font-size:13.5px;line-height:1.75;color:var(--soft)} .op-line b{color:var(--gold);font-weight:700;margin-right:5px}
   .op-take{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6;font-style:italic}
   #sec-bazi,#sec-elem,#west-scene{scroll-margin-top:58px}
@@ -2566,9 +2568,6 @@ function renderCard(r, inp) {
   const hint = hintSeen ? "" : `<div class="hint-bar"><span>${lang === "zh" ? "✦ 轻点任意 干支 · 藏干 · 柱 · 行星 · 大运 —— 都有解读" : "✦ Tap any pillar, stem, planet or luck cycle — all open a reading"}</span><span class="hint-x clk" role="button" tabindex="0" data-t="hintclose" aria-label="dismiss">✕</span></div>`;
   const stg = computeStrength(r);
   const pt = computePattern(r);
-  const stgSum = lang === "zh"
-    ? `日主 ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${STG.zh[stg.level]}</b>${stg.favor.length ? ` · 喜用 <b>${stg.favor.map(e => ELEM_CHAR[e]).join("")}</b>` : ""}${stg.avoid.length ? ` · 忌 ${stg.avoid.map(e => ELEM_CHAR[e]).join("")}` : ""} <span class="stg-tap">点开详解 ›</span>`
-    : `Day Master ${r.dayMaster} · <b class="gold">${STG.en[stg.level]}</b>${stg.favor.length ? ` · favor <b>${stg.favor.map(e => ELEM_TXT.en[e]).join(", ")}</b>` : ""} <span class="stg-tap">details ›</span>`;
 
   const tgTxt = (stem) => TEN_GOD_NAME[lang][tenGod(r.dayMaster, stem)];
   const glossTxt = (gz) => lang === "zh"
@@ -2599,12 +2598,6 @@ function renderCard(r, inp) {
     ? `${ELEM_NOTE.zh[domK]}。<span style="opacity:.6">(${T.elemCount}${r.timeKnown ? "" : T.noHour})</span>`
     : `${ELEM_TXT.en[domK]}${T.dominant}${ELEM_NOTE.en[domK]}. <span style="opacity:.6">(${T.elemCount}${r.timeKnown ? "" : T.noHour})</span>`;
 
-  const mgod = tenGod(r.dayMaster, r.month[0]);
-  const deeper = r.timeKnown
-    ? `<div class="deeper"><div class="d-head"><span class="label gold">${T.deeper}</span><span class="unlock">${T.deeperSub}</span></div>
-       <div class="drow"><span class="d-label">${T.dLabelDM}</span><p>${lang === "zh" ? r.dayMaster + " — " : r.dayMaster + " "}${DM_LINE[lang][r.dayMaster]}</p></div>
-       <div class="drow"><span class="d-label">${T.dLabelMonth}</span><p>${TEN_GOD_FULL[lang][mgod]}${lang === "zh" ? T.shapes : " " + T.shapes}${TEN_GOD_GLOSS[lang][mgod]}</p></div></div>`
-    : `<div class="deeper"><div class="locked">${T.locked}</div></div>`;
 
   const utcMs = Date.UTC(inp.y, inp.m - 1, inp.d, inp.notime ? 12 : inp.hh, inp.notime ? 0 : inp.mi) - inp.tz * 60000;
   const wheel = computeWheel(utcMs, inp.lat, inp.lon, !inp.notime);
@@ -2615,11 +2608,7 @@ function renderCard(r, inp) {
   const angles = wheel && wheel.haveAngles ? `<div class="wp clk" role="button" tabindex="0" data-t="asc"><span class="wp-gl">AC</span><span class="wp-nm">${WX.asc}</span><span class="wp-sg">${sgOf(wheel.asc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="mc"><span class="wp-gl">MC</span><span class="wp-nm">${WX.mc}</span><span class="wp-sg">${sgOf(wheel.mc)}</span></div><div class="wp clk" role="button" tabindex="0" data-t="fortune"><span class="wp-gl">${FORTUNE_GLYPH}</span><span class="wp-nm">${WX.fortune}</span><span class="wp-sg">${sgOf(wheel.fortune)}</span></div>` : "";
   const nodeRow = wheel && wheel.node != null ? `<div class="wp clk" role="button" tabindex="0" data-t="node"><span class="wp-gl">\u260a</span><span class="wp-nm">${NODE_TXT[lang][0]}</span><span class="wp-sg">${sgOf(wheel.node)}</span></div>` : "";
   const sunS = wheel.planets[0].sign, moonS = wheel.planets[1].sign, ascS = wheel.haveAngles ? SIGNS[Math.floor(wheel.asc / 30)] : null;
-  const wsum = lang === "zh"
-    ? `<div class="wsum"><b>速读</b>:太阳在${SIGN_TXT.zh[sunS]} = 你的内核;月亮在${SIGN_TXT.zh[moonS]} = 你的情绪底色;${ascS ? `上升在${SIGN_TXT.zh[ascS]} = 别人第一眼看到的你` : `上升(第一印象)需出生时间+地点`}。<span class="wsum-tip">点任意行星 / 相位,看它对你意味着什么。</span></div>`
-    : `<div class="wsum"><b>Quick read</b>: Sun in ${SIGN_TXT.en[sunS]} = your core; Moon in ${SIGN_TXT.en[moonS]} = your emotional baseline; ${ascS ? `Rising in ${SIGN_TXT.en[ascS]} = the you others meet first` : `Rising (first impression) needs birth time + place`}. <span class="wsum-tip">Tap any planet or aspect to see what it means for you.</span></div>`;
   const western = wheel ? `<div class="deeper" id="west-scene"><div class="d-head"><span class="label gold">${W.chart}</span><span class="unlock">${W.sub}</span></div>
-    ${wsum}
     ${wheel.haveAngles ? (() => { const rp = RULER[ascS], pd = wheel.planets.find(p => p.body === rp); return pd ? `<div class="wnote" style="color:var(--gold);opacity:.9">${lang === "zh" ? `命主星:<b>${PLANET_NAME.zh[rp]}</b>(上升${SIGN_TXT.zh[ascS]}守护)落 ${SIGN_TXT.zh[pd.sign]}${pd.house ? " 第" + pd.house + "宫" : ""}——你这一生的总钥匙。` : `Chart ruler: <b>${PLANET_NAME.en[rp]}</b> (rules your ${SIGN_TXT.en[ascS]} Ascendant) in ${SIGN_TXT.en[pd.sign]}${pd.house ? ", house " + pd.house : ""} — the key to the whole chart.`}</div>` : ""; })() : ""}
     <div class="wheel-wrap">${buildWheel(wheel)}</div>
     <div class="wheel-guide">${lang === "zh"
@@ -2647,10 +2636,10 @@ function renderCard(r, inp) {
   const opAstro = wheel ? (lang === "zh"
     ? `<div class="op-line"><b>星盘</b> ☉${SIGN_TXT.zh[wheel.planets[0].sign]} · ☽${SIGN_TXT.zh[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.zh[SIGNS[Math.floor(wheel.asc / 30)]] : "待出生时地"}</div>`
     : `<div class="op-line"><b>Chart</b> ☉${SIGN_TXT.en[wheel.planets[0].sign]} · ☽${SIGN_TXT.en[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.en[SIGNS[Math.floor(wheel.asc / 30)]] : "—"}</div>`) : "";
-  const opening = `<div class="opening">
+  const opening = `<div class="opening clk" role="button" tabindex="0" data-t="strength">
     <div class="op-line"><b>${lang === "zh" ? "八字" : "BaZi"}</b> ${lang === "zh" ? "日主" : "DM"} ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${PATTERN[pt.key][lang][0]}</b> · <span class="gold">${STG[lang][stg.level]}</span>${favC ? ` · ${lang === "zh" ? "喜" : "favor"} ${favC}` : ""}${avoC ? ` · ${lang === "zh" ? "忌" : "avoid"} ${avoC}` : ""}</div>
     ${opAstro}
-    <div class="op-take">${DM_LINE[lang][r.dayMaster]}</div></div>`;
+    <div class="op-take">${DM_LINE[lang][r.dayMaster]} <span class="op-tap">${lang === "zh" ? "· 点开旺衰·喜用 ›" : "· strength & useful ›"}</span></div></div>`;
   const navbar = `<div class="cardnavbar"><span class="navtab" role="button" tabindex="0" data-jump="sec-bazi">${lang === "zh" ? "八字" : "BaZi"}</span><span class="navtab" role="button" tabindex="0" data-jump="sec-elem">${lang === "zh" ? "五行·解读" : "Elements"}</span>${wheel ? `<span class="navtab" role="button" tabindex="0" data-jump="west-scene">${lang === "zh" ? "星盘" : "Chart"}</span>` : ""}</div>`;
   $("screen-card").innerHTML = `
     <div class="watermark serif">${ANIMAL_TRAD[dBranch]}</div>
@@ -2675,7 +2664,6 @@ function renderCard(r, inp) {
     <div class="pillars-note">${T.hiddenNote}</div>
     <div class="elements" id="sec-elem">${pills}</div>
     <div class="elements-note">${elemNoteTxt}</div>
-    <div class="stg-sum clk" role="button" tabindex="0" data-t="strength">${stgSum}</div>
     <div class="cta-row">
       <span class="cta cta-primary clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日 · 此刻 ☉" : "Today & Now ☉"}</span>
@@ -2685,7 +2673,6 @@ function renderCard(r, inp) {
     <div class="detail-bar">
       <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
       <span class="dbtn clk" role="button" tabindex="0" data-t="relations">${T.btnRel}</span>
-      <span class="dbtn clk" role="button" tabindex="0" data-t="strength">${T.btnStg}</span>
       <span class="dbtn clk" role="button" tabindex="0" data-t="shensha">${T.btnShen}</span>
       <span class="dbtn clk" role="button" tabindex="0" data-t="luck">${T.btnLuck}</span>
     </div>
@@ -2695,7 +2682,6 @@ function renderCard(r, inp) {
     <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
     <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
     ${crossLine ? `<div class="voice"><span class="label gold">${lang === "zh" ? "东西合参 · 核心" : "East × West · core"}</span><p>${crossLine}</p></div>` : ""}
-    ${deeper}
     ${western}
     <div class="footer">
       <div class="meta">${born}${inp.tsDelta != null && !inp.notime ? (lang === "zh" ? ` · 真太阳时 ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta} 分` : ` · true solar ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta}m`) : ""}${inp.city ? " · " + esc(inp.city) : ""}${inp.cityNote ? `<br><span class="cityblurb">${esc(inp.cityNote)}</span>` : ""}<br>${T.disclaimer}</div>

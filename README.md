@@ -36,7 +36,7 @@ A single self-contained `index.html` — no server, no runtime dependencies, no 
 
 Pure client-side JavaScript, cross-validated, no runtime dependencies.
 
-- Solar-term table **1930–2030** precomputed with Swiss Ephemeris (minute precision, stored in UTC)
+- Solar-term table **1900–2150** precomputed with Swiss Ephemeris (minute precision, stored in UTC)
 - Year pillar switches at 立春 Lichun; month pillars at the twelve *jie* terms; **Western sign cusps derive from the same table** (solar longitude at multiples of 30°) — two astrologies, one ephemeris
 - Day pillar via JDN arithmetic; late 子时 (23:00+) rolls to the next day; timezone-aware for births anywhere
 - Cross-validated on **443 cases** against `sxtwl` and `cnlunar`; every divergence is a documented school/granularity difference, not an engine error (see `tests/README.md`)
@@ -56,7 +56,7 @@ node tests/golden.js   # 18 engine assertions (must all pass)
 | `src/engine.js` | Four-pillar + natal engine (pure functions, `module.exports`-guarded) |
 | `src/astronomy.min.js` | Astronomy Engine (planetary positions, houses, aspects) |
 | `src/fonts.css` | Embedded fonts (EB Garamond + Nunito subsets, as data URIs) |
-| `data/terms.json` | Solar terms 1930–2030; regenerate with `tools/gen_terms.py` (needs `pyswisseph`) |
+| `data/terms.json` | Solar terms 1900–2150; regenerate with `tools/gen_terms.py` (needs `pyswisseph`) |
 | `tests/` | Golden assertions + `sxtwl` / `cnlunar` cross-validation harness |
 | `docs/` | Spec and art handoff |
 
@@ -70,7 +70,7 @@ Share-card PNG export · 144 combined-archetype write-ups · a beginner/expert t
 
 ## 中文速览
 
-一次输入,双盘同解。**八字**:四柱 + 藏干 + 纳音 + 十神(点字有大白话解释)、旺衰喜用(含调候与合化/合绊判定)、格局成败、六合三合冲刑害、大运与流年流月流日(逐项定吉凶大吉→大凶)、运势曲线。**星盘**:行星 / 星座 / 宫位 / 相位 / 尊贵 / 命主星 / 北交点 / 月相 / 元素配比的完整命盘,点符号看解读,无时辰自动降级。**东西合参**:顶部一句合参(两盘同断 / 两盘相争);**合盘**含用神互补 + 星座合盘 + 双人运势曲线 + 评分,可存 4 人互测。中英一键切换、英文侧自带拼音;八字侧古典宋体、星座侧圆体,做出中西对比。引擎:瑞士星历预算 1930–2030 节气表,八字与星座共用同一张天文表;443 例与 sxtwl / cnlunar 对拍,差异皆为流派/粒度口径而非计算错误。
+一次输入,双盘同解。**八字**:四柱 + 藏干 + 纳音 + 十神(点字有大白话解释)、旺衰喜用(含调候与合化/合绊判定)、格局成败、六合三合冲刑害、大运与流年流月流日(逐项定吉凶大吉→大凶)、运势曲线。**星盘**:行星 / 星座 / 宫位 / 相位 / 尊贵 / 命主星 / 北交点 / 月相 / 元素配比的完整命盘,点符号看解读,无时辰自动降级。**东西合参**:顶部一句合参(两盘同断 / 两盘相争);**合盘**含用神互补 + 星座合盘 + 双人运势曲线 + 评分,可存 4 人互测。中英一键切换、英文侧自带拼音;八字侧古典宋体、星座侧圆体,做出中西对比。引擎:瑞士星历预算 1900–2150 节气表,八字与星座共用同一张天文表;443 例与 sxtwl / cnlunar 对拍,差异皆为流派/粒度口径而非计算错误。
 
 ## Disclaimer
 

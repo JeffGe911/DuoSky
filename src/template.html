@@ -1503,6 +1503,24 @@ function synthReadings(r) {
   const EN = { wood: zh?"木":"Wood", fire: zh?"火":"Fire", earth: zh?"土":"Earth", metal: zh?"金":"Metal", water: zh?"水":"Water" };
   const isStrong = s.level === "strong", isWeak = s.level === "weak";
   const guanScore = s.score[roles.guan], shiScore = s.score[roles.shi], yinScore = s.score[roles.yin], biScore = s.score[roles.bi];
+  const tyNow = (new Date()).getFullYear();
+  const inpTM = lastChart.inp;
+  const lkTM = computeLuck(TERMS, { y:inpTM.y, m:inpTM.m, d:inpTM.d, hh:inpTM.hh, mi:inpTM.mi, tzMin:inpTM.tz, timeKnown:!inpTM.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
+  let curGZ = null, started = false;
+  if (lkTM && !lkTM.error) { const ageN = tyNow - inpTM.y, pastN = lkTM.list.filter(x => ageN >= x.startAge); if (pastN.length) { curGZ = pastN[pastN.length - 1].ganzhi; started = true; } }
+  const yrIdxN = ((tyNow - 1984) % 60 + 60) % 60, yrGZ = GAN[yrIdxN % 10] + ZHI[yrIdxN % 12];
+  const activeEls = new Set();
+  [curGZ, yrGZ].forEach(gz => { if (!gz) return; activeEls.add(GAN_WX[gz[0]]); activeEls.add(GAN_WX[ZHI_MAIN[gz[1]]]); });
+  const areaTiming = (starEl) => {
+    if (!started) return zh ? " 【时运】尚未起运,此阶段先按本命而行,大运一到再看引动。" : " [Timing] Luck cycles haven't begun — go by the natal chart for now.";
+    const tag = zh ? `【时运·${curGZ}运/${yrGZ}年】` : `[Now · ${curGZ} luck / ${yrGZ}]`;
+    const active = activeEls.has(starEl), fav = s.favor.indexOf(starEl) >= 0, avo = s.avoid.indexOf(starEl) >= 0;
+    if (active && fav) return zh ? ` ${tag}正引动你的喜用,这块当旺——该主动发力、抓住机会的阶段。` : ` ${tag} your useful phase is triggered — this area is rising; act on it now.`;
+    if (active && avo) return zh ? ` ${tag}正引动忌神,这块波动或压力偏大——宜守成、缓决策、稳字当头。` : ` ${tag} an unfavorable phase is triggered — more turbulence here; hold steady and delay big calls.`;
+    if (active) return zh ? ` ${tag}有所引动、较为活跃,进退皆有戏,顺势而为。` : ` ${tag} this area is active now — moving either way; go with the flow.`;
+    if (fav) return zh ? ` ${tag}未特别引动,平稳蓄势,机会未到不必强求。` : ` ${tag} not specifically triggered — steady; don't force it.`;
+    return zh ? ` ${tag}此阶段影响不大,平顺度过即可。` : ` ${tag} little effect this phase — steady going.`;
+  };
   const FIELD = { zh:{ wood:"文教、出版、木材、医药、服装与成长型行业", fire:"文化、能源、餐饮、互联网、光电、公关等「热」行业", earth:"地产、建筑、农业、仓储、中介与稳健实业", metal:"金融、机械、法律、军警、五金等决断型行业", water:"贸易、物流、旅游、传媒、信息与流动型行业" },
     en:{ wood:"education, publishing, timber, medicine, growth fields", fire:"culture, energy, food, internet, media & PR — 'hot' fields", earth:"real estate, construction, agriculture, logistics, steady trades", metal:"finance, machinery, law, security, decisive hard-edged fields", water:"trade, logistics, travel, media, information & flow" } };
   let careerPath;
@@ -1546,7 +1564,7 @@ function synthReadings(r) {
     : "") : (zh ? " 官星不显,事业不走仕途论资,靠本事与作品自证。" : " No prominent Officer — you prove yourself by output, not rank.");
   const guanMove = guanClashed ? (zh ? " 官星逢冲,主职位变动、易换岗换环境,变中求进反成契机。" : " Officer clashed — expect role/environment changes; progress comes through change.")
     : guanCombined ? (zh ? " 官星逢合,事业多受人情与关系牵引,善用人脉但防被绑定。" : " Officer in combination — career moves through relationships; leverage them without getting tied.") : "";
-  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${guanShape}${guanMove}${combos.length ? " " + combos.join("") : ""}${careerShen}`;
+  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${guanShape}${guanMove}${combos.length ? " " + combos.join("") : ""}${careerShen}${areaTiming(roles.guan)}`;
   const caiE = roles.cai, caiScore = s.score[caiE];
   const caiFav = s.favor.indexOf(caiE) >= 0, caiAvo = s.avoid.indexOf(caiE) >= 0;
   const hasShiSheng = shiScore > avg * 0.7;
@@ -1605,6 +1623,7 @@ function synthReadings(r) {
   else if (dominantCai === "both") wealth += zh ? " 正偏财并见:稳定收入与活络财路兼备、来源多元,宜正财打底、偏财添彩。" : " Both Proper and Windfall Wealth — diverse income; let salary anchor it and ventures add upside.";
   if (has("lu")) wealth += zh ? " 命带禄神,衣禄不缺。" : " Prosperity star: a reliable livelihood.";
   if (has("yima")) wealth += zh ? " 驿马动财,财在走动、远方与变动中求。" : " Traveling Horse: money found through movement and travel.";
+  wealth += areaTiming(caiE);
   const male = gender === "m";
   let love = (dayHas("liuhe") || dayHas("sanhe") || dayHas("banhe")) ? (zh ? "夫妻宫逢合,缘分深、易得伴侣之助,关系偏稳。" : "Your spouse palace is in harmony — deep bonds, a supportive partner, stability.")
     : dayHas("chong") ? (zh ? "夫妻宫逢冲,感情多起伏、聚少离多或早晚见分,需多经营。" : "Your spouse palace is clashed — ups and downs, distance or timing; tend it with care.")
@@ -1624,6 +1643,7 @@ function synthReadings(r) {
   const spouseEarly = GAN_WX[r.year[0]] === spouseStar || GAN_WX[r.month[0]] === spouseStar || cCarries(r.year[1], spouseStar) || cCarries(r.month[1], spouseStar);
   love += spouseReveal ? (zh ? " 配偶星透干,缘分明朗、易早遇正缘。" : " Partner star is revealed — love shows early and clearly.") : (zh ? " 配偶星深藏,缘分含蓄、往往水到渠成或晚显。" : " Partner star is hidden — love comes quietly, often later.");
   love += spouseEarly ? (zh ? " 配偶星临年月,主早婚或早遇。" : " Partner star sits in the early pillars — an earlier union.") : (zh ? " 配偶星临日时,主晚婚或缘分晚成,不必着急。" : " Partner star sits in the later pillars — a later union; no rush.");
+  love += areaTiming(spouseStar);
   love += zh ? ` 宜配:另一半若带 <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b> 气最补你——这类人${PARTNER.zh[ys.element]};生${ELEM_CHAR[ys.element]}的${ELEM_CHAR[GEN_EL[ys.element]]}气之人亦佳。` : ` Best match: a partner who carries <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_TXT.en[ys.element]}</b> — ${PARTNER.en[ys.element]}; someone ${ELEM_TXT.en[GEN_EL[ys.element]]}-natured (which feeds it) also suits.`;
   const missing = s.score[weak] === 0;
   let health = zh ? `五行以${EN[weak]}最${missing ? "缺(全无)" : "弱"}——留意${ELEM_ORGAN.zh[weak]}。` : `${EN[weak]} is your ${missing ? "missing" : "weakest"} phase — mind ${ELEM_ORGAN.en[weak]}.`;
@@ -1658,6 +1678,7 @@ function synthReadings(r) {
   family += (biFS > avg * 1.2) ? (zh ? " 比劫旺,手足朋友多、助力也多,但资源需分、合作讲分明。" : " Strong peers — many siblings/friends and support, though resources get shared.")
     : (biFS < avg * 0.5) ? (zh ? " 比劫弱,兄弟缘薄或少助,凡事多靠自己一肩挑。" : " Light peers — few siblings or little help; you carry things yourself.")
     : (zh ? " 手足朋友相处平和,不黏不疏。" : " Easy, balanced ties with siblings and friends.");
+  family += areaTiming(roles.yin);
   let children;
   if (inp.notime) children = zh ? "未提供出生时辰,子女宫(时柱)无法定盘——补上时辰即可解读子女缘。" : "No birth time given — the children palace (Hour pillar) can't be read; add a time to unlock it.";
   else {
@@ -1674,6 +1695,7 @@ function synthReadings(r) {
     children += hourClash ? (zh ? " 时柱逢冲,与子女聚少离多或多为其操心,子女个性独立多变。" : " Hour pillar clashed — distance or worry over children; independent, changeable kids.")
       : hourHarm ? (zh ? " 时柱逢合,子女孝顺贴心、晚景有靠。" : " Hour pillar in harmony — affectionate children and support in later years.") : "";
     children += zh ? ` 时柱本气为「${TEN_GOD_FULL.zh[childType]}」,子女多${CHILD_T.zh[childType]}。` : ` The hour pillar's core is the ${TEN_GOD_FULL.en[childType]} — children tend to be ${CHILD_T.en[childType]}.`;
+    children += areaTiming(childStar);
   }
   const DIR = { zh:{ wood:"东方及东南", fire:"南方", earth:"本地与中土之地", metal:"西方及西北", water:"北方" }, en:{ wood:"East / SE", fire:"South", earth:"local / central regions", metal:"West / NW", water:"North" } };
   const COLEL = { zh:{ wood:"青绿", fire:"红紫", earth:"黄棕", metal:"白·金属色", water:"黑蓝" }, en:{ wood:"green", fire:"red / purple", earth:"yellow / brown", metal:"white / metallic", water:"black / blue" } };
@@ -1681,6 +1703,7 @@ function synthReadings(r) {
   direction += (has("yima") || ymClash) ? (zh ? " 命带驿马或根基逢动,离乡背井、异地发展反而顺,越走越旺。" : " With a Traveling Horse / moving roots, you fare better away from home — go far.")
     : (zh ? " 根基安稳,守土深耕、在熟地稳扎稳打亦佳。" : " Settled roots — you also thrive putting down deep local roots.");
   direction += zh ? ` 幸运色偏 <b>${COLEL.zh[ys.element]}</b>,衣饰、居家可多用来补运。` : ` Lucky tones lean <b>${COLEL.en[ys.element]}</b> — use them in dress and home.`;
+  direction += started ? (zh ? ` 【时运】当大运/流年走到 ${ELEM_CHAR[ys.element]} 之乡,搬迁、外拓、置业尤其应验。` : ` [Timing] moves, expansion and property especially pay off when luck/year reaches your ${ELEM_TXT.en[ys.element]} phase.`) : "";
   const out = [
     [zh ? "📜 总览" : "📜 Overview", lead],
     [zh ? "💼 事业" : "💼 Career", career],

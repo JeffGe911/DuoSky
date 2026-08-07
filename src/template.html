@@ -1522,6 +1522,10 @@ function synthReadings(r) {
   const roles = s.roles, avg = s.total / 5;
   const has = k => computeShensha(r).some(x => x.key === k);
   const pt = computePattern(r), cl = computeClimate(r, s), ys = computeYongshen(r, s);
+  const favEls = (s.favor && s.favor.length) ? s.favor.slice() : [ys.element];
+  const workRanked = favEls.slice().sort((a, b) => s.score[b] - s.score[a]);
+  const primeWork = s.score[workRanked[0]] > 0 ? workRanked[0] : ys.element;
+  const otherFav = favEls.filter(e => e !== primeWork);
   const present = new Set();
   const chs = [r.year[0], r.month[0]]; if (r.hour) chs.push(r.hour[0]);
   [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []).forEach(b => CANGGAN[b].forEach(h => chs.push(h)));
@@ -1578,7 +1582,9 @@ function synthReadings(r) {
     careerPath = isStrong ? (zh ? "命中官星不显,不必挤仕途——凭本事独立发展、经商或做专业更自在,你就是自己的靠山。" : "No prominent Officer — no need to force the official track; go independent, in business or a profession. You are your own backing.")
       : (zh ? "官星不显、身势偏弱,事业宜稳扎稳打、依托团队与平台,先立足再图发展,忌频繁跳动。" : "No prominent Officer and a lighter self — go steady, lean on a team/platform, establish footing before expanding; avoid job-hopping.");
   }
-  careerPath += zh ? ` 行业取用神 ${ELEM_CHAR[ys.element]},利${FIELD.zh[ys.element]}。` : ` By your useful element (${ELEM_TXT.en[ys.element]}), favorable fields: ${FIELD.en[ys.element]}.`;
+  careerPath += zh
+    ? ` 你的喜用 ${favEls.map(e => ELEM_CHAR[e]).join("、")} 不止一个,其中<b>做功最强</b>的是 <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_CHAR[primeWork]}</b>(命局里最有根、最能发挥)——事业主取此路,利${FIELD.zh[primeWork]}${otherFav.length ? `;兼可取 ${otherFav.map(e => ELEM_CHAR[e]).join("、")}(${otherFav.map(e => FIELD.zh[e]).join(";")})` : ""}。`
+    : ` Your useful elements (${favEls.map(e => ELEM_TXT.en[e]).join(", ")}) are more than one; the one doing the <b>most work</b> is <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_TXT.en[primeWork]}</b> (best-rooted) — lead your career there: ${FIELD.en[primeWork]}${otherFav.length ? `; also viable: ${otherFav.map(e => FIELD.en[e]).join("; ")}` : ""}.`;
   const careerShen = has("jiangxing") ? (zh ? " 命带将星,有统御之力。" : " A General star gives command.") : has("wenchang") ? (zh ? " 文昌入命,利考学与文名。" : " Academic star favors study and reputation.") : has("huagai") ? (zh ? " 华盖临身,专业、艺术与玄学有缘。" : " Canopy favors expertise, art, the mystical.") : "";
   const combos = [];
   if (hasTG("伤官") && hasTG("正官")) combos.push(zh ? "命见「伤官见官」——事业与官非是非需格外留心,忌锋芒犯上。" : "'Hurting Officer meets the Officer' — mind friction with authority.");
@@ -1738,7 +1744,9 @@ function synthReadings(r) {
   }
   const DIR = { zh:{ wood:"东方及东南", fire:"南方", earth:"本地与中土之地", metal:"西方及西北", water:"北方" }, en:{ wood:"East / SE", fire:"South", earth:"local / central regions", metal:"West / NW", water:"North" } };
   const COLEL = { zh:{ wood:"青绿", fire:"红紫", earth:"黄棕", metal:"白·金属色", water:"黑蓝" }, en:{ wood:"green", fire:"red / purple", earth:"yellow / brown", metal:"white / metallic", water:"black / blue" } };
-  let direction = zh ? `地利取用神 <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b>,宜往 <b>${DIR.zh[ys.element]}</b> 求发展——那方水土最补你,读书、创业、定居都可优先考虑。` : `Your useful element is <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_TXT.en[ys.element]}</b>, so favor the <b>${DIR.en[ys.element]}</b> — that region feeds you; weigh it for study, ventures or settling.`;
+  let direction = zh
+    ? `地利以做功最强的喜用 <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_CHAR[primeWork]}</b> 为主,宜往 <b>${DIR.zh[primeWork]}</b> 求发展——那方水土最补你,读书、创业、定居可优先;${otherFav.length ? `${otherFav.map(e => ELEM_CHAR[e] + "→" + DIR.zh[e]).join("、")} 亦为吉方。` : ""}`
+    : `Geography follows your strongest-working useful element <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_TXT.en[primeWork]}</b>: head <b>${DIR.en[primeWork]}</b> — that region feeds you most; ${otherFav.length ? `${otherFav.map(e => ELEM_TXT.en[e] + "→" + DIR.en[e]).join(", ")} are good too.` : ""}`;
   direction += (has("yima") || ymClash) ? (zh ? " 命带驿马或根基逢动,离乡背井、异地发展反而顺,越走越旺。" : " With a Traveling Horse / moving roots, you fare better away from home — go far.")
     : (zh ? " 根基安稳,守土深耕、在熟地稳扎稳打亦佳。" : " Settled roots — you also thrive putting down deep local roots.");
   direction += zh ? ` 幸运色偏 <b>${COLEL.zh[ys.element]}</b>,衣饰、居家可多用来补运。` : ` Lucky tones lean <b>${COLEL.en[ys.element]}</b> — use them in dress and home.`;

@@ -274,6 +274,8 @@ __FONTS__
   .lk-yr{font-size:9.5px;color:var(--muted);margin-top:2px}
   .lk-ny{font-size:9.5px;color:var(--gold);opacity:.8;margin-top:1px;line-height:1.1}
   .lkc.clk{cursor:pointer;transition:.15s} .lkc.clk:hover{border-color:var(--gold);background:rgba(217,185,108,.08)}
+  .lkc-on{border-color:var(--gold);background:rgba(217,185,108,.16);box-shadow:0 0 0 1px var(--gold) inset}
+  .lk-nav{margin-top:12px}
   .lkc.clk:focus-visible{outline:1px solid var(--gold);outline-offset:1px}
   .ny{font-size:9.5px;color:var(--gold);opacity:.72;margin:-2px 0 4px;letter-spacing:.02em;line-height:1.2}
   .dw-back{position:absolute;top:16px;left:18px;font-size:12px;color:var(--gold);opacity:.8;cursor:pointer;letter-spacing:.04em}
@@ -2493,12 +2495,18 @@ function luckStepDrawer(i) {
     [lang === "zh" ? "运程" : "Span", ageR],
     [lang === "zh" ? "流年 · 十年" : "Yearly · this decade", fleetRows]
   ];
+  const nav = lk.list.map((y, j) => {
+    const st2 = y.ganzhi[0], br2 = y.ganzhi[1], tg2 = tenGod(r.dayMaster, st2), fo2 = luckAssess(r, y.ganzhi, sg).level;
+    return `<div class="lkc clk${j === i ? " lkc-on" : ""}" role="button" tabindex="0" data-t="luckstep" data-i="${j}"><div class="lk-age">${y.startAge}${lang === "zh" ? "岁" : ""}</div><div class="lk-gz serif"><span style="color:${STEM_COLOR[st2]}">${st2}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br2]]}">${br2}</span></div><div class="lk-tg">${TEN_GOD_NAME[lang][tg2]}</div><span class="fo-dot ${fo2}"></span></div>`;
+  }).join("");
   const c = STEM_COLOR[st];
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
     <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:36px">${x.ganzhi}</span>
       <div><div class="dw-title serif">${cnEn(x.ganzhi)} · ${lang === "zh" ? ny.name : NAYIN_EN[Math.floor(ny.idx / 2)]}</div><div class="dw-sub">${ageR}</div></div></div>
-    <div style="margin-top:8px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
+    <div class="lk-strip lk-nav">${nav}</div>
+    <div class="wnote" style="margin:2px 0 6px">${lang === "zh" ? "← 左右滑动切换其它大运" : "← swipe to switch decades"}</div>
+    <div style="margin-top:6px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
 }
 const SHEN = {
   tianyi:{ zh:["天乙贵人","逢凶化吉、贵人相助的第一吉星。"], en:["Nobleman","the luckiest star — help arrives, danger softens."] },
@@ -2525,7 +2533,7 @@ function shenshaDrawer(r) {
 }
 const drawerBg = $("drawer-bg"), drawerEl = $("drawer");
 let lastFocus = null;
-function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
+function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const _on = drawerEl.querySelector(".lkc-on"); if (_on && _on.scrollIntoView) _on.scrollIntoView({ inline: "center", block: "nearest" }); const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
 function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); if (lastFocus && lastFocus.focus) { lastFocus.focus(); lastFocus = null; } }
 drawerBg.onclick = closeDrawer;
 drawerEl.addEventListener("keydown", e => {

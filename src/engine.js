@@ -336,6 +336,17 @@ function luckAssess(r, ganzhi, s, cl) {
     else if (others.length === 1 && (br === SANHE_WANG[elem] || others[0] === SANHE_WANG[elem])) { addEl(elem, 1); reasons.push({ t:"banhe", chars: br + others[0], elem }); }
   }
   if (ys.element && (stemEl === ys.element || GAN_WX[ZHI_MAIN[br]] === ys.element)) { score += 1.2; reasons.push({ t:"yongshen", elem: ys.element }); }
+  // 官杀制比劫 / 制羊刃: 身强或带刃时行官杀运,化凶为权,利掌权与事业
+  const guanE = s.roles && s.roles.guan;
+  if (guanE && s.level === "strong") {
+    const luckHasGuan = stemEl === guanE || GAN_WX[ZHI_MAIN[br]] === guanE || hid.some(h => GAN_WX[h] === guanE);
+    if (luckHasGuan) {
+      const bladeBr = SS_YANGREN[r.dayMaster];
+      const natalBrs = natalBr.map(x => x[1]);
+      if (bladeBr && natalBrs.indexOf(bladeBr) >= 0) { score += 1.2; reasons.push({ t:"zhiRen" }); }
+      else if (s.score[s.roles.bi] >= s.total / 5) { score += 0.8; reasons.push({ t:"zhiJie" }); }
+    }
+  }
   const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
   const grade = score >= 2.5 ? "daji" : score >= 1 ? "ji" : score > -1 ? "ping" : score > -2.5 ? "xiong" : "daxiong";
   return { score: +score.toFixed(1), level, grade, reasons };

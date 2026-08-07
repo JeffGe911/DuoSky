@@ -401,13 +401,12 @@
   .hint-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:12px;color:var(--gold);
     background:rgba(217,185,108,.09);border:1px solid var(--gold-dim);border-radius:9px;padding:8px 12px;margin:0 0 16px;letter-spacing:.02em}
   .hint-x{flex:none;cursor:pointer;opacity:.7;font-size:12px} .hint-x:hover{opacity:1}
-  .cardnavbar{position:sticky;top:6px;z-index:6;display:flex;justify-content:space-around;align-items:center;flex-wrap:nowrap;padding:10px 8px;margin:0 0 18px;border-radius:12px;
-    background:linear-gradient(180deg,#eef2ea 0%,#dee4d7 55%,#c9d1c1 100%);
-    border:1px solid rgba(255,255,255,.55);
-    box-shadow:0 3px 13px rgba(3,5,15,.42), inset 0 1px 0 rgba(255,255,255,.85), inset 0 -3px 8px rgba(108,128,108,.3)}
-  .navtab{flex:1;text-align:center;font-size:13.5px;letter-spacing:.12em;color:#3b4a3d;cursor:pointer;padding:2px 6px;background:none;border:none;font-family:"Songti SC","STSong",serif;transition:color .15s;text-shadow:0 1px 0 rgba(255,255,255,.5)}
-  .navtab + .navtab{border-left:1px solid rgba(110,130,110,.38)}
-  .navtab:hover{color:#8a6a1e} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:4px}
+  .cardnavbar{position:sticky;top:0;z-index:6;display:flex;justify-content:space-around;align-items:center;flex-wrap:nowrap;padding:11px 0;margin:0 -6px 16px;
+    background:linear-gradient(180deg,rgba(46,23,20,.9),rgba(46,23,20,.5));backdrop-filter:blur(7px);border-bottom:1px solid var(--gold-dim)}
+  body.west .cardnavbar{background:linear-gradient(180deg,rgba(20,18,34,.9),rgba(20,18,34,.5))}
+  .navtab{flex:1;text-align:center;font-size:13px;letter-spacing:.16em;color:var(--soft);cursor:pointer;padding:3px 6px;background:none;border:none;transition:color .15s}
+  .navtab + .navtab{border-left:1px solid var(--hairline)}
+  .navtab:hover{color:var(--gold)} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:4px}
   .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 14px;background:rgba(217,185,108,.05)}
   .crosstop{border:1px solid var(--gold);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.10);box-shadow:0 0 0 1px rgba(217,185,108,.15) inset}
   .crosstop .label{display:block;margin-bottom:6px} .crosstop p{font-size:14px;line-height:1.75;color:var(--soft);margin:0}
@@ -1302,6 +1301,17 @@ function luckAssess(r, ganzhi, s, cl) {
     else if (others.length === 1 && (br === SANHE_WANG[elem] || others[0] === SANHE_WANG[elem])) { addEl(elem, 1); reasons.push({ t:"banhe", chars: br + others[0], elem }); }
   }
   if (ys.element && (stemEl === ys.element || GAN_WX[ZHI_MAIN[br]] === ys.element)) { score += 1.2; reasons.push({ t:"yongshen", elem: ys.element }); }
+  // 官杀制比劫 / 制羊刃: 身强或带刃时行官杀运,化凶为权,利掌权与事业
+  const guanE = s.roles && s.roles.guan;
+  if (guanE && s.level === "strong") {
+    const luckHasGuan = stemEl === guanE || GAN_WX[ZHI_MAIN[br]] === guanE || hid.some(h => GAN_WX[h] === guanE);
+    if (luckHasGuan) {
+      const bladeBr = SS_YANGREN[r.dayMaster];
+      const natalBrs = natalBr.map(x => x[1]);
+      if (bladeBr && natalBrs.indexOf(bladeBr) >= 0) { score += 1.2; reasons.push({ t:"zhiRen" }); }
+      else if (s.score[s.roles.bi] >= s.total / 5) { score += 0.8; reasons.push({ t:"zhiJie" }); }
+    }
+  }
   const level = score >= 1 ? "good" : score <= -1 ? "bad" : "neutral";
   const grade = score >= 2.5 ? "daji" : score >= 1 ? "ji" : score > -1 ? "ping" : score > -2.5 ? "xiong" : "daxiong";
   return { score: +score.toFixed(1), level, grade, reasons };
@@ -3136,6 +3146,8 @@ const LREASON = {
   hua:{ zh:"合化", en:"transforms→" }, bind:{ zh:"合绊·减力", en:"bound" }, wet:{ zh:"湿土润局·调候", en:"wet earth (moistens)" }, dry:{ zh:"燥土暖局·调候", en:"dry earth (warms)" },
   liuhe:{ zh:"六合", en:"six-harmony" }, chongJi:{ zh:"冲去忌神·吉", en:"clashes out an avoid (good)" }, chongYong:{ zh:"冲损用神·凶", en:"clashes the useful (bad)" }, chong:{ zh:"相冲·主变动", en:"clash (change)" },
   xing:{ zh:"相刑", en:"punishment" }, hai:{ zh:"相害", en:"harm" }, sanhe:{ zh:"三合成局", en:"triad" }, banhe:{ zh:"半合", en:"half-triad" },
+  zhiRen:{ zh:"官杀制刃·化凶为权", en:"Officer tames the Blade — power" },
+  zhiJie:{ zh:"官杀制劫·护财掌权", en:"Officer reins in Peers — authority" },
   yongshen:{ zh:"行用神运·大吉", en:"useful-god luck (very favorable)" } };
 const GEN_EL = { wood:"water", fire:"wood", earth:"fire", metal:"earth", water:"metal" };
 const PARTNER = { zh:{ wood:"上进有生气、能陪你成长", fire:"热情行动、给你温暖与动力", earth:"踏实包容、给你安定依靠", metal:"果决有条理、给你规矩与助力", water:"灵活有智慧、给你滋润与变通" },
@@ -3171,7 +3183,7 @@ function luckDrawer(r) {
   const sg = computeStrength(r);
   const cols = lk.list.map((x, i) => {
     const st = x.ganzhi[0], br = x.ganzhi[1], tg = tenGod(r.dayMaster, st), ny = nayin(x.ganzhi);
-    const fo = luckAssess(r, x.ganzhi, sg).level;
+    const asmt = luckAssess(r, x.ganzhi, sg), fo = gradeDot(asmt.grade);
     return `<div class="lkc clk" role="button" tabindex="0" data-t="luckstep" data-i="${i}"><div class="lk-age">${x.startAge}${lang === "zh" ? "岁" : ""}</div>` +
       `<div class="lk-gz serif"><span style="color:${STEM_COLOR[st]}">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]}">${br}</span></div>` +
       `<div class="lk-tg">${TEN_GOD_NAME[lang][tg]}</div><div class="lk-ny">${lang === "zh" ? ny.name : ELEM_TXT.en[ny.elem]}</div><div class="lk-yr">${x.startYear}</div><span class="fo-dot ${fo}"></span></div>`;
@@ -3181,7 +3193,7 @@ function luckDrawer(r) {
       <div><div class="dw-title serif">${LK[lang].title}</div><div class="dw-sub">${LK[lang].sub}</div></div></div>
     <div class="lk-meta">${startTxt}</div>
     <div class="lk-strip">${cols}</div>
-    <div class="lk-legend">${lang === "zh" ? "吉凶(依喜用):" : "fortune (by useful phase):"} <span class="fo-dot good"></span>${lang === "zh" ? "吉" : "good"} <span class="fo-dot neutral"></span>${lang === "zh" ? "平" : "mixed"} <span class="fo-dot bad"></span>${lang === "zh" ? "忌" : "adverse"}</div>
+    <div class="lk-legend">${lang === "zh" ? "吉凶(依喜用):" : "fortune:"} <span class="fo-dot great"></span>${lang === "zh" ? "大吉" : "best"} <span class="fo-dot good"></span>${lang === "zh" ? "吉" : "good"} <span class="fo-dot neutral"></span>${lang === "zh" ? "平" : "mixed"} <span class="fo-dot bad"></span>${lang === "zh" ? "凶" : "adverse"} <span class="fo-dot terrible"></span>${lang === "zh" ? "大凶" : "worst"}</div>
     <div class="wnote">${lang === "zh" ? "← 左右滑动查看各步大运,点任意一步看该十年详解。" : "← Swipe to see all pillars; tap any for its decade reading."} ${LK[lang].note}</div>`;
 }
 const SIGN_ELEM = { Aries:"fire",Leo:"fire",Sagittarius:"fire",Taurus:"earth",Virgo:"earth",Capricorn:"earth",Gemini:"air",Libra:"air",Aquarius:"air",Cancer:"water",Scorpio:"water",Pisces:"water" };
@@ -3335,9 +3347,10 @@ function fortuneDrawer(r) {
   const pts = [], data = [];
   for (let a = 1; a <= MAXA; a++) {
     const yr = inp.y + a, da = a >= startAge ? daAt(a) : null;
-    const daFo = da ? luckAssess(r, da.ganzhi, s).level : "neutral";
     const idx = ((yr - 1984) % 60 + 60) % 60, gz = GAN[idx % 10] + ZHI[idx % 12];
-    const val = foVal(daFo) + foVal(luckAssess(r, gz, s).level);
+    const daScore = da ? luckAssess(r, da.ganzhi, s).score : 0;
+    const yrScore = luckAssess(r, gz, s).score;
+    const val = Math.max(-2.4, Math.min(2.4, daScore * 0.42 + yrScore * 0.52));
     pts.push([xOf(a), yOf(val)]); data.push({ age: a, year: yr, val });
   }
   const line = `<polyline points="${pts.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}" fill="none" stroke="#D9B96C" stroke-width="1.4" opacity=".92"/>`;
@@ -3397,7 +3410,7 @@ function luckStepDrawer(i) {
     [lang === "zh" ? "运程" : "Span", ageR]
   ];
   const nav = lk.list.map((y, j) => {
-    const st2 = y.ganzhi[0], br2 = y.ganzhi[1], tg2 = tenGod(r.dayMaster, st2), fo2 = luckAssess(r, y.ganzhi, sg).level;
+    const st2 = y.ganzhi[0], br2 = y.ganzhi[1], tg2 = tenGod(r.dayMaster, st2), fo2 = gradeDot(luckAssess(r, y.ganzhi, sg).grade);
     return `<div class="lkc clk${j === i ? " lkc-on" : ""}" role="button" tabindex="0" data-t="luckstep" data-i="${j}"><div class="lk-age">${y.startAge}${lang === "zh" ? "岁" : ""}</div><div class="lk-gz serif"><span style="color:${STEM_COLOR[st2]}">${st2}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br2]]}">${br2}</span></div><div class="lk-tg">${TEN_GOD_NAME[lang][tg2]}</div><span class="fo-dot ${fo2}"></span></div>`;
   }).join("");
   const c = STEM_COLOR[st];

@@ -985,7 +985,7 @@ const UI = {
       shapes:"坐镇月柱——"} };
 const DW={en:{whatIs:"What it is",inChart:"In your chart",hidden:"Hidden inside",dayMaster:"This is your Day Master — the \"you\" the whole chart is read around."},
   zh:{whatIs:"本义",inChart:"在你盘里",hidden:"所藏",dayMaster:"这是你的日主——全盘围绕的那个「你」。"}};
-const DWPOS={en:{year:"Year",month:"Month",day:"Day",hour:"Hour"},zh:{year:"年",month:"月",day:"日",hour:"时"}};
+const DWPOS={en:{year:"Year",month:"Month",day:"Day",hour:"Hour",luck:"Luck pillar",fleet:"Solar year"},zh:{year:"年",month:"月",day:"日",hour:"时",luck:"大运",fleet:"流年"}};
 const TZ_OPTS = [
   [480,"UTC+8 · Beijing / Shanghai / Singapore","UTC+8 · 北京 / 上海 / 新加坡"],
   [540,"UTC+9 · Tokyo / Seoul","UTC+9 · 东京 / 首尔"],
@@ -2170,7 +2170,10 @@ function renderCard(r, inp) {
 
 function posLabel(pk, kind) {
   const k = lang === "zh" ? (kind === "stem" ? "天干" : "地支") : (kind === "stem" ? "stem" : "branch");
-  return lang === "zh" ? `${DWPOS.zh[pk]}柱·${k}` : `${DWPOS.en[pk]} ${k}`;
+  const base = DWPOS[lang][pk];
+  if (!base) return k;
+  const pillar = ["year","month","day","hour"].indexOf(pk) >= 0;
+  return lang === "zh" ? `${base}${pillar ? "柱" : ""}·${k}` : `${base} ${k}`;
 }
 function drawerShell(glyph, color, title, sub, rows) {
   const body = rows.map(([lbl, txt]) => { const block = /^\s*<(div|svg|table|ul|ol)/i.test(txt); return `<div class="drow"><span class="d-label">${lbl}</span>${block ? `<div class="dp">${txt}</div>` : `<p>${txt}</p>`}</div>`; }).join("");
@@ -2574,7 +2577,7 @@ function luckStepDrawer(i) {
   const c = STEM_COLOR[st];
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
-    <div class="dw-head"><span class="dw-glyph serif" style="font-size:36px"><span style="color:${STEM_COLOR[st]};text-shadow:0 0 18px ${STEM_COLOR[st]}88;font-weight:600">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]};text-shadow:0 0 18px ${STEM_COLOR[ZHI_MAIN[br]]}88;opacity:.82">${br}</span></span>
+    <div class="dw-head"><span class="dw-glyph serif" style="font-size:36px"><span class="clk" role="button" tabindex="0" data-t="stem" data-c="${st}" data-p="luck" style="color:${STEM_COLOR[st]};text-shadow:0 0 18px ${STEM_COLOR[st]}88;font-weight:600;cursor:pointer">${st}</span><span class="clk" role="button" tabindex="0" data-t="branch" data-c="${br}" data-p="luck" style="color:${STEM_COLOR[ZHI_MAIN[br]]};text-shadow:0 0 18px ${STEM_COLOR[ZHI_MAIN[br]]}88;opacity:.82;cursor:pointer">${br}</span></span>
       <div><div class="dw-title serif">${cnEn(x.ganzhi)} · ${lang === "zh" ? ny.name : NAYIN_EN[Math.floor(ny.idx / 2)]}</div><div class="dw-sub">${ageR}</div></div></div>
     <div class="lk-strip lk-nav">${nav}</div>
     <div class="wnote" style="margin:2px 0 6px">${lang === "zh" ? "← 左右滑动切换其它大运" : "← swipe to switch decades"}</div>
@@ -2596,7 +2599,7 @@ function fleetYearDrawer(gz, year) {
   const c = STEM_COLOR[st];
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
-    <div class="dw-head"><span class="dw-glyph serif" style="font-size:34px"><span style="color:${STEM_COLOR[st]};text-shadow:0 0 18px ${STEM_COLOR[st]}88;font-weight:600">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]};text-shadow:0 0 18px ${STEM_COLOR[ZHI_MAIN[br]]}88;opacity:.82">${br}</span></span>
+    <div class="dw-head"><span class="dw-glyph serif" style="font-size:34px"><span class="clk" role="button" tabindex="0" data-t="stem" data-c="${st}" data-p="fleet" style="color:${STEM_COLOR[st]};text-shadow:0 0 18px ${STEM_COLOR[st]}88;font-weight:600;cursor:pointer">${st}</span><span class="clk" role="button" tabindex="0" data-t="branch" data-c="${br}" data-p="fleet" style="color:${STEM_COLOR[ZHI_MAIN[br]]};text-shadow:0 0 18px ${STEM_COLOR[ZHI_MAIN[br]]}88;opacity:.82;cursor:pointer">${br}</span></span>
       <div><div class="dw-title serif">${year} · ${cnEn(gz)}</div><div class="dw-sub">${zh ? "流年" : "Solar year"}</div></div></div>
     <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
 }

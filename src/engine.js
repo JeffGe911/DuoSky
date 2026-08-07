@@ -351,26 +351,40 @@ function branchRel2(a, b) {
   if (a === b) return "same";
   return "none";
 }
+function compatHua(a, b, sX, sY) {   // 两干相合是否化, 化神是否为二人所喜
+  if (STEM_HE[a] !== b) return null;
+  const E = STEM_HE_ELEM[a + b] || STEM_HE_ELEM[b + a];
+  const useful = sX.favor.indexOf(E) >= 0 || sY.favor.indexOf(E) >= 0;
+  const harm = sX.avoid.indexOf(E) >= 0 || sY.avoid.indexOf(E) >= 0;
+  return { elem: E, useful, harm };
+}
 function computeCompat(rA, rB) {
   const sA = computeStrength(rA), sB = computeStrength(rB);
+  const ysA = computeYongshen(rA, sA), ysB = computeYongshen(rB, sB);
   const aE = GAN_WX[rA.dayMaster], bE = GAN_WX[rB.dayMaster];
   const dmRel = STEM_HE[rA.dayMaster] === rB.dayMaster ? "he" : aE === bE ? "same" : (shengOf(aE) === bE || shengOf(bE) === aE) ? "sheng" : "ke";
   const zodiac = branchRel2(rA.year[1], rB.year[1]);
   const spouse = branchRel2(rA.day[1], rB.day[1]);
-  const aHelp = sA.favor.filter(e => sB.score[e] > sB.total / 5).length;   // B 能补 A 的喜用
-  const bHelp = sB.favor.filter(e => sA.score[e] > sA.total / 5).length;   // A 能补 B 的喜用
-  const aHarm = sA.avoid.filter(e => sB.score[e] > sB.total / 4).length;   // B 加重 A 的忌神
+  // 喜用互补(含用神): B 能否补 A 的用神 / 喜用
+  const bFeedsA = sB.score[ysA.element] > sB.total / 5, aFeedsB = sA.score[ysB.element] > sA.total / 5;
+  const aHelp = sA.favor.filter(e => sB.score[e] > sB.total / 5).length;
+  const bHelp = sB.favor.filter(e => sA.score[e] > sA.total / 5).length;
+  const aHarm = sA.avoid.filter(e => sB.score[e] > sB.total / 4).length;
   const bHarm = sB.avoid.filter(e => sA.score[e] > sA.total / 4).length;
+  // 合化: 日主五合 / 夫妻宫相合 是否化、化神是否为用
+  const dmHua = compatHua(rA.dayMaster, rB.dayMaster, sA, sB);
   const ZBONUS = { liuhe:15, sanhe:14, banhe:8, same:6, none:0, xing:-8, hai:-8, chong:-12 };
   const SBONUS = { liuhe:12, sanhe:10, banhe:6, same:6, none:0, xing:-6, hai:-6, chong:-12 };
-  let score = 60;
-  score += dmRel === "he" ? 18 : dmRel === "sheng" ? 15 : dmRel === "same" ? 8 : 6;
+  let score = 58;
+  score += dmRel === "he" ? 16 : dmRel === "sheng" ? 14 : dmRel === "same" ? 8 : 6;
   score += ZBONUS[zodiac] || 0;
   score += SBONUS[spouse] || 0;
-  score += Math.min(aHelp, 2) * 5 + Math.min(bHelp, 2) * 5 - aHarm * 3 - bHarm * 3;
-  score = Math.max(20, Math.min(98, Math.round(score)));
-  const tier = score >= 80 ? "great" : score >= 66 ? "good" : score >= 52 ? "ok" : "work";
-  return { score, tier, dmRel, zodiac, spouse, aHelp, bHelp, aHarm, bHarm, favorA: sA.favor, favorB: sB.favor, dmA: rA.dayMaster, dmB: rB.dayMaster, aE, bE };
+  score += Math.min(aHelp, 2) * 4 + Math.min(bHelp, 2) * 4 - aHarm * 3 - bHarm * 3;
+  score += (bFeedsA ? 8 : 0) + (aFeedsB ? 8 : 0);        // 供对方用神 = 大补
+  if (dmHua) score += dmHua.useful ? 8 : dmHua.harm ? -2 : 3;   // 日主合化为用
+  const bazi = Math.max(15, Math.min(98, Math.round(score)));
+  return { bazi, dmRel, zodiac, spouse, aHelp, bHelp, aHarm, bHarm, bFeedsA, aFeedsB, dmHua,
+    ysA: ysA.element, ysB: ysB.element, favorA: sA.favor, favorB: sB.favor, dmA: rA.dayMaster, dmB: rB.dayMaster, aE, bE };
 }
 
 // ============ 真太阳时校正 ============

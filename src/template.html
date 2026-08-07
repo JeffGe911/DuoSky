@@ -1631,26 +1631,36 @@ function compatResultDrawer(bEntry) {
   const A = { r:lastChart.r, wheel:lastWheel, name:lastChart.inp.name || (zh ? "当事人" : "You") };
   const B = entryToChart(bEntry); if (!B.name) B.name = zh ? "对方" : "Partner";
   const c = computeCompat(A.r, B.r), syn = synastry(A.wheel, B.wheel);
-  const col = c.tier === "great" ? "#7FC08A" : c.tier === "good" ? "#D9B96C" : c.tier === "ok" ? "#C9A24E" : "#C64B33";
-  const useTxt = (c.aHelp || c.bHelp)
-    ? (zh ? `用神互补:${c.aHelp ? "对方能补你喜用 " + c.aHelp + " 项;" : ""}${c.bHelp ? "你能补对方 " + c.bHelp + " 项。" : ""}` : `Useful-element complement: partner supplies ${c.aHelp}, you supply ${c.bHelp}.`)
-    : (zh ? "用神互补一般。" : "Modest elemental complement.");
+  // 星盘分: 和谐-张力
+  const west = syn ? Math.max(20, Math.min(96, 58 + (syn.harmonious - syn.tense) * 7)) : null;
+  const final = west != null ? Math.round(c.bazi * 0.6 + west * 0.4) : c.bazi;
+  const tier = final >= 80 ? "great" : final >= 66 ? "good" : final >= 52 ? "ok" : "work";
+  const col = tier === "great" ? "#7FC08A" : tier === "good" ? "#D9B96C" : tier === "ok" ? "#C9A24E" : "#C64B33";
+  // 用神互补
+  const feed = [];
+  if (c.bFeedsA) feed.push(zh ? `对方一身 ${ELEM_CHAR[c.ysA]} 气,正补你的用神(大益)` : `partner is rich in ${ELEM_TXT.en[c.ysA]} — feeds your useful element`);
+  if (c.aFeedsB) feed.push(zh ? `你一身 ${ELEM_CHAR[c.ysB]} 气,正补对方用神` : `you are rich in ${ELEM_TXT.en[c.ysB]} — feed theirs`);
+  const useTxt = feed.length ? feed.join(zh ? ";" : "; ") + "." : (zh ? "用神互补一般,靠后天经营。" : "Modest elemental complement.");
+  // 合化
+  let huaTxt = "";
+  if (c.dmRel === "he" && c.dmHua) huaTxt = zh ? ` 日主 ${c.dmA}${c.dmB} 相合,化 ${ELEM_CHAR[c.dmHua.elem]}${c.dmHua.useful ? "——化神为二人所喜,情投意合又互补(上等)" : c.dmHua.harm ? "——化神偏忌,情浓却需节制" : "——牵引亲密"}。` : ` Day masters ${c.dmA}${c.dmB} unite → ${ELEM_TXT.en[c.dmHua.elem]}${c.dmHua.useful ? " (a useful fusion — deep and complementary)" : ""}.`;
   const rows = [
-    [zh ? "日主" : "Day masters", `${A.r.dayMaster}(${ELEM_CHAR[c.aE]}) × ${B.r.dayMaster}(${ELEM_CHAR[c.bE]})——${CPT.dm[c.dmRel][lang]}`],
+    [zh ? "日主" : "Day masters", `${A.r.dayMaster}(${ELEM_CHAR[c.aE]}) × ${B.r.dayMaster}(${ELEM_CHAR[c.bE]})——${CPT.dm[c.dmRel][lang]}${huaTxt}`],
     [zh ? "生肖" : "Zodiac (year)", `${ANIMAL_TXT[lang][A.r.year[1]]} × ${ANIMAL_TXT[lang][B.r.year[1]]}——${CPT.br[c.zodiac][lang]}`],
     [zh ? "夫妻宫(日支)" : "Spouse palace", `${A.r.day[1]} × ${B.r.day[1]}——${CPT.br[c.spouse][lang]}`],
-    [zh ? "用神" : "Elements", useTxt]
+    [zh ? "用神互补" : "Useful-element fit", useTxt]
   ];
   if (syn) {
     const hitTxt = syn.hits.slice(0, 5).map(h => `<span style="color:${ASPECT_META[h.type][0]}">${PLANET_GLYPH[h.a]}${ASPECT_ABBR[h.type]}${PLANET_GLYPH[h.b]}</span>`).join("　") || (zh ? "无紧密相位" : "none tight");
-    rows.push([zh ? "西方合盘" : "Synastry", `${zh ? "和谐" : "harmonious"} ${syn.harmonious} · ${zh ? "张力" : "tense"} ${syn.tense}<br>${hitTxt}<br><span style="opacity:.6">${zh ? "(双方 日/月/水/金/火 之间的相位)" : "(Sun/Moon/Merc/Venus/Mars cross-aspects)"}</span>`]);
+    rows.push([zh ? "西方合盘" : "Synastry", `${zh ? "和谐" : "harmonious"} ${syn.harmonious} · ${zh ? "张力" : "tense"} ${syn.tense}<br>${hitTxt}<br><span style="opacity:.6">${zh ? "(双方 日/月/水/金/火 跨盘相位)" : "(Sun/Moon/Merc/Venus/Mars cross-aspects)"}</span>`]);
   } else {
     rows.push([zh ? "西方合盘" : "Synastry", zh ? "需双方都有出生时间与地点。" : "needs both birth times & places."]);
   }
+  rows.push([zh ? "评分" : "Scores", `${zh ? "八字" : "BaZi"} ${c.bazi}${west != null ? ` · ${zh ? "星盘" : "Chart"} ${west}` : ""} → ${zh ? "综合" : "overall"} <b style="color:${col}">${final}</b>`]);
   return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="match">‹ ${zh ? "重选" : "back"}</span>
-    <div class="dw-head"><span class="cpt-score" style="border-color:${col};color:${col}">${c.score}</span>
-      <div><div class="dw-title serif">${esc(A.name)} ✕ ${esc(B.name)}</div><div class="dw-sub" style="color:${col}">${CPT.tier[lang][c.tier]}</div></div></div>
+    <div class="dw-head"><span class="cpt-score" style="border-color:${col};color:${col}">${final}</span>
+      <div><div class="dw-title serif">${esc(A.name)} ✕ ${esc(B.name)}</div><div class="dw-sub" style="color:${col}">${CPT.tier[lang][tier]}${west != null ? (zh ? " · 八字+星盘合参" : " · BaZi + synastry") : (zh ? " · 仅八字" : " · BaZi only")}</div></div></div>
     <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>
     <div class="wnote">${zh ? "合婚仅供参考,真感情靠经营。" : "For reflection — real love is built, not read."}</div>`;
 }

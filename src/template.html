@@ -370,11 +370,13 @@ __FONTS__
   .hint-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:12px;color:var(--gold);
     background:rgba(217,185,108,.09);border:1px solid var(--gold-dim);border-radius:9px;padding:8px 12px;margin:0 0 16px;letter-spacing:.02em}
   .hint-x{flex:none;cursor:pointer;opacity:.7;font-size:12px} .hint-x:hover{opacity:1}
-  .cardnavbar{position:sticky;top:0;z-index:6;display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:10px 0;margin:0 -36px 16px;
-    background:rgba(40,21,19,.94);border-bottom:1px solid var(--gold-dim);backdrop-filter:blur(6px)}
-  body.west .cardnavbar{background:rgba(20,18,34,.94)}
-  .navtab{font-size:12px;letter-spacing:.08em;color:var(--soft);border:1px solid var(--gold-dim);border-radius:20px;padding:5px 15px;cursor:pointer;transition:.15s;background:rgba(217,185,108,.06)}
-  .navtab:hover{border-color:var(--gold);color:var(--gold)} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
+  .cardnavbar{position:sticky;top:6px;z-index:6;display:flex;justify-content:space-around;align-items:center;flex-wrap:nowrap;padding:10px 8px;margin:0 0 18px;border-radius:12px;
+    background:linear-gradient(180deg,#eef2ea 0%,#dee4d7 55%,#c9d1c1 100%);
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow:0 3px 13px rgba(3,5,15,.42), inset 0 1px 0 rgba(255,255,255,.85), inset 0 -3px 8px rgba(108,128,108,.3)}
+  .navtab{flex:1;text-align:center;font-size:13.5px;letter-spacing:.12em;color:#3b4a3d;cursor:pointer;padding:2px 6px;background:none;border:none;font-family:"Songti SC","STSong",serif;transition:color .15s;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+  .navtab + .navtab{border-left:1px solid rgba(110,130,110,.38)}
+  .navtab:hover{color:#8a6a1e} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:4px}
   .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.05)}
   .opening.clk{cursor:pointer;transition:.15s} .opening.clk:hover{border-color:var(--gold);background:rgba(217,185,108,.1)} .opening.clk:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
   .op-tap{color:var(--gold);font-style:normal;white-space:nowrap}

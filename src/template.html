@@ -1626,6 +1626,18 @@ function matchDrawer() {
       <div><div class="dw-title serif">${zh ? "合盘 · 合婚" : "Compatibility"}</div><div class="dw-sub">${esc(cur.name || (zh ? "当前" : "you"))} × ${zh ? "输入对方" : "enter partner"}</div></div></div>
     <div style="margin-top:14px">${form}${rosterPart}</div>`;
 }
+function personFortune(r, inp, gen, s, fromY, n) {
+  const lk = computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender:gen });
+  if (!lk || lk.error) return null;
+  const fv = f => f === "good" ? 1 : f === "bad" ? -1 : 0, out = [];
+  for (let i = 0; i < n; i++) {
+    const Y = fromY + i, age = Y - inp.y, past = lk.list.filter(x => age >= x.startAge), da = past.length ? past[past.length - 1] : null;
+    const daFo = da ? luckAssess(r, da.ganzhi, s).level : "neutral";
+    const idx = ((Y - 1984) % 60 + 60) % 60, gz = GAN[idx % 10] + ZHI[idx % 12];
+    out.push(fv(daFo) + fv(luckAssess(r, gz, s).level));
+  }
+  return out;
+}
 function compatResultDrawer(bEntry) {
   const zh = lang === "zh";
   const A = { r:lastChart.r, wheel:lastWheel, name:lastChart.inp.name || (zh ? "当事人" : "You") };
@@ -1655,6 +1667,18 @@ function compatResultDrawer(bEntry) {
     rows.push([zh ? "西方合盘" : "Synastry", `${zh ? "和谐" : "harmonious"} ${syn.harmonious} · ${zh ? "张力" : "tense"} ${syn.tense}<br>${hitTxt}<br><span style="opacity:.6">${zh ? "(双方 日/月/水/金/火 跨盘相位)" : "(Sun/Moon/Merc/Venus/Mars cross-aspects)"}</span>`]);
   } else {
     rows.push([zh ? "西方合盘" : "Synastry", zh ? "需双方都有出生时间与地点。" : "needs both birth times & places."]);
+  }
+  {
+    const fromY = (new Date()).getFullYear(), N = 15;
+    const sA = computeStrength(A.r), sB = computeStrength(B.r);
+    const fa = personFortune(A.r, lastChart.inp, gender, sA, fromY, N), fb = personFortune(B.r, bEntry, bEntry.gender || "m", sB, fromY, N);
+    if (fa && fb) {
+      let same = 0; const both = [];
+      for (let i = 0; i < N; i++) { if (Math.sign(fa[i]) === Math.sign(fb[i])) same++; if (fa[i] >= 1 && fb[i] >= 1) both.push(fromY + i); }
+      const pct = Math.round(same / N * 100), lab = pct >= 66 ? (zh ? "同频·高" : "in sync") : pct >= 40 ? (zh ? "中" : "moderate") : (zh ? "错位" : "out of phase");
+      const note = pct >= 66 ? (zh ? "顺逆同步,能一起冲也一起扛,彼此扶持。" : "you rise and dip together — mutual support.") : pct >= 40 ? (zh ? "时而同步时而错位,多沟通即可。" : "partly in step — communicate through the gaps.") : (zh ? "节奏常相反,一顺一逆时需多体谅,也能互补撑住。" : "often opposite tempos — patience, but also complementary.");
+      rows.push([zh ? "运势同步" : "Luck sync", `<b class="gold">${pct}% · ${lab}</b>——${note}${both.length ? (zh ? ` 共同顺遂年:${both.slice(0, 4).join("、")}。` : ` Shared good years: ${both.slice(0, 4).join(", ")}.`) : ""}`]);
+    }
   }
   rows.push([zh ? "评分" : "Scores", `${zh ? "八字" : "BaZi"} ${c.bazi}${west != null ? ` · ${zh ? "星盘" : "Chart"} ${west}` : ""} → ${zh ? "综合" : "overall"} <b style="color:${col}">${final}</b>`]);
   return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>

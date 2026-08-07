@@ -269,7 +269,9 @@ __FONTS__
   .lk-strip::-webkit-scrollbar-thumb:hover{background:var(--gold)}
   .lkc{flex:none;width:54px;text-align:center;border:1px solid var(--hairline);border-radius:9px;padding:7px 3px;background:rgba(255,255,255,.02);scroll-snap-align:start}
   .lk-age{font-size:10.5px;color:var(--muted)}
-  .lk-gz{font-size:21px;line-height:1.15;margin:3px 0;letter-spacing:.02em}
+  .lk-gz{font-size:21px;line-height:1.15;margin:3px 0;letter-spacing:.03em}
+  .lk-gz span:first-child,.fy-gz span:first-child{font-weight:600}
+  .lk-gz span:last-child,.fy-gz span:last-child{opacity:.68;font-weight:400}
   .lk-tg{font-size:10px;color:var(--gold);letter-spacing:.02em}
   .lk-yr{font-size:9.5px;color:var(--muted);margin-top:2px}
   .lk-ny{font-size:9.5px;color:var(--gold);opacity:.8;margin-top:1px;line-height:1.1}
@@ -327,6 +329,7 @@ __FONTS__
   .fy-row{display:flex;align-items:center;gap:10px;font-size:12px;margin:3px 0;padding-bottom:4px;border-bottom:1px solid rgba(255,255,255,.05)}
   .fy-yr{flex:none;width:52px;color:var(--muted)} .fy-gz{flex:none;width:36px;font-size:15px;letter-spacing:.02em} .fy-tg{flex:1;color:var(--soft)}
   .fy-rs{opacity:.5;font-size:11px} .fy-now .fy-yr{color:var(--gold)} .fy-now{background:rgba(217,185,108,.06);border-radius:6px}
+  .fy-row.clk{cursor:pointer;border-radius:6px;transition:background .15s} .fy-row.clk:hover{background:rgba(217,185,108,.12)} .fy-row.clk:focus-visible{outline:1px solid var(--gold);outline-offset:-1px}
   .fy-block{margin:14px 0 4px} .fy-lab{display:block;margin-bottom:7px}
   .fy-list{max-height:250px;overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--gold-dim) rgba(255,255,255,.06)}
   .fy-list::-webkit-scrollbar{width:9px}
@@ -2485,7 +2488,7 @@ function luckStepDrawer(i) {
     const fa = luckAssess(r, fy.ganzhi, sg), tgy = tenGod(r.dayMaster, fy.ganzhi[0]);
     const rs = fa.reasons.length ? luckReasonText(fa.reasons.slice(0, 2)) : "";
     const cur = fy.year === nowYr ? " fy-now" : "";
-    return `<div class="fy-row${cur}"><span class="fy-yr">${fy.year}${fy.year === nowYr ? (lang === "zh" ? " ·今" : " ·now") : ""}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[fy.ganzhi[0]]}">${fy.ganzhi[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[fy.ganzhi[1]]]}">${fy.ganzhi[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tgy]}${rs ? ` <span class="fy-rs">${rs}</span>` : ""}</span><span class="fo-dot ${fa.level}"></span></div>`;
+    return `<div class="fy-row${cur} clk" role="button" tabindex="0" data-t="fyear" data-gz="${fy.ganzhi}" data-yr="${fy.year}"><span class="fy-yr">${fy.year}${fy.year === nowYr ? (lang === "zh" ? " ·今" : " ·now") : ""}</span><span class="fy-gz serif"><span style="color:${STEM_COLOR[fy.ganzhi[0]]}">${fy.ganzhi[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[fy.ganzhi[1]]]}">${fy.ganzhi[1]}</span></span><span class="fy-tg">${TEN_GOD_NAME[lang][tgy]}${rs ? ` <span class="fy-rs">${rs}</span>` : ""}</span><span class="fo-dot ${fa.level}"></span></div>`;
   }).join("");
   const lead = lang === "zh"
     ? `这十年以 <b class="gold">${TEN_GOD_FULL.zh[tg]}</b> 当运——${TEN_GOD_GLOSS.zh[tg]}纳音「${ny.name}」,属${ELEM_TXT.zh[ny.elem]}。`
@@ -2512,7 +2515,26 @@ function luckStepDrawer(i) {
     <div class="lk-strip lk-nav">${nav}</div>
     <div class="wnote" style="margin:2px 0 6px">${lang === "zh" ? "← 左右滑动切换其它大运" : "← swipe to switch decades"}</div>
     <div style="margin-top:6px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>
-    <div class="fy-block"><div class="d-label fy-lab">${lang === "zh" ? "流年 · 这十年(可上下滑)" : "Yearly · this decade (scroll)"}</div><div class="fy-list">${fleetRows}</div></div>`;
+    <div class="fy-block"><div class="d-label fy-lab">${lang === "zh" ? "流年 · 这十年 · 点年份看解析" : "Yearly · this decade · tap a year"}</div><div class="fy-list">${fleetRows}</div></div>`;
+}
+function fleetYearDrawer(gz, year) {
+  const r = lastChart.r, zh = lang === "zh";
+  const st = gz[0], br = gz[1], tg = tenGod(r.dayMaster, st), ny = nayin(gz), sg = computeStrength(r);
+  const asmt = luckAssess(r, gz, sg);
+  const hid = CANGGAN[br].map(hs => `<span style="color:${STEM_COLOR[hs]}">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(zh ? "\u3000" : " · ");
+  const rows = [
+    [DW[lang].whatIs, zh ? `${year} 年 ${cnEn(gz)},流年以 <b class="gold">${TEN_GOD_FULL.zh[tg]}</b> 当值——${TEN_GOD_GLOSS.zh[tg]}` : `${year}, the year ${gz}, runs as <b class="gold">${TEN_GOD_FULL.en[tg]}</b> — ${TEN_GOD_GLOSS.en[tg]}`],
+    [zh ? "十神含义" : "Ten God", TEN_GOD_DEF[lang][tg]],
+    [zh ? "藏干" : "Hidden", hid],
+    [zh ? "这类流年" : "Year type", TG_LUCK[lang][TG_GROUP[tg]]],
+    [zh ? "吉凶细批" : "Fortune", `<span class="fo-dot ${gradeDot(asmt.grade)}"></span> <b>${GRADE[lang][asmt.grade]}</b> <span style="opacity:.5">(${asmt.score})</span><br><span style="opacity:.8">${luckReasonText(asmt.reasons)}</span>`]
+  ];
+  const c = STEM_COLOR[st];
+  return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
+    <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:34px">${gz}</span>
+      <div><div class="dw-title serif">${year} · ${cnEn(gz)}</div><div class="dw-sub">${zh ? "流年" : "Solar year"}</div></div></div>
+    <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
 }
 const SHEN = {
   tianyi:{ zh:["天乙贵人","逢凶化吉、贵人相助的第一吉星。"], en:["Nobleman","the luckiest star — help arrives, danger softens."] },
@@ -2571,6 +2593,7 @@ function onPick(el) {
   else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
   else if (t === "luck") openDrawer(luckDrawer(r));
   else if (t === "luckstep") openDrawer(luckStepDrawer(+el.dataset.i));
+  else if (t === "fyear") openDrawer(fleetYearDrawer(el.dataset.gz, +el.dataset.yr));
   else if (t === "aspects") openDrawer(aspectDrawer());
   else if (t === "wbalance") openDrawer(westBalanceDrawer());
   else if (t === "houses") openDrawer(housesDrawer());

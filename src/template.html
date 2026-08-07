@@ -370,14 +370,12 @@ __FONTS__
   .hint-bar{display:flex;align-items:center;gap:10px;justify-content:space-between;font-size:12px;color:var(--gold);
     background:rgba(217,185,108,.09);border:1px solid var(--gold-dim);border-radius:9px;padding:8px 12px;margin:0 0 16px;letter-spacing:.02em}
   .hint-x{flex:none;cursor:pointer;opacity:.7;font-size:12px} .hint-x:hover{opacity:1}
-  .cardnavbar{position:sticky;top:6px;z-index:6;display:flex;justify-content:space-around;align-items:center;flex-wrap:nowrap;padding:11px 8px;margin:0 0 18px;border-radius:12px;
-    background-color:#bcd2b5;
-    background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='20'%20height='20'%3E%3Cg%20fill='none'%20stroke='%235f7a5a'%20stroke-opacity='0.3'%3E%3Crect%20x='3'%20y='3'%20width='14'%20height='14'/%3E%3Crect%20x='7'%20y='7'%20width='6'%20height='6'/%3E%3C/g%3E%3C/svg%3E"), linear-gradient(180deg,rgba(224,236,220,.9) 0%,rgba(178,205,170,.5) 55%,rgba(150,183,143,.7) 100%);
-    background-repeat:repeat, no-repeat;
-    border:1px solid rgba(255,255,255,.5);
-    box-shadow:0 3px 13px rgba(3,5,15,.42), inset 0 1px 0 rgba(255,255,255,.8), inset 0 0 0 1px rgba(95,122,90,.3), inset 0 -3px 8px rgba(95,122,90,.32)}
-  .navtab{flex:1;text-align:center;font-size:13.5px;letter-spacing:.12em;color:#294536;cursor:pointer;padding:2px 6px;background:none;border:none;font-family:"Songti SC","STSong",serif;transition:color .15s;text-shadow:0 1px 0 rgba(255,255,255,.55)}
-  .navtab + .navtab{border-left:1px solid rgba(80,105,78,.45)}
+  .cardnavbar{position:sticky;top:6px;z-index:6;display:flex;justify-content:space-around;align-items:center;flex-wrap:nowrap;padding:10px 8px;margin:0 0 18px;border-radius:12px;
+    background:linear-gradient(180deg,#eef2ea 0%,#dee4d7 55%,#c9d1c1 100%);
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow:0 3px 13px rgba(3,5,15,.42), inset 0 1px 0 rgba(255,255,255,.85), inset 0 -3px 8px rgba(108,128,108,.3)}
+  .navtab{flex:1;text-align:center;font-size:13.5px;letter-spacing:.12em;color:#3b4a3d;cursor:pointer;padding:2px 6px;background:none;border:none;font-family:"Songti SC","STSong",serif;transition:color .15s;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+  .navtab + .navtab{border-left:1px solid rgba(110,130,110,.38)}
   .navtab:hover{color:#8a6a1e} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:4px}
   .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.05)}
   .opening.clk{cursor:pointer;transition:.15s} .opening.clk:hover{border-color:var(--gold);background:rgba(217,185,108,.1)} .opening.clk:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
@@ -776,6 +774,30 @@ const TEN_GOD_GLOSS = {
       正财:"挣来的才留得住——你像砌墙一样攒家业。",偏财:"钱喜欢在路上遇见你——流动就是财运。",
       正官:"秩序衬你——责任是你的冠冕。",七杀:"高压是你的主场——你在风暴里发号施令。",
       正印:"你像墨一样吸收——学问是你的屋檐。",偏印:"你总从侧面知道答案——相信那根天线。"} };
+
+const TEN_GOD_DEF = {
+  zh:{
+    比肩:"与你同五行、同阴阳的星。代表兄弟姐妹、同辈、同事——跟你并肩的人。主独立、合作,也主分财。",
+    劫财:"与你同五行、但阴阳相反的星。代表同辈里的对手或合伙人。主竞争、拼劲,也主破耗钱财——故名「劫财」。",
+    食神:"由你所生、同阴阳的星。代表才华、口福、表达与享受,温和地把本事变成钱。",
+    伤官:"由你所生、阴阳相反的星。代表才气、锋芒、创意与叛逆——聪明外露,但容易冲撞权威。",
+    正财:"被你所克、阴阳相反的星。代表正当稳定的收入与家业(男命亦代表妻子),踏实积累。",
+    偏财:"被你所克、同阴阳的星。代表活钱、意外之财与生意财(亦代表父亲、机遇),在流动中生财。",
+    正官:"克你、阴阳相反的星。代表地位、名分、责任与约束(女命亦代表丈夫),守规矩得体面。",
+    七杀:"克你、同阴阳的星。代表压力、权力、魄力与考验——刚烈能担大事,制化得当则贵。",
+    正印:"生你、阴阳相反的星。代表母亲、学问、靠山与名声,主吸收、庇护与休养。",
+    偏印:"生你、同阴阳的星。代表偏门学问、直觉与专业技能,思路奇特、略孤高(又称枭神)。" },
+  en:{
+    比肩:"Same element and polarity as you — siblings, peers, colleagues who stand beside you. Independence and teamwork, but also splits wealth.",
+    劫财:"Same element, opposite polarity — a rival or partner among your peers. Drive and competition, but it drains money (hence 'Rob Wealth').",
+    食神:"What you produce, same polarity — talent, appetite, expression and enjoyment; turns skill gently into income.",
+    伤官:"What you produce, opposite polarity — flair, edge, creativity and rebellion; brilliant, but apt to challenge authority.",
+    正财:"What you control, opposite polarity — steady, legitimate income and estate (a wife, in a man's chart); built by patience.",
+    偏财:"What you control, same polarity — fluid money, windfalls and business gains (also father, opportunity); earned in motion.",
+    正官:"What controls you, opposite polarity — status, title, duty and restraint (a husband, in a woman's chart); dignity through order.",
+    七杀:"What controls you, same polarity — pressure, power, nerve and trial; fierce and capable of great things when well-tempered.",
+    正印:"What generates you, opposite polarity — mother, learning, backing and reputation; absorption, shelter and rest.",
+    偏印:"What generates you, same polarity — unconventional knowledge, intuition and specialist skill; original, a touch aloof (the 'owl')." } };
 
 const EAST_LINE = {
   en:{子:"The Rat is the zodiac's survivor-strategist — quick, resourceful, three exits from every room.",
@@ -1990,7 +2012,8 @@ function tenGodDrawer(stem, r) {
   const tg = tenGod(r.dayMaster, stem), c = STEM_COLOR[stem];
   const sub = lang === "zh" ? `${stem} 对 日主 ${r.dayMaster}` : `${stem} to Day Master ${r.dayMaster}`;
   return drawerShell(stem, c, TEN_GOD_FULL[lang][tg], sub,
-    [[DW[lang].whatIs, TEN_GOD_GLOSS[lang][tg]],
+    [[DW[lang].whatIs, TEN_GOD_DEF[lang][tg]],
+     [lang === "zh" ? "写照" : "In a word", TEN_GOD_GLOSS[lang][tg]],
      [lang === "zh" ? "取象" : "Ten God", `<b class="gold">${tgFull(tg)}</b> · ${ELEM_TXT[lang][GAN_WX[stem]]}`]]);
 }
 function tenGodsDrawer(r) {
@@ -2003,7 +2026,7 @@ function tenGodsDrawer(r) {
   const map = {};
   srcs.forEach(([ch, w]) => { if (ch === r.dayMaster) return; const tg = tenGod(r.dayMaster, ch); (map[tg] = map[tg] || []).push(`${ch}${w}`); });
   const rows = [[DW[lang].whatIs, lang === "zh" ? `日主 <b class="gold">${r.dayMaster}</b>——${DM_LINE[lang][r.dayMaster]}` : `Day Master <b class="gold">${r.dayMaster}</b>. ${DM_LINE[lang][r.dayMaster]}`]];
-  Object.keys(map).forEach(tg => rows.push([tgFull(tg), `${TEN_GOD_GLOSS[lang][tg]} <span style="opacity:.5">(${map[tg].join(" · ")})</span>`]));
+  Object.keys(map).forEach(tg => rows.push([tgFull(tg), `${TEN_GOD_DEF[lang][tg]} <span style="opacity:.5">(${map[tg].join(" · ")})</span>`]));
   return drawerShell(r.dayMaster, STEM_COLOR[r.dayMaster], lang === "zh" ? "十神" : "Ten Gods", lang === "zh" ? `日主 ${r.dayMaster} · 全盘取象` : `Day Master ${r.dayMaster}`, rows);
 }
 const LREASON = {

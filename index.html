@@ -198,6 +198,7 @@
     color:var(--gold);font-weight:700;padding-top:2px}
   body.zh .drow .d-label{font-size:11.5px;letter-spacing:.2em}
   .drow p{font-size:13px;line-height:1.65;color:var(--soft)}
+  .drow .dp{flex:1;min-width:0}
   .locked{text-align:center;padding:15px 10px;font-size:13px;color:var(--soft);line-height:1.8}
   .footer{border-top:1px solid var(--hairline);padding-top:12px;display:flex;
     justify-content:space-between;gap:10px;position:relative;z-index:1}
@@ -2669,6 +2670,14 @@ function todayDrawer(scope) {
     const dayWord = { good: zh?"今日干支扶你喜用——宜进取、办正事、见贵人。":"Today feeds your useful phase — push forward, handle key matters.", bad: zh?"今日干支冲你喜用——宜守成、缓决策、避冲突。":"Today works against your useful phase — hold steady, delay big calls.", neutral: zh?"今日干支不偏不倚——平顺度日即可。":"A neutral day — steady as she goes." }[dayFo];
     rows.push([zh?"今日":"Today", `${dateStr} <span class="fo-dot ${dayFo}"></span><br><b>${dayWord}</b>`]);
     rows.push([zh?"流年 · 流月 · 流日":"Year · Month · Day", cycRows]);
+    const dayCells = [];
+    for (let k = 0; k < 14; k++) {
+      const d = new Date(now.getTime() + k * 86400000), dyy = d.getFullYear(), dmm = d.getMonth() + 1, ddd = d.getDate();
+      const dR = computeChart(TERMS, { y:dyy, m:dmm, d:ddd, hh:12, mi:0, tzMin:localTz, timeKnown:false });
+      const gz = dR.day, aa = luckAssess(r, gz, sg), tgd = tenGod(r.dayMaster, gz[0]);
+      dayCells.push(`<div class="lkc${k === 0 ? " lkc-on" : ""}"><div class="lk-age">${dmm}/${ddd}${k === 0 ? (zh ? " 今" : " •") : ""}</div><div class="lk-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></div><div class="lk-tg">${TEN_GOD_NAME[lang][tgd]}</div><span class="fo-dot ${gradeDot(aa.grade)}"></span></div>`);
+    }
+    rows.push([zh ? "流日 · 未来两周(左右滑)" : "Daily · 2 weeks (swipe)", `<div class="lk-strip">${dayCells.join("")}</div>`]);
     const lk = lastLuck || computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
     if (lk && !lk.error) {
       const age = ty - inp.y, past = lk.list.filter(x => age >= x.startAge);
@@ -3016,7 +3025,7 @@ function posLabel(pk, kind) {
   return lang === "zh" ? `${DWPOS.zh[pk]}柱·${k}` : `${DWPOS.en[pk]} ${k}`;
 }
 function drawerShell(glyph, color, title, sub, rows) {
-  const body = rows.map(([lbl, txt]) => `<div class="drow"><span class="d-label">${lbl}</span><p>${txt}</p></div>`).join("");
+  const body = rows.map(([lbl, txt]) => { const block = /^\s*<(div|svg|table|ul|ol)/i.test(txt); return `<div class="drow"><span class="d-label">${lbl}</span>${block ? `<div class="dp">${txt}</div>` : `<p>${txt}</p>`}</div>`; }).join("");
   return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
     <div class="dw-head"><span class="dw-glyph serif" style="color:${color};text-shadow:0 0 18px ${color}88">${glyph}</span>
       <div><div class="dw-title serif">${title}</div><div class="dw-sub">${sub}</div></div></div>

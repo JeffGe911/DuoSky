@@ -532,9 +532,13 @@ function computeStrength(r) {
   let favor = [], avoid = [];
   if (level === "strong") { favor = [shi, cai, guan]; avoid = [yin, bi]; }
   else if (level === "weak") { favor = [yin, bi]; avoid = [shi, cai, guan]; }
-  else { // 中和:贵在流通,按微弱倾向定喜忌(略偏强则泄、略偏弱则扶)
-    if (ratio >= 0.5) { favor = [shi, cai]; avoid = [yin, bi]; }
-    else { favor = [yin, bi]; avoid = [cai, guan]; }
+  else { // 中和:贵在流通——补不足(最弱两行)、泄有余(最旺一行),并以调候为先(连续、无硬跳变)
+    const byScore = WX_ORDER.slice().sort((a, b) => score[a] - score[b]);
+    favor = [byScore[0], byScore[1]];
+    avoid = [byScore[4]];
+    const mb = r.month[1];
+    const clNeed = "亥子丑".indexOf(mb) >= 0 ? "fire" : "巳午未".indexOf(mb) >= 0 ? "water" : null;
+    if (clNeed && avoid.indexOf(clNeed) < 0 && favor.indexOf(clNeed) < 0) favor.unshift(clNeed);
   }
   // 用神: 喜用五行中当前分数最低者(最需引入/补强的平衡点)
   const useGod = favor.length ? favor.slice().sort((a, b) => score[a] - score[b])[0] : null;

@@ -1510,9 +1510,13 @@ function computeStrength(r) {
   let favor = [], avoid = [];
   if (level === "strong") { favor = [shi, cai, guan]; avoid = [yin, bi]; }
   else if (level === "weak") { favor = [yin, bi]; avoid = [shi, cai, guan]; }
-  else { // 中和:贵在流通,按微弱倾向定喜忌(略偏强则泄、略偏弱则扶)
-    if (ratio >= 0.5) { favor = [shi, cai]; avoid = [yin, bi]; }
-    else { favor = [yin, bi]; avoid = [cai, guan]; }
+  else { // 中和:贵在流通——补不足(最弱两行)、泄有余(最旺一行),并以调候为先(连续、无硬跳变)
+    const byScore = WX_ORDER.slice().sort((a, b) => score[a] - score[b]);
+    favor = [byScore[0], byScore[1]];
+    avoid = [byScore[4]];
+    const mb = r.month[1];
+    const clNeed = "亥子丑".indexOf(mb) >= 0 ? "fire" : "巳午未".indexOf(mb) >= 0 ? "water" : null;
+    if (clNeed && avoid.indexOf(clNeed) < 0 && favor.indexOf(clNeed) < 0) favor.unshift(clNeed);
   }
   // 用神: 喜用五行中当前分数最低者(最需引入/补强的平衡点)
   const useGod = favor.length ? favor.slice().sort((a, b) => score[a] - score[b])[0] : null;
@@ -2435,7 +2439,10 @@ function strengthDrawer(r) {
   const balance = `<div class="sbal"><span class="sbal-s" style="width:${supPct}%">${lang === "zh" ? "扶" : "support"} ${s.support}</span><span class="sbal-d">${lang === "zh" ? "抑" : "drain"} ${s.drain}</span></div>`;
   const favTxt = s.favor.length ? s.favor.map(e => `<b style="color:${ELEM_COLOR[e]}">${elName(e)}</b>`).join("、") : "—";
   const avoTxt = s.avoid.length ? s.avoid.map(e => `<span style="color:${ELEM_COLOR[e]};opacity:.85">${elName(e)}</span>`).join("、") : "—";
-  const useTxt = s.useGod ? `<b style="color:${ELEM_COLOR[s.useGod]}">${elName(s.useGod)}</b>` : "—";
+  const useTxt = ys.element ? `<b style="color:${ELEM_COLOR[ys.element]}">${elName(ys.element)}</b>` : "—";
+  const _favSD = s.favor.length ? s.favor.slice() : [ys.element];
+  const _primeSD = _favSD.slice().sort((a, b) => s.score[b] - s.score[a])[0] || ys.element;
+  const primeTxt = _primeSD ? `<b style="color:${ELEM_COLOR[_primeSD]}">${elName(_primeSD)}</b>` : "—";
   const roleC = lang === "zh" ? ["本", "中", "余"] : ["main", "mid", "res"];
   const posName = { year: T.year, month: T.month, day: T.day, hour: T.hour };
   const byBranch = {};
@@ -2452,7 +2459,7 @@ function strengthDrawer(r) {
     [DW[lang].whatIs, `<b class="gold">${lang === "zh" ? "日主 " + r.dayMaster + ELEM_CHAR[s.dmElement] : "Day Master " + r.dayMaster}</b> · <b>${L[s.level]}</b>(${lang === "zh" ? "扶抑比" : "ratio"} ${(s.ratio * 100).toFixed(0)}%)。${note}`],
     [L.support + " / " + L.drain, balance],
     [L.score, bars],
-    [L.favor + " / " + L.avoid, `${L.favor}:${favTxt}　${L.avoid}:${avoTxt}<br>${L.use}:${useTxt}`],
+    [L.favor + " / " + L.avoid, `${L.favor}:${favTxt}　${L.avoid}:${avoTxt}<br>${lang === "zh" ? "用神(格局)" : "Useful god"}:${useTxt}　${lang === "zh" ? "做功最强(主力喜用)" : "Strongest useful"}:${primeTxt}<br><span style="opacity:.55;font-size:12px">${lang === "zh" ? "用神=格局/扶抑取的主用;做功最强=喜用里最有根、最能落地发挥的那个;二者可同可异。" : "Useful god = from the pattern; strongest = the best-rooted favorable phase."}</span>`],
     [L.hidden, hidRows]
   ];
   if (huaTxt) rows.splice(1, 0, [lang === "zh" ? "合化影响" : "Combinations", `${huaTxt}<br><span style="opacity:.6">${lang === "zh" ? "合化改变五行力量、合绊减力,已计入下方得分。" : "Transformations/bindings reshape the element scores below."}</span>`]);

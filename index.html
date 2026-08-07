@@ -2580,7 +2580,25 @@ function synthReadings(r) {
   love += spouseReveal ? (zh ? " 配偶星透干,缘分明朗、易早遇正缘。" : " Partner star is revealed — love shows early and clearly.") : (zh ? " 配偶星深藏,缘分含蓄、往往水到渠成或晚显。" : " Partner star is hidden — love comes quietly, often later.");
   love += spouseEarly ? (zh ? " 配偶星临年月,主早婚或早遇。" : " Partner star sits in the early pillars — an earlier union.") : (zh ? " 配偶星临日时,主晚婚或缘分晚成,不必着急。" : " Partner star sits in the later pillars — a later union; no rush.");
   love += areaTiming(male ? "cai" : "guan");
-  love += zh ? ` 宜配:另一半若带 <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b> 气最补你——这类人${PARTNER.zh[ys.element]};生${ELEM_CHAR[ys.element]}的${ELEM_CHAR[GEN_EL[ys.element]]}气之人亦佳。` : ` Best match: a partner who carries <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_TXT.en[ys.element]}</b> — ${PARTNER.en[ys.element]}; someone ${ELEM_TXT.en[GEN_EL[ys.element]]}-natured (which feeds it) also suits.`;
+  if (!male) {
+    const shiL = s.score[roles.shi], guanL = s.score[roles.guan], yinL = s.score[roles.yin], caiL = s.score[roles.cai];
+    if (shiL > avg * 1.3 && shiL >= guanL) {
+      love += (yinL > avg * 0.8)
+        ? (zh ? " 女命食伤偏重、本易克夫星,幸有印星制食伤(伤官配印)——才华有节制,婚姻反得贵气,宜配稳重、年长或有学识者。" : " Heavy Output would hurt the husband star, but Resource restrains it — talent is disciplined and marriage gains dignity; a steady, older or learned partner suits.")
+        : (caiL > avg * 0.8)
+        ? (zh ? " 女命食伤偏重、本易克夫星,幸有财星通关(食伤生财、财生官)——才华化作助夫之力,婚姻可经营。" : " Heavy Output would hurt the husband star, but Wealth bridges it (Output→Wealth→Officer) — talent becomes support; the marriage is workable.")
+        : (zh ? " 女命食伤偏重而克夫星(官杀)——个性强、才华外露、不爱服软,婚姻宜晚成、择偶重包容;你往往能力出众、不靠夫亦能立,配偶宜找欣赏你锋芒、性子沉稳的人,忌少年冲动早婚。" : " Heavy Output attacks the husband star — strong-willed and talent-forward, you don't submit easily; marry later and choose a tolerant partner. Capable and self-standing; pick someone who admires your edge and stays steady, and avoid an impulsive early marriage.");
+    } else if (guanL < avg * 0.5) {
+      love += zh ? " 女命官杀(夫星)偏弱不显——正缘来得较晚或需主动争取,择偶贵在稳重可靠,不必将就。" : " The husband star is faint — the right partner comes later or needs seeking out; choose steady and reliable, don't settle.";
+    }
+  }
+  love += zh ? ` 宜配:另一半若带 <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_CHAR[primeWork]}</b> 气最补你(补你做功最强的喜用)——这类人${PARTNER.zh[primeWork]}。` : ` Best match: a partner carrying <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_TXT.en[primeWork]}</b> (your strongest-working useful element) — ${PARTNER.en[primeWork]}.`;
+  const heStem = STEM_HE[r.dayMaster];
+  const candSets = [];
+  candSets.push(zh ? `与你日主 <b>${r.dayMaster}</b> 五合的 <b>${heStem}</b> 日(天作之合、最默契投缘)` : `<b>${heStem}</b>, which unites with your <b>${r.dayMaster}</b> Day Master (natural rapport)`);
+  candSets.push(zh ? `日主属${ELEM_CHAR[primeWork]}的 <b>${EL_STEMS[primeWork].join("、")}</b>(补你最到位)` : `<b>${EL_STEMS[primeWork].join(" / ")}</b> (${ELEM_TXT.en[primeWork]}-natured, feeds you)`);
+  if (otherFav[0]) candSets.push(zh ? `或属${ELEM_CHAR[otherFav[0]]}的 <b>${EL_STEMS[otherFav[0]].join("、")}</b>` : `or <b>${EL_STEMS[otherFav[0]].join(" / ")}</b> (${ELEM_TXT.en[otherFav[0]]})`);
+  love += zh ? ` 另一半的日主,几种可能:${candSets.join(";")}——这几类人与你最相合(仅供参考,缘分还看整体合盘)。` : ` Likely partner Day Masters — a few possibilities: ${candSets.join("; ")}. (A rough guide; real fit needs a full synastry.)`;
   const missing = s.score[weak] === 0;
   let health = zh ? `五行以${EN[weak]}最${missing ? "缺(全无)" : "弱"}——留意${ELEM_ORGAN.zh[weak]}。` : `${EN[weak]} is your ${missing ? "missing" : "weakest"} phase — mind ${ELEM_ORGAN.en[weak]}.`;
   if (s.score[strong] > avg * 1.6) health += zh ? ` ${EN[strong]}偏旺,相关之处易过用、上火,注意疏泄平衡。` : ` ${EN[strong]} runs high — that system can overwork; keep it balanced.`;
@@ -3167,6 +3185,7 @@ const LREASON = {
   zhiJie:{ zh:"官杀制劫·护财掌权", en:"Officer reins in Peers — authority" },
   yongshen:{ zh:"行用神运·大吉", en:"useful-god luck (very favorable)" } };
 const GEN_EL = { wood:"water", fire:"wood", earth:"fire", metal:"earth", water:"metal" };
+const EL_STEMS = { wood:["甲","乙"], fire:["丙","丁"], earth:["戊","己"], metal:["庚","辛"], water:["壬","癸"] };
 const PARTNER = { zh:{ wood:"上进有生气、能陪你成长", fire:"热情行动、给你温暖与动力", earth:"踏实包容、给你安定依靠", metal:"果决有条理、给你规矩与助力", water:"灵活有智慧、给你滋润与变通" },
   en:{ wood:"driven and growing", fire:"warm and active", earth:"steady and supportive", metal:"decisive and orderly", water:"adaptable and wise" } };
 function luckReasonText(reasons) {

@@ -459,8 +459,14 @@
     .lkc{width:50px}
   }
   .dgn{font-size:10.5px;font-style:normal;color:var(--gold);opacity:.75;margin-left:2px}
-  .tg-link,.term-link{cursor:pointer;border-bottom:1px dotted var(--gold-dim);transition:color .15s}
-  .tg-link:hover,.term-link:hover{color:var(--gold);border-bottom-color:var(--gold)} .tg-link:focus-visible,.term-link:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:3px}
+  .tg-link,.term-link{cursor:pointer;border-bottom:1px dotted rgba(217,185,108,.22);transition:color .15s,border-color .15s}
+  .tg-link:hover,.term-link:hover,.tg-link:focus-visible,.term-link:focus-visible{color:var(--gold);border-bottom-color:var(--gold)} .tg-link:focus-visible,.term-link:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:3px}
+  .rsec{border-top:1px solid var(--hairline)}
+  .rsec>summary{cursor:pointer;list-style:none;padding:10px 0 8px;font-size:13.5px;letter-spacing:.05em;color:var(--gold);font-weight:600}
+  .rsec>summary::-webkit-details-marker{display:none}
+  .rsec>summary::after{content:"\25be";float:right;opacity:.5}
+  .rsec:not([open])>summary::after{content:"\25b8"}
+  .rsec-body{font-size:13px;line-height:1.72;color:var(--soft);padding:0 0 11px}
   #reveal-fx{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
     background:radial-gradient(62% 60% at 50% 45%, rgba(30,16,15,.78), rgba(8,6,10,.45) 68%, transparent);transition:opacity .45s ease}
   #reveal-fx.on{opacity:1}
@@ -2443,8 +2449,8 @@ function synthReadings(r) {
   const GEN_NEXT = { yin:"bi", bi:"shi", shi:"cai", cai:"guan", guan:"yin" };
   const KE_NEXT = { bi:"cai", cai:"yin", yin:"shi", shi:"guan", guan:"bi" };
   const yrTG = tenGod(r.dayMaster, yrGZ[0]), yrGrp = TG_GROUP[yrTG];
-  const areaTiming = (group) => {
-    if (!started) return zh ? " 【时运】尚未起运,此阶段先按本命而行,大运一到再看引动。" : " [Timing] Luck cycles haven't begun — go by the natal chart for now.";
+  const areaTiming = (group, label) => {
+    if (!started) return "";
     const starEl = roles[group], gname = GROUP_NAME[lang][group];
     const fav = s.favor.indexOf(starEl) >= 0, avo = s.avoid.indexOf(starEl) >= 0;
     let rel, good;
@@ -2455,7 +2461,7 @@ function synthReadings(r) {
     else if (KE_NEXT[group] === yrGrp) { rel = zh ? `${gname}克${GROUP_NAME.zh[yrGrp]}、需出力去制` : `your ${gname} spends itself controlling the year`; good = 0; }
     else { rel = zh ? `与${gname}星关系平和` : `neutral to your ${gname} star`; good = 0; }
     const verdict = good > 0 ? (zh ? "宜主动进取、把握机会" : "push forward and seize it") : good < 0 ? (zh ? "宜守成、缓决策、稳字当头" : "hold steady and delay big calls") : (zh ? "顺势而为、平稳度过" : "go with the flow");
-    return zh ? ` 【时运】现走 ${curGZ} 大运、今年 ${yrGZ}——年干「${yrTG}」${rel},${verdict}。` : ` [Timing] in your ${curGZ} decade, this year ${yrGZ}: the year stem (${TEN_GOD_NAME.en[yrTG]}) — ${rel}; ${verdict}.`;
+    return zh ? ` <b class="gold">【时运·${label}】</b>${rel},${verdict}。` : ` <b class="gold">[Now · ${label}]</b> ${rel}; ${verdict}.`;
   };
   const FIELD = { zh:{ wood:"文教、出版、木材、医药、服装与成长型行业", fire:"文化、能源、餐饮、互联网、光电、公关等「热」行业", earth:"地产、建筑、农业、仓储、中介与稳健实业", metal:"金融、机械、法律、军警、五金等决断型行业", water:"贸易、物流、旅游、传媒、信息与流动型行业" },
     en:{ wood:"education, publishing, timber, medicine, growth fields", fire:"culture, energy, food, internet, media & PR — 'hot' fields", earth:"real estate, construction, agriculture, logistics, steady trades", metal:"finance, machinery, law, security, decisive hard-edged fields", water:"trade, logistics, travel, media, information & flow" } };
@@ -2502,7 +2508,7 @@ function synthReadings(r) {
     : "") : (zh ? " 官星不显,事业不走仕途论资,靠本事与作品自证。" : " No prominent Officer — you prove yourself by output, not rank.");
   const guanMove = guanClashed ? (zh ? " 官星逢冲,主职位变动、易换岗换环境,变中求进反成契机。" : " Officer clashed — expect role/environment changes; progress comes through change.")
     : guanCombined ? (zh ? " 官星逢合,事业多受人情与关系牵引,善用人脉但防被绑定。" : " Officer in combination — career moves through relationships; leverage them without getting tied.") : "";
-  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${guanShape}${guanMove}${combos.length ? " " + combos.join("") : ""}${careerShen}${areaTiming("guan")}`;
+  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${guanShape}${guanMove}${combos.length ? " " + combos.join("") : ""}${careerShen}${areaTiming("guan", zh ? "事业" : "Career")}`;
   const caiE = roles.cai, caiScore = s.score[caiE];
   const caiFav = s.favor.indexOf(caiE) >= 0, caiAvo = s.avoid.indexOf(caiE) >= 0;
   const hasShiSheng = shiScore > avg * 0.7;
@@ -2561,7 +2567,7 @@ function synthReadings(r) {
   else if (dominantCai === "both") wealth += zh ? " 正偏财并见:稳定收入与活络财路兼备、来源多元,宜正财打底、偏财添彩。" : " Both Proper and Windfall Wealth — diverse income; let salary anchor it and ventures add upside.";
   if (has("lu")) wealth += zh ? " 命带禄神,衣禄不缺。" : " Prosperity star: a reliable livelihood.";
   if (has("yima")) wealth += zh ? " 驿马动财,财在走动、远方与变动中求。" : " Traveling Horse: money found through movement and travel.";
-  wealth += areaTiming("cai");
+  wealth += areaTiming("cai", zh ? "财运" : "Wealth");
   const male = gender === "m";
   let love = (dayHas("liuhe") || dayHas("sanhe") || dayHas("banhe")) ? (zh ? "夫妻宫逢合,缘分深、易得伴侣之助,关系偏稳。" : "Your spouse palace is in harmony — deep bonds, a supportive partner, stability.")
     : dayHas("chong") ? (zh ? "夫妻宫逢冲,感情多起伏、聚少离多或早晚见分,需多经营。" : "Your spouse palace is clashed — ups and downs, distance or timing; tend it with care.")
@@ -2581,7 +2587,7 @@ function synthReadings(r) {
   const spouseEarly = GAN_WX[r.year[0]] === spouseStar || GAN_WX[r.month[0]] === spouseStar || cCarries(r.year[1], spouseStar) || cCarries(r.month[1], spouseStar);
   love += spouseReveal ? (zh ? " 配偶星透干,缘分明朗、易早遇正缘。" : " Partner star is revealed — love shows early and clearly.") : (zh ? " 配偶星深藏,缘分含蓄、往往水到渠成或晚显。" : " Partner star is hidden — love comes quietly, often later.");
   love += spouseEarly ? (zh ? " 配偶星临年月,主早婚或早遇。" : " Partner star sits in the early pillars — an earlier union.") : (zh ? " 配偶星临日时,主晚婚或缘分晚成,不必着急。" : " Partner star sits in the later pillars — a later union; no rush.");
-  love += areaTiming(male ? "cai" : "guan");
+  love += areaTiming(male ? "cai" : "guan", zh ? "感情" : "Love");
   if (!male) {
     const shiL = s.score[roles.shi], guanL = s.score[roles.guan], yinL = s.score[roles.yin], caiL = s.score[roles.cai];
     if (shiL > avg * 1.3 && shiL >= guanL) {
@@ -2631,9 +2637,13 @@ function synthReadings(r) {
     } else luckLine = zh ? `尚未起运(约 ${lk.startAge} 岁起),先按本命而行。` : `Luck begins around age ${lk.startAge}.`;
   }
   const THEME = { zh:{ bi:"自立与人际", yin:"学识与内涵", shi:"才华与表达", cai:"务实与财富", guan:"责任与地位" }, en:{ bi:"self-reliance & relationships", yin:"learning & depth", shi:"talent & expression", cai:"the practical & wealth", guan:"duty & status" } };
+  const luckCtx = started
+    ? (zh ? `现走 <b class="gold">${curGZ}</b> 大运、今年 <b class="gold">${yrGZ}</b>(年干「${TEN_GOD_NAME.zh[yrTG]}」)——下面各面末尾的【时运】即据此判此刻旺弱。` : `You're in the <b class="gold">${curGZ}</b> decade; this year is <b class="gold">${yrGZ}</b> (year stem: ${TEN_GOD_NAME.en[yrTG]}) — each area's [Now] note reads from this.`)
+    : (zh ? `你尚未起运,以下先按本命而论。` : `Your luck cycles haven't begun; the below reads from the natal chart.`);
+  const softNote = zh ? `<span style="opacity:.62">(以下皆由规则推演,是启发而非定论——当面镜子照,别当判决书。)</span>` : `<span style="opacity:.62">(All rule-based inference — a mirror for reflection, not a verdict.)</span>`;
   const lead = zh
-    ? `你是 <b class="gold">${MATERIAL.zh[r.dayMaster]}(${ELEM_CHAR[s.dmElement]})</b> 命,走 <b class="gold">${PATTERN[pt.key].zh[0]}</b>、${STG.zh[s.level]}。${DM_LINE.zh[r.dayMaster]}用神在 <b>${ELEM_CHAR[ys.element]}</b>,一生的主旋律偏向 <b>${THEME.zh[domGroup]}</b>。下面分事业、财运、感情、家庭、子女、发展方向与健康逐一来看——`
-    : `You are a <b class="gold">${MATERIAL.en[r.dayMaster]} (${ELEM_TXT.en[s.dmElement]})</b> Day Master in a <b class="gold">${PATTERN[pt.key].en[0]}</b> pattern, ${STG.en[s.level]}. ${DM_LINE.en[r.dayMaster]} Your useful element is <b>${ELEM_TXT.en[ys.element]}</b>, and life leans toward <b>${THEME.en[domGroup]}</b>. Career, wealth, love, family, children, direction and health below —`;
+    ? `你是 <b class="gold">${MATERIAL.zh[r.dayMaster]}(${ELEM_CHAR[s.dmElement]})</b> 命,走 <b class="gold">${PATTERN[pt.key].zh[0]}</b>、${STG.zh[s.level]}。${DM_LINE.zh[r.dayMaster]}用神在 <b>${ELEM_CHAR[ys.element]}</b>,一生的主旋律偏向 <b>${THEME.zh[domGroup]}</b>。${luckCtx}<br>${softNote}`
+    : `You are a <b class="gold">${MATERIAL.en[r.dayMaster]} (${ELEM_TXT.en[s.dmElement]})</b> Day Master in a <b class="gold">${PATTERN[pt.key].en[0]}</b> pattern, ${STG.en[s.level]}. ${DM_LINE.en[r.dayMaster]} Your useful element is <b>${ELEM_TXT.en[ys.element]}</b>, and life leans toward <b>${THEME.en[domGroup]}</b>. ${luckCtx}<br>${softNote}`;
   const yinS = s.score[roles.yin], biFS = s.score[roles.bi];
   let family = (yinS > avg) ? (zh ? "印星有力,母缘深、多得母亲与长辈庇荫,少年多受呵护。" : "Strong Resource — a close, sheltering mother and elders; a protected youth.")
     : (yinS < avg * 0.6) ? (zh ? "印星偏弱,与母亲/长辈缘分较淡,早年多靠自己。" : "Light Resource — a cooler bond with mother/elders; self-reliant early.")
@@ -2645,7 +2655,7 @@ function synthReadings(r) {
   family += (biFS > avg * 1.2) ? (zh ? " 比劫旺,手足朋友多、助力也多,但资源需分、合作讲分明。" : " Strong peers — many siblings/friends and support, though resources get shared.")
     : (biFS < avg * 0.5) ? (zh ? " 比劫弱,兄弟缘薄或少助,凡事多靠自己一肩挑。" : " Light peers — few siblings or little help; you carry things yourself.")
     : (zh ? " 手足朋友相处平和,不黏不疏。" : " Easy, balanced ties with siblings and friends.");
-  family += areaTiming("yin");
+  family += areaTiming("yin", zh ? "家庭" : "Family");
   let children;
   if (inp.notime) children = zh ? "未提供出生时辰,子女宫(时柱)无法定盘——补上时辰即可解读子女缘。" : "No birth time given — the children palace (Hour pillar) can't be read; add a time to unlock it.";
   else {
@@ -2662,7 +2672,7 @@ function synthReadings(r) {
     children += hourClash ? (zh ? " 时柱逢冲,与子女聚少离多或多为其操心,子女个性独立多变。" : " Hour pillar clashed — distance or worry over children; independent, changeable kids.")
       : hourHarm ? (zh ? " 时柱逢合,子女孝顺贴心、晚景有靠。" : " Hour pillar in harmony — affectionate children and support in later years.") : "";
     children += zh ? ` 时柱本气为「${TEN_GOD_FULL.zh[childType]}」,子女多${CHILD_T.zh[childType]}。` : ` The hour pillar's core is the ${TEN_GOD_FULL.en[childType]} — children tend to be ${CHILD_T.en[childType]}.`;
-    children += areaTiming(male ? "guan" : "shi");
+    children += areaTiming(male ? "guan" : "shi", zh ? "子女" : "Children");
   }
   const DIR = { zh:{ wood:"东方及东南", fire:"南方", earth:"本地与中土之地", metal:"西方及西北", water:"北方" }, en:{ wood:"East / SE", fire:"South", earth:"local / central regions", metal:"West / NW", water:"North" } };
   const COLEL = { zh:{ wood:"青绿", fire:"红紫", earth:"黄棕", metal:"白·金属色", water:"黑蓝" }, en:{ wood:"green", fire:"red / purple", earth:"yellow / brown", metal:"white / metallic", water:"black / blue" } };
@@ -2687,9 +2697,13 @@ function synthReadings(r) {
   return out;
 }
 function readingDrawer(r) {
-  const rows = synthReadings(r);
-  rows.push([lang === "zh" ? "说明" : "Note", lang === "zh" ? "由规则从旺衰·十神·神煞·宫位合成,是启发而非断言;仅供自省与娱乐。" : "Synthesized by rules from your chart — a prompt for reflection, not a verdict."]);
-  return drawerShell("读", "#D9B96C", lang === "zh" ? "综合解读" : "Life Reading", lang === "zh" ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart", rows);
+  const zh = lang === "zh", rows = synthReadings(r);
+  const body = rows.map(([lbl, txt]) => `<details class="rsec" open><summary>${lbl}</summary><div class="rsec-body">${txt}</div></details>`).join("");
+  return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:#D9B96C;text-shadow:0 0 18px #D9B96C88">${zh ? "读" : "\u2727"}</span>
+      <div><div class="dw-title serif">${zh ? "综合解读" : "Life Reading"}</div><div class="dw-sub">${zh ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart"}</div></div></div>
+    <div style="margin-top:6px">${body}</div>
+    <div class="wnote" style="margin-top:8px">${zh ? "轻点标题可折叠;文中带下划线的术语可点看释义。" : "Tap a heading to collapse; underlined terms are tappable for a definition."}</div>`;
 }
 function todayDrawer(scope) {
   scope = scope || "all";
@@ -2714,7 +2728,7 @@ function todayDrawer(scope) {
       const d = new Date(now.getTime() + k * 86400000), dyy = d.getFullYear(), dmm = d.getMonth() + 1, ddd = d.getDate();
       const dR = computeChart(TERMS, { y:dyy, m:dmm, d:ddd, hh:12, mi:0, tzMin:localTz, timeKnown:false });
       const gz = dR.day, aa = luckAssess(r, gz, sg), tgd = tenGod(r.dayMaster, gz[0]);
-      dayCells.push(`<div class="lkc${k === 0 ? " lkc-on" : ""}"><div class="lk-age">${dmm}/${ddd}${k === 0 ? (zh ? " 今" : " •") : ""}</div><div class="lk-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></div><div class="lk-tg">${TEN_GOD_NAME[lang][tgd]}</div><span class="fo-dot ${gradeDot(aa.grade)}"></span></div>`);
+      dayCells.push(`<div class="lkc clk${k === 0 ? " lkc-on" : ""}" role="button" tabindex="0" data-t="fday" data-gz="${gz}" data-d="${dmm}/${ddd}"><div class="lk-age">${dmm}/${ddd}${k === 0 ? (zh ? " 今" : " •") : ""}</div><div class="lk-gz serif"><span style="color:${STEM_COLOR[gz[0]]}">${gz[0]}</span><span style="color:${STEM_COLOR[ZHI_MAIN[gz[1]]]}">${gz[1]}</span></div><div class="lk-tg">${TEN_GOD_NAME[lang][tgd]}</div><span class="fo-dot ${gradeDot(aa.grade)}"></span></div>`);
     }
     rows.push([zh ? "流日 · 未来两周(左右滑)" : "Daily · 2 weeks (swipe)", `<div class="lk-strip">${dayCells.join("")}</div>`]);
     const lk = lastLuck || computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
@@ -3534,13 +3548,28 @@ function shenNameDrawer(key) {
   return drawerShell("煞", "#D9B96C", e[lang][0], zh ? "神煞 · 象征星" : "Symbolic Star", [[DW[lang].whatIs, e[lang][1]]]);
 }
 function nayinNameDrawer(name) {
-  const zh = lang === "zh", hit = NAYIN.find(x => x[0] === name), el = hit ? hit[1] : null;
+  const zh = lang === "zh"; let idx = NAYIN.findIndex(x => x[0] === name); if (idx < 0) idx = NAYIN_EN.indexOf(name); const hit = idx >= 0 ? NAYIN[idx] : null, el = hit ? hit[1] : null; name = zh ? (hit ? hit[0] : name) : (idx >= 0 ? NAYIN_EN[idx] : name);
   const lead = zh
     ? `纳音「${name}」——六十甲子配纳音的古法之一,以一对干支合出一种「象」,属 <b style="color:${el ? ELEM_COLOR[el] : "#D9B96C"}">${el ? ELEM_TXT.zh[el] : "?"}</b>。纳音偏整体气质格调;断事仍以正五行为主、纳音为点睛之辅。`
     : `Sound-element "${name}" — an old system pairing each two ganzhi into an image; element <b style="color:${el ? ELEM_COLOR[el] : "#D9B96C"}">${el ? ELEM_TXT.en[el] : "?"}</b>. It colours overall temperament; a reading still leads with the plain five phases.`;
   const rows = [[DW[lang].whatIs, lead]];
   if (el) rows.push([zh ? "五行 · 性情" : "Element", `<b style="color:${ELEM_COLOR[el]}">${ELEM_CHAR[el]}</b> · ${PARTNER[lang][el]}`]);
   return drawerShell(zh ? "音" : "\u266a", el ? ELEM_COLOR[el] : "#D9B96C", name, zh ? "纳音" : "Sound element", rows);
+}
+function dayFortuneDrawer(gz, dlabel) {
+  const r = lastChart.r, zh = lang === "zh", sg = computeStrength(r);
+  const st = gz[0], br = gz[1], tg = tenGod(r.dayMaster, st), a = luckAssess(r, gz, sg);
+  const hid = CANGGAN[br].map(hs => `<span class="clk" role="button" tabindex="0" data-t="tengod" data-c="${hs}" style="color:${STEM_COLOR[hs]};border-bottom:1px dotted ${STEM_COLOR[hs]}88;cursor:pointer">${hs}</span> <span style="opacity:.6">(${TEN_GOD_NAME[lang][tenGod(r.dayMaster, hs)]})</span>`).join(zh ? "\u3000" : " · ");
+  const rows = [
+    [DW[lang].whatIs, zh ? `${dlabel} 日,干支 ${cnEn(gz)},今日以 <b class="gold">${TEN_GOD_FULL.zh[tg]}</b> 为主气——${TEN_GOD_GLOSS.zh[tg]}` : `${dlabel}, day ${gz}: today runs as <b class="gold">${TEN_GOD_FULL.en[tg]}</b> — ${TEN_GOD_GLOSS.en[tg]}`],
+    [zh ? "藏干" : "Hidden", hid],
+    [zh ? "吉凶" : "Fortune", `<span class="fo-dot ${gradeDot(a.grade)}"></span> <b>${GRADE[lang][a.grade]}</b>${a.reasons.length ? `<br><span style="opacity:.8">${luckReasonText(a.reasons)}</span>` : ""}`]
+  ];
+  const c = STEM_COLOR[st];
+  return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
+    <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:32px">${gz}</span>
+      <div><div class="dw-title serif">${dlabel} · ${cnEn(gz)}</div><div class="dw-sub">${zh ? "流日" : "Day"}</div></div></div>
+    <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
 }
 function wrapMatches(root, re, build) {
   if (!root || !document.createTreeWalker) return;
@@ -3549,7 +3578,7 @@ function wrapMatches(root, re, build) {
   while ((node = walker.nextNode())) {
     if (!node.nodeValue) continue;
     re.lastIndex = 0; if (!re.test(node.nodeValue)) continue;
-    if (node.parentElement && node.parentElement.closest("[data-t],.tg-link,.term-link,.d-label,.dw-title")) continue;
+    if (node.parentElement && node.parentElement.closest("[data-t],.tg-link,.term-link,.d-label,.dw-title,summary")) continue;
     targets.push(node);
   }
   targets.forEach(n => {
@@ -3571,10 +3600,19 @@ function mkTermLink(cls, dataT, dataVal, text) {
 const SHEN_ALIAS = { "天乙贵人":"tianyi","贵人":"tianyi","文昌":"wenchang","禄神":"lu","羊刃":"yangren","桃花":"taohua","驿马":"yima","华盖":"huagai","将星":"jiangxing","劫煞":"jiesha","空亡":"kongwang" };
 const NAYIN_NAMES = NAYIN.map(x => x[0]);
 function linkifyTerms(root) {
-  if (lang !== "zh" || !root) return;
-  wrapMatches(root, /(比肩|劫财|食神|伤官|正财|偏财|正官|七杀|正印|偏印)(?!格)/g, t => mkTermLink("tg-link", "tgname", t, t));
-  wrapMatches(root, /(天乙贵人|贵人|文昌|禄神|羊刃|桃花|驿马|华盖|将星|劫煞|空亡)/g, t => mkTermLink("term-link", "shenname", SHEN_ALIAS[t], t));
-  wrapMatches(root, new RegExp("(" + NAYIN_NAMES.join("|") + ")", "g"), t => mkTermLink("term-link", "nayinname", t, t));
+  if (!root) return;
+  if (lang === "zh") {
+    wrapMatches(root, /(比肩|劫财|食神|伤官|正财|偏财|正官|七杀|正印|偏印)(?!格)/g, t => mkTermLink("tg-link", "tgname", t, t));
+    wrapMatches(root, /(天乙贵人|贵人|文昌|禄神|羊刃|桃花|驿马|华盖|将星|劫煞|空亡)/g, t => mkTermLink("term-link", "shenname", SHEN_ALIAS[t], t));
+    wrapMatches(root, new RegExp("(" + NAYIN_NAMES.join("|") + ")", "g"), t => mkTermLink("term-link", "nayinname", t, t));
+    return;
+  }
+  // English: multi-word terms first (神煞 / 纳音), then single-word ten gods
+  const SH_EN = {}; Object.keys(SHEN).forEach(k => { SH_EN[SHEN[k].en[0]] = k; });
+  wrapMatches(root, new RegExp("(" + Object.keys(SH_EN).sort((a, b) => b.length - a.length).join("|") + ")", "g"), t => mkTermLink("term-link", "shenname", SH_EN[t], t));
+  wrapMatches(root, new RegExp("(" + NAYIN_EN.slice().sort((a, b) => b.length - a.length).join("|") + ")", "g"), t => mkTermLink("term-link", "nayinname", t, t));
+  const TG_EN = { Ally:"比肩", Rival:"劫财", Poet:"食神", Maverick:"伤官", Harvest:"正财", Windfall:"偏财", Magistrate:"正官", General:"七杀", Scholar:"正印", Mystic:"偏印", Officer:"正官", Killings:"七杀", Wealth:"正财", Output:"食神", Peers:"比肩", Resource:"正印" };
+  wrapMatches(root, new RegExp("\\b(" + Object.keys(TG_EN).join("|") + ")\\b", "g"), t => mkTermLink("tg-link", "tgname", TG_EN[t], t));
 }
 function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; try { linkifyTerms(drawerEl); } catch (e) {} drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const _on = drawerEl.querySelector(".lkc-on"); if (_on && _on.scrollIntoView) _on.scrollIntoView({ inline: "center", block: "nearest" }); const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
 function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); if (lastFocus && lastFocus.focus) { lastFocus.focus(); lastFocus = null; } }
@@ -3611,6 +3649,7 @@ function onPick(el) {
   else if (t === "tgname") openDrawer(tenGodNameDrawer(el.dataset.g));
   else if (t === "shenname") openDrawer(shenNameDrawer(el.dataset.g));
   else if (t === "nayinname") openDrawer(nayinNameDrawer(el.dataset.g));
+  else if (t === "fday") openDrawer(dayFortuneDrawer(el.dataset.gz, el.dataset.d));
   else if (t === "fyear") openDrawer(fleetYearDrawer(el.dataset.gz, +el.dataset.yr));
   else if (t === "aspects") openDrawer(aspectDrawer());
   else if (t === "wbalance") openDrawer(westBalanceDrawer());

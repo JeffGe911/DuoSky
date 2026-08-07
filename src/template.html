@@ -359,6 +359,8 @@ __FONTS__
   .cta-primary{flex-basis:100%}
   .cta-sec{background:rgba(217,185,108,.08);color:var(--gold);border:1px solid var(--gold-dim);box-shadow:none;font-weight:600;font-size:13px}
   .cta:hover{filter:brightness(1.06)} .cta-sec:hover{filter:none;background:rgba(217,185,108,.16);border-color:var(--gold)}
+  .cta-lead{margin:16px 0 0} .cta-lead .cta-primary{display:block;width:100%;font-size:15px;padding:15px 0;letter-spacing:.12em}
+  .cta-sub{margin-top:8px} .cta-sub .cta{font-size:12.5px;padding:10px 8px;font-weight:600}
   .cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .gz .clk{border-bottom:1px dotted rgba(217,185,108,.4);padding-bottom:1px}
   .gz .clk:hover{border-bottom-color:var(--gold)}
@@ -385,11 +387,14 @@ __FONTS__
   .navtab{flex:1;text-align:center;font-size:13.5px;letter-spacing:.12em;color:#3b4a3d;cursor:pointer;padding:2px 6px;background:none;border:none;font-family:"Songti SC","STSong",serif;transition:color .15s;text-shadow:0 1px 0 rgba(255,255,255,.5)}
   .navtab + .navtab{border-left:1px solid rgba(110,130,110,.38)}
   .navtab:hover{color:#8a6a1e} .navtab:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:4px}
-  .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.05)}
+  .opening{border:1px solid var(--gold-dim);border-radius:12px;padding:13px 16px;margin:0 0 14px;background:rgba(217,185,108,.05)}
+  .crosstop{border:1px solid var(--gold);border-radius:12px;padding:13px 16px;margin:0 0 16px;background:rgba(217,185,108,.10);box-shadow:0 0 0 1px rgba(217,185,108,.15) inset}
+  .crosstop .label{display:block;margin-bottom:6px} .crosstop p{font-size:14px;line-height:1.75;color:var(--soft);margin:0}
   .opening.clk{cursor:pointer;transition:.15s} .opening.clk:hover{border-color:var(--gold);background:rgba(217,185,108,.1)} .opening.clk:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
-  .op-tap{color:var(--gold);font-style:normal;white-space:nowrap}
-  .op-line{font-size:13.5px;line-height:1.75;color:var(--soft)} .op-line b{color:var(--gold);font-weight:700;margin-right:5px}
-  .op-take{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.6;font-style:italic}
+  .op-tap{display:inline-block;margin-top:5px;color:var(--gold);font-style:normal;white-space:nowrap;font-size:12px}
+  .op-line{font-size:12.5px;line-height:1.7;color:var(--muted)} .op-line b{color:var(--gold);font-weight:700;margin-right:5px}
+  .op-lead{font-size:16.5px;line-height:1.68;color:var(--soft)}
+  .op-data{margin-top:9px;padding-top:9px;border-top:1px solid var(--hairline)}
   #sec-bazi,#sec-elem,#west-scene{scroll-margin-top:58px}
   .match-form{display:flex;flex-direction:column;gap:9px}
   .match-form .cta{text-align:center}
@@ -1855,9 +1860,12 @@ function renderCard(r, inp) {
     ? `<div class="op-line"><b>星盘</b> ☉${SIGN_TXT.zh[wheel.planets[0].sign]} · ☽${SIGN_TXT.zh[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.zh[SIGNS[Math.floor(wheel.asc / 30)]] : "待出生时地"}</div>`
     : `<div class="op-line"><b>Chart</b> ☉${SIGN_TXT.en[wheel.planets[0].sign]} · ☽${SIGN_TXT.en[wheel.planets[1].sign]} · ↑${wheel.haveAngles ? SIGN_TXT.en[SIGNS[Math.floor(wheel.asc / 30)]] : "—"}</div>`) : "";
   const opening = `<div class="opening clk" role="button" tabindex="0" data-t="strength">
-    <div class="op-line"><b>${lang === "zh" ? "八字" : "BaZi"}</b> ${lang === "zh" ? "日主" : "DM"} ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${PATTERN[pt.key][lang][0]}</b> · <span class="gold">${STG[lang][stg.level]}</span>${favC ? ` · ${lang === "zh" ? "喜" : "favor"} ${favC}` : ""}${avoC ? ` · ${lang === "zh" ? "忌" : "avoid"} ${avoC}` : ""}</div>
-    ${opAstro}
-    <div class="op-take">${DM_LINE[lang][r.dayMaster]} <span class="op-tap">${lang === "zh" ? "· 点开旺衰·喜用 ›" : "· strength & useful ›"}</span></div></div>`;
+    <div class="op-lead">${DM_LINE[lang][r.dayMaster]}</div>
+    <div class="op-data">
+      <div class="op-line"><b>${lang === "zh" ? "八字" : "BaZi"}</b> ${lang === "zh" ? "日主" : "DM"} ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · <b class="gold">${PATTERN[pt.key][lang][0]}</b> · <span class="gold">${STG[lang][stg.level]}</span>${favC ? ` · ${lang === "zh" ? "喜" : "favor"} ${favC}` : ""}${avoC ? ` · ${lang === "zh" ? "忌" : "avoid"} ${avoC}` : ""}</div>
+      ${opAstro}
+      <span class="op-tap">${lang === "zh" ? "点开旺衰·喜用 ›" : "strength & useful ›"}</span>
+    </div></div>`;
   const navbar = `<div class="cardnavbar"><span class="navtab" role="button" tabindex="0" data-jump="sec-bazi">${lang === "zh" ? "八字" : "BaZi"}</span><span class="navtab" role="button" tabindex="0" data-jump="sec-elem">${lang === "zh" ? "五行·解读" : "Elements"}</span>${wheel ? `<span class="navtab" role="button" tabindex="0" data-jump="west-scene">${lang === "zh" ? "星盘" : "Chart"}</span>` : ""}</div>`;
   $("screen-card").innerHTML = `
     <div class="watermark serif">${ANIMAL_TRAD[dBranch]}</div>
@@ -1872,6 +1880,7 @@ function renderCard(r, inp) {
     </div>
     ${navbar}
     ${opening}
+    ${crossLine ? `<div class="crosstop"><span class="label gold">${lang === "zh" ? "东西合参 · 核心" : "East × West · core"}</span><p>${crossLine}</p></div>` : ""}
     ${hint}
     <div class="pillars" id="sec-bazi">
       ${tile("year", r.year, false)}
@@ -1882,8 +1891,10 @@ function renderCard(r, inp) {
     <div class="pillars-note">${T.hiddenNote}</div>
     <div class="elements" id="sec-elem">${pills}</div>
     <div class="elements-note">${elemNoteTxt}</div>
-    <div class="cta-row">
+    <div class="cta-lead">
       <span class="cta cta-primary clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
+    </div>
+    <div class="cta-row cta-sub">
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日运势 運" : "Today · BaZi 運"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="fortunecurve">${lang === "zh" ? "运势曲线 📈" : "Fortune Curve 📈"}</span>
@@ -1898,7 +1909,6 @@ function renderCard(r, inp) {
     <div class="voice"><span class="label">${T.west}</span><p>${WEST_LINE[lang][sign]}</p></div>
     <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
     <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
-    ${crossLine ? `<div class="voice"><span class="label gold">${lang === "zh" ? "东西合参 · 核心" : "East × West · core"}</span><p>${crossLine}</p></div>` : ""}
     ${western}
     <div class="footer">
       <div class="meta">${born}${inp.tsDelta != null && !inp.notime ? (lang === "zh" ? ` · 真太阳时 ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta} 分` : ` · true solar ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta}m`) : ""}${inp.city ? " · " + esc(inp.city) : ""}${inp.cityNote ? `<br><span class="cityblurb">${esc(inp.cityNote)}</span>` : ""}<br>${T.disclaimer}</div>

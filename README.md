@@ -15,7 +15,7 @@ A single self-contained `index.html` — no server, no runtime dependencies, no 
 - Strength & useful element (旺衰 / 喜用神) from hidden-stem weighting, seasonal 调候, and whether combinations actually transform (合化) or merely bind (合绊)
 - Pattern (格局) with success/failure (成败) and its own useful-god logic
 - Relationships across the chart: 六合 / 三合 / 冲 / 刑 / 害, with fortune-weighted meaning
-- 大运 luck pillars and 流年 / 流月 / 流日 — each graded 大吉→大凶 with the reasons behind the grade
+- 大运 luck pillars and 流年 / 流月 / 流日 — each graded 大吉→大凶 with the reasons behind the grade; open a decade to see its ten yearly cycles, each tappable for a per-year reading
 - A life **fortune curve** with its peaks and troughs
 
 **星盘 · Western natal chart**
@@ -25,6 +25,11 @@ A single self-contained `index.html` — no server, no runtime dependencies, no 
 **东西合参 · East × West synthesis**
 - One synthesis line up top — where BaZi and the natal chart *agree*, and where they *clash*
 - **合盘 · Compatibility**: useful-element complementarity + synastry + a dual fortune curve (shared good years) + a verdict; save up to 4 people and compare
+
+**综合解读 · Life Reading**
+- Eight areas argued from the chart itself — Overview, Career, Wealth, Love, Family, Children, Direction, Health — each built from your day master, pattern, useful element, hidden-stem roots and 合冲刑害 relations, not one-size-fits-all blurbs
+- Wealth alone walks the full 看财 checklist: is it your useful element, can the self carry it (身强能任 vs 财多身弱), is there an Officer guarding it, Output feeding it, is it 天透地藏 (revealed in a stem *and* rooted in a branch), and is there a Wealth-vault (财库)
+- Every area closes with a **now** line: from your current 大运 pillar and this solar year it names the year stem's Ten God and how it triggers that area's star — rising, turbulent, or quiet
 
 **Craft**
 - **EN / 中文** one-click toggle — each mode is language-pure; the English side adds pinyin to any Chinese ganzhi
@@ -70,7 +75,7 @@ Share-card PNG export · 144 combined-archetype write-ups · a beginner/expert t
 
 ## 中文速览
 
-一次输入,双盘同解。**八字**:四柱 + 藏干 + 纳音 + 十神(点字有大白话解释)、旺衰喜用(含调候与合化/合绊判定)、格局成败、六合三合冲刑害、大运与流年流月流日(逐项定吉凶大吉→大凶)、运势曲线。**星盘**:行星 / 星座 / 宫位 / 相位 / 尊贵 / 命主星 / 北交点 / 月相 / 元素配比的完整命盘,点符号看解读,无时辰自动降级。**东西合参**:顶部一句合参(两盘同断 / 两盘相争);**合盘**含用神互补 + 星座合盘 + 双人运势曲线 + 评分,可存 4 人互测。中英一键切换、英文侧自带拼音;八字侧古典宋体、星座侧圆体,做出中西对比。引擎:瑞士星历预算 1900–2150 节气表,八字与星座共用同一张天文表;443 例与 sxtwl / cnlunar 对拍,差异皆为流派/粒度口径而非计算错误。
+一次输入,双盘同解。**八字**:四柱 + 藏干 + 纳音 + 十神(点字有大白话解释)、旺衰喜用(含调候与合化/合绊判定)、格局成败、六合三合冲刑害、大运与流年流月流日(逐项定吉凶大吉→大凶)、运势曲线。**星盘**:行星 / 星座 / 宫位 / 相位 / 尊贵 / 命主星 / 北交点 / 月相 / 元素配比的完整命盘,点符号看解读,无时辰自动降级。**东西合参**:顶部一句合参(两盘同断 / 两盘相争);**合盘**含用神互补 + 星座合盘 + 双人运势曲线 + 评分,可存 4 人互测。**综合解读**分总览·事业·财运·感情·家庭·子女·发展方向·健康八面,全部依日主·格局·用神·藏干通根·合冲刑害推断(如看财走「喜用 / 身能任 / 官护 / 食伤生 / 天透地藏 / 财库」全套),每面末尾再给一句依当前大运+流年的时间落点(点名流年天干的十神如何生克引动该区域之星)。中英一键切换、英文侧自带拼音;八字侧古典宋体、星座侧圆体,做出中西对比。引擎:瑞士星历预算 1900–2150 节气表,八字与星座共用同一张天文表;443 例与 sxtwl / cnlunar 对拍,差异皆为流派/粒度口径而非计算错误。
 
 ## Disclaimer
 

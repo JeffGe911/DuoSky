@@ -2436,12 +2436,13 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(
     { zh:"仙后", s:[[5,32],[26,56],[46,30],[66,58],[88,34]], l:[[0,1],[1,2],[2,3],[3,4]] }
   ];
   const frag = document.createDocumentFragment();
-  for (let n = 0; n < 170; n++) {
+  for (let n = 0; n < 340; n++) {
     const st = document.createElement("span");
-    const sz = (Math.random() * 1.5 + 0.5).toFixed(1);
+    const dust = Math.random() < 0.5;
+    const sz = (dust ? Math.random() * 0.5 + 0.4 : Math.random() * 1.6 + 0.7).toFixed(1);
     st.className = "wstar";
     st.style.cssText = `left:${(Math.random() * 100).toFixed(2)}%;top:${(Math.random() * 100).toFixed(2)}%;width:${sz}px;height:${sz}px;` +
-      `--td:${(Math.random() * 5 + 3).toFixed(1)}s;--dl:${(Math.random() * 6).toFixed(1)}s;--mx:${(0.2 + Math.random() * 0.6).toFixed(2)}`;
+      `--td:${(Math.random() * 5 + 3).toFixed(1)}s;--dl:${(Math.random() * 6).toFixed(1)}s;--mx:${(dust ? 0.13 + Math.random() * 0.3 : 0.28 + Math.random() * 0.6).toFixed(2)}`;
     frag.appendChild(st);
   }
   for (let i = 0; i < 22; i++) {

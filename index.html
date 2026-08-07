@@ -404,6 +404,8 @@
   .xy-cloud{width:min(72vw,380px);height:auto;filter:drop-shadow(0 0 20px rgba(217,185,108,.6));transform:scale(.7);opacity:0;transition:transform .6s cubic-bezier(.2,.7,.2,1), opacity .5s ease}
   #reveal-fx.on .xy-cloud{transform:scale(1);opacity:1}
   @media (prefers-reduced-motion:reduce){#reveal-fx{display:none}}
+  .wheel-guide{font-size:12px;line-height:1.75;color:var(--soft);background:rgba(255,255,255,.03);border:1px solid var(--hairline);border-radius:10px;padding:11px 13px;margin:10px 0 4px}
+  .wheel-guide b{color:var(--gold);font-weight:600}
   .hidden{display:none}
 </style>
 </head>
@@ -2618,6 +2620,9 @@ function renderCard(r, inp) {
     ${wsum}
     ${wheel.haveAngles ? (() => { const rp = RULER[ascS], pd = wheel.planets.find(p => p.body === rp); return pd ? `<div class="wnote" style="color:var(--gold);opacity:.9">${lang === "zh" ? `命主星:<b>${PLANET_NAME.zh[rp]}</b>(上升${SIGN_TXT.zh[ascS]}守护)落 ${SIGN_TXT.zh[pd.sign]}${pd.house ? " 第" + pd.house + "宫" : ""}——你这一生的总钥匙。` : `Chart ruler: <b>${PLANET_NAME.en[rp]}</b> (rules your ${SIGN_TXT.en[ascS]} Ascendant) in ${SIGN_TXT.en[pd.sign]}${pd.house ? ", house " + pd.house : ""} — the key to the whole chart.`}</div>` : ""; })() : ""}
     <div class="wheel-wrap">${buildWheel(wheel)}</div>
+    <div class="wheel-guide">${lang === "zh"
+      ? "<b>怎么看:</b>最外圈是<b>十二星座</b>;里面十个符号(☉太阳 ☽月亮 ☿水星 ♀金星 ♂火星 ♃木星 ♄土星…)是<b>行星</b>——落在哪个星座、第几宫,就代表那份能量用在哪块人生领域;金色轴线是<b>上升↔下降</b>(你与他人)和<b>中天↔天底</b>(事业与家);中间的彩色连线是行星间的<b>相位</b>(和谐或张力)。下面列表逐个写清,<b>点任意符号看解读</b>。"
+      : "<b>How to read it:</b> the outer ring is the <b>12 signs</b>; the ten inner symbols (☉Sun ☽Moon ☿Mercury ♀Venus ♂Mars ♃Jupiter ♄Saturn…) are the <b>planets</b> — the sign & house they fall in show where that energy plays out; the gold axes are <b>Asc↔Desc</b> (you & others) and <b>MC↔IC</b> (career & home); the colored lines are <b>aspects</b> between planets. The list below spells each out — <b>tap any symbol</b> for its reading."}</div>
     ${wheel.haveAngles ? "" : `<div class="wnote">${WX.needLoc}</div>`}
     <div class="wgrid">${legend}${angles}${nodeRow}</div>
     <div class="detail-bar">${wheel.aspects && wheel.aspects.length ? `<span class="dbtn clk" role="button" tabindex="0" data-t="aspects">${WX.aspects} \u25b3</span>` : ""}<span class="dbtn clk" role="button" tabindex="0" data-t="wbalance">${lang === "zh" ? "元素 · 月相 ✦" : "Elements · Moon ✦"}</span>${wheel.haveAngles ? `<span class="dbtn clk" role="button" tabindex="0" data-t="houses">${lang === "zh" ? "宫位 ✦" : "Houses ✦"}</span>` : ""}</div>

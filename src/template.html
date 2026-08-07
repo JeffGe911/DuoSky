@@ -2510,7 +2510,7 @@ function luckStepDrawer(i) {
   const c = STEM_COLOR[st];
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
-    <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:36px">${x.ganzhi}</span>
+    <div class="dw-head"><span class="dw-glyph serif" style="font-size:36px"><span style="color:${STEM_COLOR[st]};text-shadow:0 0 18px ${STEM_COLOR[st]}88;font-weight:600">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]};text-shadow:0 0 18px ${STEM_COLOR[ZHI_MAIN[br]]}88;opacity:.82">${br}</span></span>
       <div><div class="dw-title serif">${cnEn(x.ganzhi)} · ${lang === "zh" ? ny.name : NAYIN_EN[Math.floor(ny.idx / 2)]}</div><div class="dw-sub">${ageR}</div></div></div>
     <div class="lk-strip lk-nav">${nav}</div>
     <div class="wnote" style="margin:2px 0 6px">${lang === "zh" ? "← 左右滑动切换其它大运" : "← swipe to switch decades"}</div>
@@ -2532,7 +2532,7 @@ function fleetYearDrawer(gz, year) {
   const c = STEM_COLOR[st];
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="luck">\u2039 ${LK[lang].title}</span>
-    <div class="dw-head"><span class="dw-glyph serif" style="color:${c};text-shadow:0 0 18px ${c}88;font-size:34px">${gz}</span>
+    <div class="dw-head"><span class="dw-glyph serif" style="font-size:34px"><span style="color:${STEM_COLOR[st]};text-shadow:0 0 18px ${STEM_COLOR[st]}88;font-weight:600">${st}</span><span style="color:${STEM_COLOR[ZHI_MAIN[br]]};text-shadow:0 0 18px ${STEM_COLOR[ZHI_MAIN[br]]}88;opacity:.82">${br}</span></span>
       <div><div class="dw-title serif">${year} · ${cnEn(gz)}</div><div class="dw-sub">${zh ? "流年" : "Solar year"}</div></div></div>
     <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>`;
 }

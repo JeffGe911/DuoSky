@@ -1501,23 +1501,50 @@ function synthReadings(r) {
   const weak = elems.slice().sort((a, b) => s.score[a] - s.score[b])[0];
   const strong = elems.slice().sort((a, b) => s.score[b] - s.score[a])[0];
   const EN = { wood: zh?"木":"Wood", fire: zh?"火":"Fire", earth: zh?"土":"Earth", metal: zh?"金":"Metal", water: zh?"水":"Water" };
-  const posture = s.level === "strong" ? (zh ? "身强,宜主动出击——创业、挑战、独立门户都担得起。" : "Strong self — go on the offensive; you can carry a venture of your own.")
-    : s.level === "weak" ? (zh ? "身弱,宜背靠平台、借团队与专业立足,稳中求进胜过单打独斗。" : "Weak self — lean on platforms, teams and expertise; steady beats solo.")
-    : (zh ? "身势中和,进退有余,顺势择机即可。" : "Balanced — room to advance or hold; pick your moments.");
+  const isStrong = s.level === "strong", isWeak = s.level === "weak";
+  const guanScore = s.score[roles.guan], shiScore = s.score[roles.shi], yinScore = s.score[roles.yin], biScore = s.score[roles.bi];
+  const FIELD = { zh:{ wood:"文教、出版、木材、医药、服装与成长型行业", fire:"文化、能源、餐饮、互联网、光电、公关等「热」行业", earth:"地产、建筑、农业、仓储、中介与稳健实业", metal:"金融、机械、法律、军警、五金等决断型行业", water:"贸易、物流、旅游、传媒、信息与流动型行业" },
+    en:{ wood:"education, publishing, timber, medicine, growth fields", fire:"culture, energy, food, internet, media & PR — 'hot' fields", earth:"real estate, construction, agriculture, logistics, steady trades", metal:"finance, machinery, law, security, decisive hard-edged fields", water:"trade, logistics, travel, media, information & flow" } };
+  let careerPath;
+  if (guanScore > avg && (isStrong || yinScore > avg * 0.8)) {
+    careerPath = (hasTG("七杀") && !hasTG("正官"))
+      ? (zh ? "你扛得住压力、越挑战越出彩,宜走开创与权责重的路——创业、销售、军警、外科、工程、竞技等硬碰硬的领域最能发挥。" : "You thrive under pressure and shine on challenge — take the pioneering, high-stakes route: founding, sales, security, surgery, engineering, competition.")
+      : (zh ? "身能任官,宜走体制、管理与专业资格的正途——公职、大企业、行政、法务、管理岗最合适,按部就班反而积累最快,重职位与名声。" : "You are strong enough to 'hold office' — the formal track fits: public service, large firms, administration, law, management; steady rank-climbing compounds fastest.");
+  } else if (guanScore > avg * 1.2 && isWeak && yinScore < avg * 0.7) {
+    careerPath = zh ? "官杀旺而身弱,事业压力大、易受人事牵制或怀才不遇——务必背靠平台、以学历资历(印)为靠山,忌硬扛全揽;起运补身后渐入佳境。" : "Heavy Officer/Killings on a weak self — real pressure and being hemmed in; anchor to a platform and build credentials (Resource) as backing, don't carry it all alone. It eases once a supportive luck pillar arrives.";
+  } else if (shiScore > avg && (hasTG("食神") || hasTG("伤官"))) {
+    careerPath = hasTG("伤官") ? (zh ? "才华外露型,宜靠技术、创意与表达吃饭——设计、研发、自媒体、艺术、专业顾问;自由发挥的舞台比论资排辈的体制更适合你,唯忌锋芒犯上。" : "Talent-forward — earn through skill, creativity and expression: design, R&D, content, art, consulting. A free stage suits you better than a hierarchy; just mind clashing with authority.")
+      : (zh ? "以才艺与专业生财,宜技术、教育、餐饮、文创等「做自己擅长又喜欢的事」的路,温和积累、口碑即招牌。" : "You earn through craft and expertise — technical work, teaching, food, creative trades: do what you're good at and enjoy; reputation is your brand.");
+  } else if (yinScore > avg && (hasTG("正印") || hasTG("偏印"))) {
+    careerPath = zh ? "靠学识、资历与名声立业,宜教育、研究、文化、医卫、行政后勤;贵人与平台是助力,重积累、不宜投机。" : "You build on learning, credentials and reputation: education, research, culture, healthcare, administration; mentors and platforms help — accumulate, don't speculate.";
+  } else {
+    careerPath = isStrong ? (zh ? "命中官星不显,不必挤仕途——凭本事独立发展、经商或做专业更自在,你就是自己的靠山。" : "No prominent Officer — no need to force the official track; go independent, in business or a profession. You are your own backing.")
+      : (zh ? "官星不显、身势偏弱,事业宜稳扎稳打、依托团队与平台,先立足再图发展,忌频繁跳动。" : "No prominent Officer and a lighter self — go steady, lean on a team/platform, establish footing before expanding; avoid job-hopping.");
+  }
+  careerPath += zh ? ` 行业取用神 ${ELEM_CHAR[ys.element]},利${FIELD.zh[ys.element]}。` : ` By your useful element (${ELEM_TXT.en[ys.element]}), favorable fields: ${FIELD.en[ys.element]}.`;
   const careerShen = has("jiangxing") ? (zh ? " 命带将星,有统御之力。" : " A General star gives command.") : has("wenchang") ? (zh ? " 文昌入命,利考学与文名。" : " Academic star favors study and reputation.") : has("huagai") ? (zh ? " 华盖临身,专业、艺术与玄学有缘。" : " Canopy favors expertise, art, the mystical.") : "";
   const combos = [];
   if (hasTG("伤官") && hasTG("正官")) combos.push(zh ? "命见「伤官见官」——事业与官非是非需格外留心,忌锋芒犯上。" : "'Hurting Officer meets the Officer' — mind friction with authority.");
   if (hasTG("食神") && hasTG("七杀")) combos.push(zh ? "「食神制杀」——能驾驭压力、独当一面,利掌权与专业。" : "'Eating God tames the Killings' — you master pressure and can lead.");
   if (hasTG("正官") && (hasTG("正印") || hasTG("偏印"))) combos.push(zh ? "「官印相生」——名实相济,利体制与名声。" : "'Officer feeds Resource' — position and repute reinforce each other.");
   if (hasTG("伤官") && (hasTG("正印") || hasTG("偏印"))) combos.push(zh ? "「伤官配印」——才华有约束,可成大器。" : "'Hurting Officer paired with Resource' — disciplined talent.");
-  const career = `${PATTERN[pt.key][lang][1]} ${posture}${combos.length ? " " + combos.join("") : ""}${careerShen}`;
+  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${combos.length ? " " + combos.join("") : ""}${careerShen}`;
   const caiE = roles.cai, caiScore = s.score[caiE];
-  let wealth = s.favor.indexOf(caiE) >= 0 ? (zh ? "财为喜用,求财顺遂、财能养命。" : "Wealth is a useful element for you — money comes with ease and sustains you.")
-    : s.avoid.indexOf(caiE) >= 0 ? (zh ? "财为忌神,越逐利越耗身,宜量力、靠专业稳收而非投机。" : "Wealth is unfavorable — chasing it drains you; earn steadily through skill, avoid speculation.")
-    : (zh ? "财势平常,取之有道即可。" : "Wealth is moderate — earn it honestly and it holds.");
-  wealth += (s.level === "strong" && caiScore > avg) ? (zh ? " 身强财旺,担得起财,越做越大,是能聚财的格局。" : " Strong self with strong wealth — you can hold money and grow it.")
-    : (s.level === "weak" && caiScore > avg) ? (zh ? " 财多身弱,钱来得动也守不住,易为财奔忙——宜合伙、借力、稳守。" : " Much wealth, weak self — money moves but slips away; partner up and hold steady.")
-    : (caiScore < avg * 0.7) ? (zh ? " 财星偏轻,细水长流、靠一技之长,不宜大博。" : " Light on wealth — a steady trade suits you better than big bets.") : "";
+  const caiFav = s.favor.indexOf(caiE) >= 0, caiAvo = s.avoid.indexOf(caiE) >= 0;
+  const hasShiSheng = shiScore > avg * 0.7;
+  const dominantCai = hasTG("正财") && hasTG("偏财") ? "both" : hasTG("正财") ? "zheng" : hasTG("偏财") ? "pian" : "none";
+  let wealth = (isStrong && caiScore > avg) ? (zh ? "身强又见财旺,担得起财——能聚财、越做越大的格局,宜主动进取、适度冒险。" : "Strong self with strong Wealth — you can hold money and grow it; go on the offensive and take measured risks.")
+    : (isWeak && caiScore > avg) ? (zh ? "财多身弱,富屋贫人:钱来得动却守不住、易为财奔忙——宜合伙借力、稳守落袋,先补身(靠朋友比劫、学历印星)再谈扩张,忌一人吞大盘。" : "Much wealth, weak self — money moves but slips away and wears you out; partner up, bank gains, and strengthen yourself (allies, credentials) before expanding; don't swallow it all alone.")
+    : (caiScore < avg * 0.7) ? (zh ? "财星偏轻,非大富大贵之路,但细水长流稳妥——靠一技之长与固定收入积累最实在,忌孤注一掷。" : "Light on Wealth — not the road to a fortune, but steady: a skilled trade and regular income compound best; avoid all-or-nothing bets.")
+    : (zh ? "财势中平,取之有道便守得住——不缺用度,大财靠机遇、稳财靠积累。" : "Moderate Wealth — earn it honestly and it holds; enough to live on, big money via opportunity, stable money via accumulation.");
+  wealth += hasShiSheng ? (zh ? " 命有食伤生财,财源有根、能自造财路,靠本事与作品持续进账。" : " With Output feeding Wealth, your income has a root — you generate your own money through skill and output.")
+    : (caiScore > avg ? (zh ? " 惜无食伤生财,财旺而源浅,进财偏靠机遇、祖荫或配偶,宜自建可持续的收入来源。" : " But no Output to feed it — wealth without a source leans on luck, family or spouse; build a sustainable income stream.") : "");
+  if (dominantCai === "pian") wealth += zh ? " 以偏财为主:偏动财、生意财、投资与异地财旺,起伏大、来去快,宜见好就收、落袋为安。" : " Windfall Wealth leads — business, investment and out-of-town money; volatile and fast, so lock in gains.";
+  else if (dominantCai === "zheng") wealth += zh ? " 以正财为主:靠固定收入、薪资与专业稳健积累,踏实理财、忌高风险博弈。" : " Proper Wealth leads — salary, profession and steady accumulation; manage it conservatively.";
+  else if (dominantCai === "both") wealth += zh ? " 正偏财并见:稳定收入与活络财路兼备、来源多元,宜正财打底、偏财添彩。" : " Both Proper and Windfall Wealth — diverse income; let salary anchor it and ventures add upside.";
+  if (biScore > avg * 1.3 && caiScore < biScore && !(isWeak && caiScore > avg)) wealth += zh ? " 比劫偏重,防「比劫夺财」——合伙易被分、钱财借出难收、防担保连带,亲兄弟也要明算账。" : " Heavy Peers risk 'robbing wealth' — partnerships get diluted, loans go unrepaid; watch guarantees, keep accounts clear even with family.";
+  wealth += caiFav ? (zh ? " 总的说,财为你的喜用——求财顺遂、财能养命,是可以往财上使劲的命。" : " Overall Wealth is a useful element for you — money comes with ease and sustains you; you can lean into it.")
+    : caiAvo ? (zh ? " 但财为忌神——越纯逐利越耗身心,宜靠专业与稳定收入,少碰投机与高杠杆。" : " But Wealth is unfavorable — pure money-chasing drains you; rely on skill and steady income, avoid speculation and leverage.") : "";
   if (has("lu")) wealth += zh ? " 命带禄神,衣禄不缺。" : " Prosperity star: a reliable livelihood.";
   if (has("yima")) wealth += zh ? " 驿马动财,财在走动、远方与变动中求。" : " Traveling Horse: money found through movement and travel.";
   const male = gender === "m";

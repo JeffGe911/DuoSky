@@ -228,7 +228,7 @@ __FONTS__
   .wp-nm{font-size:12px;color:var(--soft);flex:none;width:64px} body.zh .wp-nm{width:46px}
   .wp-sg{font-size:12px;color:var(--muted)}
   .wnote{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
-  :root{--round:ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","PingFang SC","Varela Round","Nunito",system-ui,sans-serif}
+  :root{--round:"Nunito",ui-rounded,"SF Pro Rounded","Hiragino Maru Gothic ProN","PingFang SC","Varela Round",system-ui,sans-serif}
   #west-scene .d-head .label,#west-scene .wp-nm,#west-scene .wp-sg,#west-scene .wheel-guide,#west-scene .wnote,#west-scene .dgn,#west-scene .unlock,#west-scene .dbtn{font-family:var(--round)}
   #west-scene .d-head .label{font-size:13.5px;letter-spacing:.1em}
   #west-scene .wp-nm{font-size:14px} #west-scene .wp-sg{font-size:13.5px}
@@ -411,6 +411,18 @@ __FONTS__
     .cg span{padding:2px 7px 3px;font-size:12.5px}
     .dw-close{width:34px;height:34px}
     .wp{padding:7px 6px}
+  }
+  @media (max-width:430px){
+    .pillars{gap:5px}
+    .pillar{padding:8px 3px 7px}
+    .pillar .p-label{font-size:9px;letter-spacing:.1em}
+    .pillar .tgline{font-size:9.5px;margin-top:3px;min-height:11px}
+    .pillar .gz{font-size:21px}
+    .pillar .gloss{font-size:9.5px;margin-bottom:3px}
+    .ny{font-size:8.5px;margin:-2px 0 3px}
+    .cg{gap:2px} .cg span{padding:1px 5px 2px;font-size:11px}
+    .cgc .cgp{font-size:7px}
+    .pill-animal{font-size:10px;top:2px;right:3px}
   }
   .dgn{font-size:10.5px;font-style:normal;color:var(--gold);opacity:.75;margin-left:2px}
   #reveal-fx{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;

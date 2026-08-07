@@ -2378,7 +2378,6 @@ function synthReadings(r) {
     } else luckLine = zh ? `尚未起运(约 ${lk.startAge} 岁起),先按本命而行。` : `Luck begins around age ${lk.startAge}.`;
   }
   const THEME = { zh:{ bi:"自立与人际", yin:"学识与内涵", shi:"才华与表达", cai:"务实与财富", guan:"责任与地位" }, en:{ bi:"self-reliance & relationships", yin:"learning & depth", shi:"talent & expression", cai:"the practical & wealth", guan:"duty & status" } };
-  const domGroup = Object.keys(g).sort((a, b) => g[b] - g[a])[0];
   const lead = zh
     ? `你是 <b class="gold">${MATERIAL.zh[r.dayMaster]}(${ELEM_CHAR[s.dmElement]})</b> 命,走 <b class="gold">${PATTERN[pt.key].zh[0]}</b>、${STG.zh[s.level]}。${DM_LINE.zh[r.dayMaster]}用神在 <b>${ELEM_CHAR[ys.element]}</b>,一生的主旋律偏向 <b>${THEME.zh[domGroup]}</b>。下面分事业、财运、感情、健康四面来看——`
     : `You are a <b class="gold">${MATERIAL.en[r.dayMaster]} (${ELEM_TXT.en[s.dmElement]})</b> Day Master in a <b class="gold">${PATTERN[pt.key].en[0]}</b> pattern, ${STG.en[s.level]}. ${DM_LINE.en[r.dayMaster]} Your useful element is <b>${ELEM_TXT.en[ys.element]}</b>, and life leans toward <b>${THEME.en[domGroup]}</b>. Four areas below —`;

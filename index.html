@@ -215,7 +215,7 @@
       radial-gradient(120% 70% at 50% -6%, rgba(233,190,120,.10), transparent 58%),
       linear-gradient(162deg,rgba(54,27,22,.97),rgba(28,14,13,.99));border:1px solid var(--gold-dim);border-bottom:none;
     border-radius:20px 20px 0 0;padding:22px 26px 30px;box-shadow:0 -20px 60px rgba(3,5,15,.72);
-    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:90vh;min-height:38vh;overflow:auto}
+    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:90vh;min-height:38vh;overflow-y:auto;overflow-x:hidden}
   .drawer.open{transform:translate(-50%,0)}
   .dw-close{position:absolute;top:15px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--soft);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px;line-height:1;font-family:inherit}
   .dw-close:hover{border-color:var(--gold);color:var(--gold)}
@@ -258,8 +258,12 @@
   .dbtn:hover{background:rgba(217,185,108,.14);border-color:var(--gold)}
   .dbtn:focus-visible{outline:1px solid var(--gold);outline-offset:2px}
   .lk-meta{font-size:12.5px;color:var(--soft);margin:12px 0;letter-spacing:.04em}
-  .lk-strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:8px}
-  .lkc{flex:none;width:54px;text-align:center;border:1px solid var(--hairline);border-radius:9px;padding:7px 3px;background:rgba(255,255,255,.02)}
+  .lk-strip{display:flex;gap:7px;overflow-x:auto;padding-bottom:10px;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--gold-dim) rgba(255,255,255,.07)}
+  .lk-strip::-webkit-scrollbar{height:8px}
+  .lk-strip::-webkit-scrollbar-track{background:rgba(255,255,255,.07);border-radius:8px}
+  .lk-strip::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:8px}
+  .lk-strip::-webkit-scrollbar-thumb:hover{background:var(--gold)}
+  .lkc{flex:none;width:54px;text-align:center;border:1px solid var(--hairline);border-radius:9px;padding:7px 3px;background:rgba(255,255,255,.02);scroll-snap-align:start}
   .lk-age{font-size:10.5px;color:var(--muted)}
   .lk-gz{font-size:21px;line-height:1.15;margin:3px 0;letter-spacing:.02em}
   .lk-tg{font-size:10px;color:var(--gold);letter-spacing:.02em}
@@ -3149,7 +3153,7 @@ function luckDrawer(r) {
     <div class="lk-meta">${startTxt}</div>
     <div class="lk-strip">${cols}</div>
     <div class="lk-legend">${lang === "zh" ? "吉凶(依喜用):" : "fortune (by useful phase):"} <span class="fo-dot good"></span>${lang === "zh" ? "吉" : "good"} <span class="fo-dot neutral"></span>${lang === "zh" ? "平" : "mixed"} <span class="fo-dot bad"></span>${lang === "zh" ? "忌" : "adverse"}</div>
-    <div class="wnote">${lang === "zh" ? "点任意大运看该十年详解。" : "Tap any pillar for the decade reading."} ${LK[lang].note}</div>`;
+    <div class="wnote">${lang === "zh" ? "← 左右滑动查看各步大运,点任意一步看该十年详解。" : "← Swipe to see all pillars; tap any for its decade reading."} ${LK[lang].note}</div>`;
 }
 const SIGN_ELEM = { Aries:"fire",Leo:"fire",Sagittarius:"fire",Taurus:"earth",Virgo:"earth",Capricorn:"earth",Gemini:"air",Libra:"air",Aquarius:"air",Cancer:"water",Scorpio:"water",Pisces:"water" };
 const SIGN_MODE = { Aries:"cardinal",Cancer:"cardinal",Libra:"cardinal",Capricorn:"cardinal",Taurus:"fixed",Leo:"fixed",Scorpio:"fixed",Aquarius:"fixed",Gemini:"mutable",Virgo:"mutable",Sagittarius:"mutable",Pisces:"mutable" };

@@ -2978,7 +2978,7 @@ function compatResultDrawer(bEntry) {
     <div class="dw-head"><span class="cpt-score" style="border-color:${col};color:${col}">${final}</span>
       <div><div class="dw-title serif">${esc(A.name)} ✕ ${esc(B.name)}</div><div class="dw-sub" style="color:${col}">${CPT.tier[lang][tier]}${west != null ? (zh ? " · 八字+星盘合参" : " · BaZi + synastry") : (zh ? " · 仅八字" : " · BaZi only")}</div></div></div>
     ${syncSvg}
-    <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>
+    <details class="rsec" open style="margin-top:8px"><summary>${zh ? "详细评断" : "Breakdown"}</summary><div class="rsec-body">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div></details>
     <div class="wnote">${zh ? "合婚仅供参考,真感情靠经营。" : "For reflection — real love is built, not read."}</div>`;
 }
 let westObserver = null;

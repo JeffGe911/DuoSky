@@ -2537,7 +2537,29 @@ function compatResultDrawer(bEntry) {
   // 合化
   let huaTxt = "";
   if (c.dmRel === "he" && c.dmHua) huaTxt = zh ? ` 日主 ${c.dmA}${c.dmB} 相合,化 ${ELEM_CHAR[c.dmHua.elem]}${c.dmHua.useful ? "——化神为二人所喜,情投意合又互补(上等)" : c.dmHua.harm ? "——化神偏忌,情浓却需节制" : "——牵引亲密"}。` : ` Day masters ${c.dmA}${c.dmB} unite → ${ELEM_TXT.en[c.dmHua.elem]}${c.dmHua.useful ? " (a useful fusion — deep and complementary)" : ""}.`;
+  // 运势同步 + 双线叠加图
+  const fromY = (new Date()).getFullYear(), N = 15;
+  const sA = computeStrength(A.r), sB = computeStrength(B.r);
+  const fa = personFortune(A.r, lastChart.inp, gender, sA, fromY, N), fb = personFortune(B.r, bEntry, bEntry.gender || "m", sB, fromY, N);
+  let syncPct = null, syncLab = "", syncNote = "", both = [], syncSvg = "";
+  if (fa && fb) {
+    let same = 0;
+    for (let i = 0; i < N; i++) { if (Math.sign(fa[i]) === Math.sign(fb[i])) same++; if (fa[i] >= 1 && fb[i] >= 1) both.push(fromY + i); }
+    syncPct = Math.round(same / N * 100);
+    syncLab = syncPct >= 66 ? (zh ? "同频·高" : "in sync") : syncPct >= 40 ? (zh ? "中" : "moderate") : (zh ? "错位" : "out of phase");
+    syncNote = syncPct >= 66 ? (zh ? "顺逆同步,能一起冲也一起扛,彼此扶持。" : "you rise and dip together — mutual support.") : syncPct >= 40 ? (zh ? "时而同步时而错位,多沟通即可。" : "partly in step — communicate through the gaps.") : (zh ? "节奏常相反,一顺一逆时需多体谅,也能互补撑住。" : "often opposite tempos — patience, but also complementary.");
+    const W = 380, X0 = 8, H = 62, mid = 8 + H / 2, xf = i => X0 + i / (N - 1) * W, yf = v => mid - v * (H / 2 / 2.2);
+    const pl = (arr, cl) => `<polyline points="${arr.map((v, i) => xf(i).toFixed(1) + "," + yf(v).toFixed(1)).join(" ")}" fill="none" stroke="${cl}" stroke-width="1.6" opacity=".92"/>`;
+    const dts = both.map(y => `<circle cx="${xf(y - fromY).toFixed(1)}" cy="${yf(2).toFixed(1)}" r="2.6" fill="#7FC08A"/>`).join("");
+    syncSvg = `<svg viewBox="0 0 ${W + 16} ${H + 24}" style="width:100%;display:block;margin:2px 0"><line x1="${X0}" y1="${mid}" x2="${X0 + W}" y2="${mid}" stroke="#EDE6D0" stroke-opacity=".2"/>${pl(fa, "#D9B96C")}${pl(fb, "#7DAEDD")}${dts}<text x="${X0}" y="${H + 20}" font-size="9" fill="#96A0B8">${fromY}</text><text x="${X0 + W}" y="${H + 20}" text-anchor="end" font-size="9" fill="#96A0B8">${fromY + N - 1}</text></svg><div class="wnote" style="margin:1px 0 8px"><span style="color:#D9B96C">▬</span> ${esc(A.name)} · <span style="color:#7DAEDD">▬</span> ${esc(B.name)} · <span style="color:#7FC08A">●</span> ${zh ? "共同顺遂年" : "shared good years"}</div>`;
+  }
+  const dmAdvice = ({ he: zh ? "日主相合,天生投缘、彼此吸引" : "day masters unite — a natural pull", sheng: zh ? "一方滋养一方,相处温和互补" : "one nourishes the other — gentle", same: zh ? "同类相知,也各有主见,记得留空间" : "like minds, both willful — give space", ke: zh ? "张力与吸引并存,需要磨合与让度" : "tension and attraction — give and take" })[c.dmRel];
+  const feedGood = c.bFeedsA || c.aFeedsB;
+  const verdict = zh
+    ? `你俩整体<b style="color:${col}">${CPT.tier.zh[tier]}</b>(综合 ${final})。${dmAdvice};${feedGood ? "更难得的是用神互补,在一起会互相「补气」、越处越顺" : "用神互补一般,靠用心经营"}${syncPct != null ? ";运势" + (syncPct >= 66 ? "又同频,顺逆同步" : syncPct >= 40 ? "时同时异" : "节奏不同、需多体谅") : ""}。`
+    : `Overall <b style="color:${col}">${CPT.tier.en[tier]}</b> (${final}). ${dmAdvice}; ${feedGood ? "and your useful elements complement — you top each other up" : "with a modest elemental fit"}.${syncPct != null ? (syncPct >= 66 ? " Your luck runs in sync." : syncPct >= 40 ? " Luck partly in step." : " Different tempos — be patient.") : ""}`;
   const rows = [
+    [zh ? "总评" : "Verdict", verdict],
     [zh ? "日主" : "Day masters", `${A.r.dayMaster}(${ELEM_CHAR[c.aE]}) × ${B.r.dayMaster}(${ELEM_CHAR[c.bE]})——${CPT.dm[c.dmRel][lang]}${huaTxt}`],
     [zh ? "生肖" : "Zodiac (year)", `${ANIMAL_TXT[lang][A.r.year[1]]} × ${ANIMAL_TXT[lang][B.r.year[1]]}——${CPT.br[c.zodiac][lang]}`],
     [zh ? "夫妻宫(日支)" : "Spouse palace", `${A.r.day[1]} × ${B.r.day[1]}——${CPT.br[c.spouse][lang]}`],
@@ -2549,23 +2571,13 @@ function compatResultDrawer(bEntry) {
   } else {
     rows.push([zh ? "西方合盘" : "Synastry", zh ? "需双方都有出生时间与地点。" : "needs both birth times & places."]);
   }
-  {
-    const fromY = (new Date()).getFullYear(), N = 15;
-    const sA = computeStrength(A.r), sB = computeStrength(B.r);
-    const fa = personFortune(A.r, lastChart.inp, gender, sA, fromY, N), fb = personFortune(B.r, bEntry, bEntry.gender || "m", sB, fromY, N);
-    if (fa && fb) {
-      let same = 0; const both = [];
-      for (let i = 0; i < N; i++) { if (Math.sign(fa[i]) === Math.sign(fb[i])) same++; if (fa[i] >= 1 && fb[i] >= 1) both.push(fromY + i); }
-      const pct = Math.round(same / N * 100), lab = pct >= 66 ? (zh ? "同频·高" : "in sync") : pct >= 40 ? (zh ? "中" : "moderate") : (zh ? "错位" : "out of phase");
-      const note = pct >= 66 ? (zh ? "顺逆同步,能一起冲也一起扛,彼此扶持。" : "you rise and dip together — mutual support.") : pct >= 40 ? (zh ? "时而同步时而错位,多沟通即可。" : "partly in step — communicate through the gaps.") : (zh ? "节奏常相反,一顺一逆时需多体谅,也能互补撑住。" : "often opposite tempos — patience, but also complementary.");
-      rows.push([zh ? "运势同步" : "Luck sync", `<b class="gold">${pct}% · ${lab}</b>——${note}${both.length ? (zh ? ` 共同顺遂年:${both.slice(0, 4).join("、")}。` : ` Shared good years: ${both.slice(0, 4).join(", ")}.`) : ""}`]);
-    }
-  }
+  if (syncPct != null) rows.push([zh ? "运势同步" : "Luck sync", `<b class="gold">${syncPct}% · ${syncLab}</b>——${syncNote}${both.length ? (zh ? ` 共同顺遂年:${both.slice(0, 4).join("、")}。` : ` Shared good years: ${both.slice(0, 4).join(", ")}.`) : ""}`]);
   rows.push([zh ? "评分" : "Scores", `${zh ? "八字" : "BaZi"} ${c.bazi}${west != null ? ` · ${zh ? "星盘" : "Chart"} ${west}` : ""} → ${zh ? "综合" : "overall"} <b style="color:${col}">${final}</b>`]);
   return `<button class="dw-close" id="dw-close" aria-label="Close">✕</button>
     <span class="dw-back clk" role="button" tabindex="0" data-t="match">‹ ${zh ? "重选" : "back"}</span>
     <div class="dw-head"><span class="cpt-score" style="border-color:${col};color:${col}">${final}</span>
       <div><div class="dw-title serif">${esc(A.name)} ✕ ${esc(B.name)}</div><div class="dw-sub" style="color:${col}">${CPT.tier[lang][tier]}${west != null ? (zh ? " · 八字+星盘合参" : " · BaZi + synastry") : (zh ? " · 仅八字" : " · BaZi only")}</div></div></div>
+    ${syncSvg}
     <div style="margin-top:10px">${rows.map(([l, t]) => `<div class="drow"><span class="d-label">${l}</span><p>${t}</p></div>`).join("")}</div>
     <div class="wnote">${zh ? "合婚仅供参考,真感情靠经营。" : "For reflection — real love is built, not read."}</div>`;
 }

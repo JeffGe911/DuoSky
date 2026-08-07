@@ -470,6 +470,7 @@
   .rsec>summary::after{content:"\25be";float:right;opacity:.5}
   .rsec:not([open])>summary::after{content:"\25b8"}
   .rsec-body{font-size:13px;line-height:1.72;color:var(--soft);padding:0 0 11px}
+  body.lite .cg,body.lite .ny,body.lite .pillars-note,body.lite .elements-note,body.lite .wheel-guide,body.lite .op-data,body.lite .cg-link{display:none !important}
   #reveal-fx{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
     background:radial-gradient(62% 60% at 50% 45%, rgba(30,16,15,.78), rgba(8,6,10,.45) 68%, transparent);transition:opacity .45s ease}
   #reveal-fx.on{opacity:1}
@@ -708,6 +709,7 @@
   <button class="back" id="btn-save"><span class="i-en">★ Save</span><span class="i-zh">★ 存名册</span></button>
   <button class="back" id="btn-share"><span class="i-en">🔗 Link</span><span class="i-zh">🔗 链接</span></button>
   <button class="back" id="btn-card"><span class="i-en">🎴 Card</span><span class="i-zh">🎴 分享卡</span></button>
+  <button class="back" id="btn-lite"></button>
   <button class="back" id="btn-print"><span class="i-en">🖨 Print</span><span class="i-zh">🖨 打印</span></button>
 </div>
 <button id="totop" class="totop hidden" aria-label="back to top">↑</button>
@@ -1978,6 +1980,9 @@ function setLang(l) {
 $("lang-en").onclick = () => setLang("en");
 $("lang-zh").onclick = () => setLang("zh");
 document.body.classList.toggle("zh", lang === "zh");
+try { if (localStorage.getItem("duosky_lite") === "1") document.body.classList.add("lite"); } catch (e) {}
+function refreshLiteBtn() { const b = document.getElementById("btn-lite"); if (!b) return; const on = document.body.classList.contains("lite"); b.textContent = lang === "zh" ? (on ? "詳 详尽" : "◐ 简明") : (on ? "Full" : "◐ Lite"); }
+function toggleLite() { const on = document.body.classList.toggle("lite"); try { localStorage.setItem("duosky_lite", on ? "1" : "0"); } catch (e) {} refreshLiteBtn(); }
 $("lang-en").classList.toggle("on", lang === "en");
 $("lang-zh").classList.toggle("on", lang === "zh");
 fillTz();
@@ -2316,6 +2321,7 @@ function shareCardImage() {
 $("btn-card").onclick = shareCardImage;
 $("btn-share").onclick = shareLink;
 $("btn-print").onclick = () => window.print();
+$("btn-lite").onclick = toggleLite; refreshLiteBtn();
 $("totop").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
 window.addEventListener("scroll", () => { const t = $("totop"); if (t) t.classList.toggle("hidden", window.scrollY < 500 || $("screen-card").classList.contains("hidden")); });
 (function loadShared() {
@@ -2780,7 +2786,8 @@ function synthReadings(r) {
 }
 function readingDrawer(r) {
   const zh = lang === "zh", rows = synthReadings(r);
-  const body = rows.map(([lbl, txt]) => `<details class="rsec" open><summary>${lbl}</summary><div class="rsec-body">${txt}</div></details>`).join("");
+  const lite = document.body.classList.contains("lite");
+  const body = rows.map(([lbl, txt], i) => `<details class="rsec"${(!lite || i === 0) ? " open" : ""}><summary>${lbl}</summary><div class="rsec-body">${txt}</div></details>`).join("");
   return `<button class="dw-close" id="dw-close" aria-label="Close">\u2715</button>
     <div class="dw-head"><span class="dw-glyph serif" style="color:#D9B96C;text-shadow:0 0 18px #D9B96C88">${zh ? "读" : "\u2727"}</span>
       <div><div class="dw-title serif">${zh ? "综合解读" : "Life Reading"}</div><div class="dw-sub">${zh ? "由旺衰·十神·神煞·宫位合成" : "synthesized from your chart"}</div></div></div>

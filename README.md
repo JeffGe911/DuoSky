@@ -51,6 +51,7 @@ Pure client-side JavaScript, cross-validated, no runtime dependencies.
 ```bash
 python3 build.py       # src/ + data/ -> index.html (self-contained, single file)
 node tests/golden.js   # 18 engine assertions (must all pass)
+node tests/reading.js  # interpretive-layer invariants (favor/用神/grades across 600+ charts)
 ```
 
 `build.py` inlines `src/engine.js`, `src/astronomy.min.js`, and `src/fonts.css` into `src/template.html`. It **validates before writing**: every inlined `<script>` is run through `node --check` and the output is scanned for leftover placeholders — a broken build never overwrites `index.html`.

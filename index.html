@@ -216,7 +216,7 @@
       radial-gradient(120% 70% at 50% -6%, rgba(233,190,120,.10), transparent 58%),
       linear-gradient(162deg,rgba(54,27,22,.97),rgba(28,14,13,.99));border:1px solid var(--gold-dim);border-bottom:none;
     border-radius:20px 20px 0 0;padding:22px 26px 30px;box-shadow:0 -20px 60px rgba(3,5,15,.72);
-    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:82vh;overflow:auto}
+    transition:transform .26s cubic-bezier(.2,.7,.2,1);max-height:90vh;min-height:38vh;overflow:auto}
   .drawer.open{transform:translate(-50%,0)}
   .dw-close{position:absolute;top:15px;right:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);color:var(--soft);border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px;line-height:1;font-family:inherit}
   .dw-close:hover{border-color:var(--gold);color:var(--gold)}
@@ -2548,7 +2548,7 @@ function compatResultDrawer(bEntry) {
     syncPct = Math.round(same / N * 100);
     syncLab = syncPct >= 66 ? (zh ? "同频·高" : "in sync") : syncPct >= 40 ? (zh ? "中" : "moderate") : (zh ? "错位" : "out of phase");
     syncNote = syncPct >= 66 ? (zh ? "顺逆同步,能一起冲也一起扛,彼此扶持。" : "you rise and dip together — mutual support.") : syncPct >= 40 ? (zh ? "时而同步时而错位,多沟通即可。" : "partly in step — communicate through the gaps.") : (zh ? "节奏常相反,一顺一逆时需多体谅,也能互补撑住。" : "often opposite tempos — patience, but also complementary.");
-    const W = 380, X0 = 8, H = 62, mid = 8 + H / 2, xf = i => X0 + i / (N - 1) * W, yf = v => mid - v * (H / 2 / 2.2);
+    const W = 460, X0 = 8, H = 120, mid = 8 + H / 2, xf = i => X0 + i / (N - 1) * W, yf = v => mid - v * (H / 2 / 2.4);
     const pl = (arr, cl) => `<polyline points="${arr.map((v, i) => xf(i).toFixed(1) + "," + yf(v).toFixed(1)).join(" ")}" fill="none" stroke="${cl}" stroke-width="1.6" opacity=".92"/>`;
     const dts = both.map(y => `<circle cx="${xf(y - fromY).toFixed(1)}" cy="${yf(2).toFixed(1)}" r="2.6" fill="#7FC08A"/>`).join("");
     syncSvg = `<svg viewBox="0 0 ${W + 16} ${H + 24}" style="width:100%;display:block;margin:2px 0"><line x1="${X0}" y1="${mid}" x2="${X0 + W}" y2="${mid}" stroke="#EDE6D0" stroke-opacity=".2"/>${pl(fa, "#D9B96C")}${pl(fb, "#7DAEDD")}${dts}<text x="${X0}" y="${H + 20}" font-size="9" fill="#96A0B8">${fromY}</text><text x="${X0 + W}" y="${H + 20}" text-anchor="end" font-size="9" fill="#96A0B8">${fromY + N - 1}</text></svg><div class="wnote" style="margin:1px 0 8px"><span style="color:#D9B96C">▬</span> ${esc(A.name)} · <span style="color:#7DAEDD">▬</span> ${esc(B.name)} · <span style="color:#7FC08A">●</span> ${zh ? "共同顺遂年" : "shared good years"}</div>`;
@@ -2733,7 +2733,6 @@ function renderCard(r, inp) {
     <div class="detail-bar">
       <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
       <span class="dbtn clk" role="button" tabindex="0" data-t="relations">${T.btnRel}</span>
-      <span class="dbtn clk" role="button" tabindex="0" data-t="shensha">${T.btnShen}</span>
       <span class="dbtn clk" role="button" tabindex="0" data-t="luck">${T.btnLuck}</span>
     </div>
     <div class="voice" style="border-top:1px solid var(--hairline);padding-top:14px">
@@ -3065,8 +3064,8 @@ function fortuneDrawer(r) {
   const inp = lastChart.inp, s = computeStrength(r), zh = lang === "zh";
   const lk = computeLuck(TERMS, { y:inp.y, m:inp.m, d:inp.d, hh:inp.hh, mi:inp.mi, tzMin:inp.tz, timeKnown:!inp.notime }, { yearStem:r.year[0], monthGZ:r.month, gender });
   if (!lk || lk.error) return drawerShell("運", "#D9B96C", zh ? "运势曲线" : "Fortune Curve", "", [[DW[lang].whatIs, LK[lang].oor]]);
-  const startAge = lk.startAge, MAXA = 85, W = 420, X0 = 30, H = 120, Y0 = 12, yMid = Y0 + H / 2;
-  const xOf = a => X0 + a / MAXA * W, yOf = v => yMid - v * (H / 2 / 2.2);
+  const startAge = lk.startAge, MAXA = 85, W = 440, X0 = 30, H = 200, Y0 = 14, yMid = Y0 + H / 2;
+  const xOf = a => X0 + a / MAXA * W, yOf = v => yMid - v * (H / 2 / 2.4);
   const foVal = f => f === "good" ? 1 : f === "bad" ? -1 : 0;
   const daAt = age => { const p = lk.list.filter(x => age >= x.startAge); return p.length ? p[p.length - 1] : null; };
   let bands = "";
@@ -3200,7 +3199,6 @@ function onPick(el) {
   else if (t === "match") openDrawer(matchDrawer());
   else if (t === "matchwith") openDrawer(compatResultDrawer(roster[+el.dataset.ri]));
   else if (t === "matchgo") { const be = readMatchForm(); if (be) openDrawer(compatResultDrawer(be)); }
-  else if (t === "shensha") openDrawer(shenshaDrawer(r));
   else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
   else if (t === "luck") openDrawer(luckDrawer(r));
   else if (t === "luckstep") openDrawer(luckStepDrawer(+el.dataset.i));

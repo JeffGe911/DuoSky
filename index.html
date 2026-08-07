@@ -459,6 +459,8 @@
     .lkc{width:50px}
   }
   .dgn{font-size:10.5px;font-style:normal;color:var(--gold);opacity:.75;margin-left:2px}
+  .tg-link{cursor:pointer;border-bottom:1px dotted var(--gold-dim);transition:color .15s}
+  .tg-link:hover{color:var(--gold);border-bottom-color:var(--gold)} .tg-link:focus-visible{outline:1px solid var(--gold);outline-offset:2px;border-radius:3px}
   #reveal-fx{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;
     background:radial-gradient(62% 60% at 50% 45%, rgba(30,16,15,.78), rgba(8,6,10,.45) 68%, transparent);transition:opacity .45s ease}
   #reveal-fx.on{opacity:1}
@@ -2591,6 +2593,17 @@ function synthReadings(r) {
     } else if (guanL < avg * 0.5) {
       love += zh ? " 女命官杀(夫星)偏弱不显——正缘来得较晚或需主动争取,择偶贵在稳重可靠,不必将就。" : " The husband star is faint — the right partner comes later or needs seeking out; choose steady and reliable, don't settle.";
     }
+  } else {
+    const caiL = s.score[roles.cai], biL = s.score[roles.bi], guanL = s.score[roles.guan], shiL = s.score[roles.shi];
+    if (biL > avg * 1.3 && caiL < biL) {
+      love += (guanL > avg * 0.8)
+        ? (zh ? " 男命比劫偏重本易「劫财夺妻」,幸有官杀制比劫——妻星得护,婚姻有保障,择偶宜端庄稳重。" : " Heavy Peers would rob the wife star, but the Officer reins them in — the wife star is protected; choose a poised, steady partner.")
+        : (shiL > avg * 0.8)
+        ? (zh ? " 男命比劫偏重本易劫财夺妻,幸有食伤通关(比劫生食伤、食伤生财)——化竞争为助力,婚姻可经营。" : " Heavy Peers would rob the wife star, but Output bridges it (Peers→Output→Wealth) — rivalry turns to support; the marriage is workable.")
+        : (zh ? " 男命比劫偏重而无制,防「劫财夺妻」——感情多竞争、易因兄弟朋友或钱财生隙,婚姻宜晚成、忌因财因友损情,择偶要专一守心。" : " Heavy Peers unchecked — beware peers robbing the wife: rivalry in love, friction over friends or money; marry later, stay single-minded, don't let money or friends erode it.");
+    } else if (caiL < avg * 0.5) {
+      love += zh ? " 男命财星(妻星)偏弱不显——妻缘偏薄或来得晚,宜主动把握、择人重贤淑稳重,不必将就。" : " The wife star (Wealth) is faint — the bond comes thin or late; take initiative, choose steady and kind, don't settle.";
+    }
   }
   love += zh ? ` 宜配:另一半若带 <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_CHAR[primeWork]}</b> 气最补你(补你做功最强的喜用)——这类人${PARTNER.zh[primeWork]}。` : ` Best match: a partner carrying <b style="color:${ELEM_COLOR[primeWork]}">${ELEM_TXT.en[primeWork]}</b> (your strongest-working useful element) — ${PARTNER.en[primeWork]}.`;
   const heStem = STEM_HE[r.dayMaster];
@@ -3503,7 +3516,41 @@ function shenshaDrawer(r) {
 }
 const drawerBg = $("drawer-bg"), drawerEl = $("drawer");
 let lastFocus = null;
-function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const _on = drawerEl.querySelector(".lkc-on"); if (_on && _on.scrollIntoView) _on.scrollIntoView({ inline: "center", block: "nearest" }); const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
+function tenGodNameDrawer(tg) {
+  const zh = lang === "zh";
+  if (!TEN_GOD_DEF[lang] || !TEN_GOD_DEF[lang][tg]) return drawerShell("神", "#D9B96C", zh ? "十神" : "Ten God", "", [[DW[lang].whatIs, "\u2014"]]);
+  const rows = [
+    [DW[lang].whatIs, TEN_GOD_DEF[lang][tg]],
+    [zh ? "写照" : "In a word", TEN_GOD_GLOSS[lang][tg]]
+  ];
+  return drawerShell(tg.slice(0, 1), "#D9B96C", TEN_GOD_FULL[lang][tg] || tg, zh ? "十神" : "Ten God", rows);
+}
+const TG_NAMES_ZH = ["比肩","劫财","食神","伤官","正财","偏财","正官","七杀","正印","偏印"];
+function linkifyTenGods(root) {
+  if (lang !== "zh" || !root || !document.createTreeWalker) return;
+  const re = /(比肩|劫财|食神|伤官|正财|偏财|正官|七杀|正印|偏印)(?!格)/g;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+  const targets = []; let node;
+  while ((node = walker.nextNode())) {
+    if (!node.nodeValue) continue;
+    re.lastIndex = 0; if (!re.test(node.nodeValue)) continue;
+    if (node.parentElement && node.parentElement.closest("[data-t],.tg-link,.d-label,.dw-title")) continue;
+    targets.push(node);
+  }
+  targets.forEach(n => {
+    const txt = n.nodeValue, frag = document.createDocumentFragment(); let last = 0, m; re.lastIndex = 0;
+    while ((m = re.exec(txt))) {
+      if (m.index > last) frag.appendChild(document.createTextNode(txt.slice(last, m.index)));
+      const sp = document.createElement("span");
+      sp.className = "tg-link clk"; sp.setAttribute("role", "button"); sp.tabIndex = 0;
+      sp.dataset.t = "tgname"; sp.dataset.g = m[1]; sp.textContent = m[1];
+      frag.appendChild(sp); last = m.index + m[1].length;
+    }
+    if (last < txt.length) frag.appendChild(document.createTextNode(txt.slice(last)));
+    n.parentNode.replaceChild(frag, n);
+  });
+}
+function openDrawer(html) { lastFocus = document.activeElement; drawerEl.innerHTML = html; try { linkifyTenGods(drawerEl); } catch (e) {} drawerBg.classList.add("open"); drawerEl.classList.add("open"); drawerEl.scrollTop = 0; const _on = drawerEl.querySelector(".lkc-on"); if (_on && _on.scrollIntoView) _on.scrollIntoView({ inline: "center", block: "nearest" }); const cb = $("dw-close"); if (cb) { cb.onclick = closeDrawer; cb.focus(); } }
 function closeDrawer() { drawerBg.classList.remove("open"); drawerEl.classList.remove("open"); if (lastFocus && lastFocus.focus) { lastFocus.focus(); lastFocus = null; } }
 drawerBg.onclick = closeDrawer;
 drawerEl.addEventListener("keydown", e => {
@@ -3535,6 +3582,7 @@ function onPick(el) {
   else if (t === "pillar") openDrawer(pillarDrawer(el.dataset.p));
   else if (t === "luck") openDrawer(luckDrawer(r));
   else if (t === "luckstep") openDrawer(luckStepDrawer(+el.dataset.i));
+  else if (t === "tgname") openDrawer(tenGodNameDrawer(el.dataset.g));
   else if (t === "fyear") openDrawer(fleetYearDrawer(el.dataset.gz, +el.dataset.yr));
   else if (t === "aspects") openDrawer(aspectDrawer());
   else if (t === "wbalance") openDrawer(westBalanceDrawer());

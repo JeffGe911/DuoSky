@@ -2408,7 +2408,25 @@ function synthReadings(r) {
   if (hasTG("食神") && hasTG("七杀")) combos.push(zh ? "「食神制杀」——能驾驭压力、独当一面,利掌权与专业。" : "'Eating God tames the Killings' — you master pressure and can lead.");
   if (hasTG("正官") && (hasTG("正印") || hasTG("偏印"))) combos.push(zh ? "「官印相生」——名实相济,利体制与名声。" : "'Officer feeds Resource' — position and repute reinforce each other.");
   if (hasTG("伤官") && (hasTG("正印") || hasTG("偏印"))) combos.push(zh ? "「伤官配印」——才华有约束,可成大器。" : "'Hurting Officer paired with Resource' — disciplined talent.");
-  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${combos.length ? " " + combos.join("") : ""}${careerShen}`;
+  const cStems = [r.year[0], r.month[0]].concat(r.hour ? [r.hour[0]] : []);
+  const cBranches = [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []);
+  const cMonthHid = CANGGAN[r.month[1]];
+  const cPB = { year: r.year[1], month: r.month[1], day: r.day[1] }; if (r.hour) cPB.hour = r.hour[1];
+  const cCarries = (b, el) => CANGGAN[b] && CANGGAN[b].some(h => GAN_WX[h] === el);
+  const cRels = computeRelations(natalPillars(r)).filter(x => x.scope === "branch");
+  const guanE2 = roles.guan;
+  const guanReveal = cStems.some(st => GAN_WX[st] === guanE2);
+  const guanRooted = cBranches.some(b => cCarries(b, guanE2));
+  const guanCommands = GAN_WX[cMonthHid[0]] === guanE2;
+  const guanClashed = cRels.some(x => x.type === "chong" && x.members.some(m => cCarries(cPB[m], guanE2)));
+  const guanCombined = cRels.some(x => (x.type === "liuhe" || x.type === "sanhe" || x.type === "banhe" || x.type === "sanhui") && x.members.some(m => cCarries(cPB[m], guanE2)));
+  const guanShape = (guanScore > avg * 0.5) ? ((guanReveal && guanRooted) ? (zh ? " 官星天透地藏,名位有根、职权能落到实处、升迁有凭。" : " Officer is 天透地藏 — position has real footing; promotions stick.")
+    : guanCommands ? (zh ? " 官星秉月令(月支本气),天生近权位、担得起职责。" : " Officer commands the month branch — born near authority.")
+    : (guanReveal && !guanRooted) ? (zh ? " 官透而不通根,名位易虚——头衔要靠实绩坐实。" : " Officer shows but is unrooted — back titles with real results.")
+    : "") : (zh ? " 官星不显,事业不走仕途论资,靠本事与作品自证。" : " No prominent Officer — you prove yourself by output, not rank.");
+  const guanMove = guanClashed ? (zh ? " 官星逢冲,主职位变动、易换岗换环境,变中求进反成契机。" : " Officer clashed — expect role/environment changes; progress comes through change.")
+    : guanCombined ? (zh ? " 官星逢合,事业多受人情与关系牵引,善用人脉但防被绑定。" : " Officer in combination — career moves through relationships; leverage them without getting tied.") : "";
+  const career = `${PATTERN[pt.key][lang][1]} ${careerPath}${guanShape}${guanMove}${combos.length ? " " + combos.join("") : ""}${careerShen}`;
   const caiE = roles.cai, caiScore = s.score[caiE];
   const caiFav = s.favor.indexOf(caiE) >= 0, caiAvo = s.avoid.indexOf(caiE) >= 0;
   const hasShiSheng = shiScore > avg * 0.7;
@@ -2477,6 +2495,15 @@ function synthReadings(r) {
     : (s.score[spouseStar] < avg * 0.6) ? (zh ? " 配偶星偏弱,缘分宜主动把握、择人贵稳重。" : " Partner star is light — take initiative and choose steadiness.") : "";
   if (hasTG("正官") && hasTG("七杀")) love += zh ? " 官杀混杂,情缘选择多、易反复,贵在专一。" : " Mixed Officer/Killings — many options; steadiness serves you.";
   if (has("taohua")) love += (s.avoid.indexOf(roles.cai) >= 0 || s.avoid.indexOf(roles.guan) >= 0) ? (zh ? " 命带桃花,魅力足、异性缘旺——也防烂桃花。" : " Peach Blossom: strong charm — mind the wrong kind too.") : (zh ? " 命带桃花,魅力足、人缘与异性缘俱旺。" : " Peach Blossom: real charm and magnetism.");
+  const spouseType = tenGod(r.dayMaster, CANGGAN[r.day[1]][0]);
+  const SPOUSE_T = { zh:{ 比肩:"独立要强、与你像战友", 劫财:"个性强、家用大或偶有口角", 食神:"温和有情趣、重生活享受", 伤官:"聪明有主见、需要空间", 正财:"务实顾家、节俭可靠", 偏财:"大方有魅力、异性缘旺", 正官:"端正稳重、有责任感", 七杀:"强势有威、个性刚烈", 正印:"顾家有涵养、体贴入微", 偏印:"内敛敏感、想法独特" },
+    en:{ 比肩:"independent and comradely", 劫财:"strong-willed, with some friction", 食神:"warm and pleasure-loving", 伤官:"clever and needs space", 正财:"thrifty and home-minded", 偏财:"generous and charismatic", 正官:"upright and responsible", 七杀:"forceful and strong", 正印:"cultured and caring", 偏印:"private and original" } };
+  love += zh ? ` 夫妻宫本气为「${TEN_GOD_FULL.zh[spouseType]}」,配偶多半${SPOUSE_T.zh[spouseType]}。` : ` Your spouse palace's core is the ${TEN_GOD_FULL.en[spouseType]} — a partner who is ${SPOUSE_T.en[spouseType]}.`;
+  const svStems = [r.year[0], r.month[0]].concat(r.hour ? [r.hour[0]] : []);
+  const spouseReveal = svStems.some(st => GAN_WX[st] === spouseStar);
+  const spouseEarly = GAN_WX[r.year[0]] === spouseStar || GAN_WX[r.month[0]] === spouseStar || cCarries(r.year[1], spouseStar) || cCarries(r.month[1], spouseStar);
+  love += spouseReveal ? (zh ? " 配偶星透干,缘分明朗、易早遇正缘。" : " Partner star is revealed — love shows early and clearly.") : (zh ? " 配偶星深藏,缘分含蓄、往往水到渠成或晚显。" : " Partner star is hidden — love comes quietly, often later.");
+  love += spouseEarly ? (zh ? " 配偶星临年月,主早婚或早遇。" : " Partner star sits in the early pillars — an earlier union.") : (zh ? " 配偶星临日时,主晚婚或缘分晚成,不必着急。" : " Partner star sits in the later pillars — a later union; no rush.");
   love += zh ? ` 宜配:另一半若带 <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b> 气最补你——这类人${PARTNER.zh[ys.element]};生${ELEM_CHAR[ys.element]}的${ELEM_CHAR[GEN_EL[ys.element]]}气之人亦佳。` : ` Best match: a partner who carries <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_TXT.en[ys.element]}</b> — ${PARTNER.en[ys.element]}; someone ${ELEM_TXT.en[GEN_EL[ys.element]]}-natured (which feeds it) also suits.`;
   const missing = s.score[weak] === 0;
   let health = zh ? `五行以${EN[weak]}最${missing ? "缺(全无)" : "弱"}——留意${ELEM_ORGAN.zh[weak]}。` : `${EN[weak]} is your ${missing ? "missing" : "weakest"} phase — mind ${ELEM_ORGAN.en[weak]}.`;
@@ -2498,13 +2525,50 @@ function synthReadings(r) {
   }
   const THEME = { zh:{ bi:"自立与人际", yin:"学识与内涵", shi:"才华与表达", cai:"务实与财富", guan:"责任与地位" }, en:{ bi:"self-reliance & relationships", yin:"learning & depth", shi:"talent & expression", cai:"the practical & wealth", guan:"duty & status" } };
   const lead = zh
-    ? `你是 <b class="gold">${MATERIAL.zh[r.dayMaster]}(${ELEM_CHAR[s.dmElement]})</b> 命,走 <b class="gold">${PATTERN[pt.key].zh[0]}</b>、${STG.zh[s.level]}。${DM_LINE.zh[r.dayMaster]}用神在 <b>${ELEM_CHAR[ys.element]}</b>,一生的主旋律偏向 <b>${THEME.zh[domGroup]}</b>。下面分事业、财运、感情、健康四面来看——`
-    : `You are a <b class="gold">${MATERIAL.en[r.dayMaster]} (${ELEM_TXT.en[s.dmElement]})</b> Day Master in a <b class="gold">${PATTERN[pt.key].en[0]}</b> pattern, ${STG.en[s.level]}. ${DM_LINE.en[r.dayMaster]} Your useful element is <b>${ELEM_TXT.en[ys.element]}</b>, and life leans toward <b>${THEME.en[domGroup]}</b>. Four areas below —`;
+    ? `你是 <b class="gold">${MATERIAL.zh[r.dayMaster]}(${ELEM_CHAR[s.dmElement]})</b> 命,走 <b class="gold">${PATTERN[pt.key].zh[0]}</b>、${STG.zh[s.level]}。${DM_LINE.zh[r.dayMaster]}用神在 <b>${ELEM_CHAR[ys.element]}</b>,一生的主旋律偏向 <b>${THEME.zh[domGroup]}</b>。下面分事业、财运、感情、家庭、子女、发展方向与健康逐一来看——`
+    : `You are a <b class="gold">${MATERIAL.en[r.dayMaster]} (${ELEM_TXT.en[s.dmElement]})</b> Day Master in a <b class="gold">${PATTERN[pt.key].en[0]}</b> pattern, ${STG.en[s.level]}. ${DM_LINE.en[r.dayMaster]} Your useful element is <b>${ELEM_TXT.en[ys.element]}</b>, and life leans toward <b>${THEME.en[domGroup]}</b>. Career, wealth, love, family, children, direction and health below —`;
+  const yinS = s.score[roles.yin], biFS = s.score[roles.bi];
+  let family = (yinS > avg) ? (zh ? "印星有力,母缘深、多得母亲与长辈庇荫,少年多受呵护。" : "Strong Resource — a close, sheltering mother and elders; a protected youth.")
+    : (yinS < avg * 0.6) ? (zh ? "印星偏弱,与母亲/长辈缘分较淡,早年多靠自己。" : "Light Resource — a cooler bond with mother/elders; self-reliant early.")
+    : (zh ? "印星平和,与长辈关系随缘、不远不近。" : "Moderate Resource — an easy bond with elders.");
+  const ymClash = cRels.some(x => x.type === "chong" && x.members.includes("year") && x.members.includes("month"));
+  const ymHarm = cRels.some(x => (x.type === "liuhe" || x.type === "sanhe" || x.type === "banhe") && x.members.includes("year") && x.members.includes("month"));
+  family += ymClash ? (zh ? " 年月相冲,早年多离乡背井、与家人聚少,自立门户较早。" : " Year–Month clash — likely leaving home early, apart from family; independent young.")
+    : ymHarm ? (zh ? " 年月相生相合,家庭和顺、根基稳,得祖上余荫。" : " Year–Month in harmony — a settled home with ancestral support.") : "";
+  family += (biFS > avg * 1.2) ? (zh ? " 比劫旺,手足朋友多、助力也多,但资源需分、合作讲分明。" : " Strong peers — many siblings/friends and support, though resources get shared.")
+    : (biFS < avg * 0.5) ? (zh ? " 比劫弱,兄弟缘薄或少助,凡事多靠自己一肩挑。" : " Light peers — few siblings or little help; you carry things yourself.")
+    : (zh ? " 手足朋友相处平和,不黏不疏。" : " Easy, balanced ties with siblings and friends.");
+  let children;
+  if (inp.notime) children = zh ? "未提供出生时辰,子女宫(时柱)无法定盘——补上时辰即可解读子女缘。" : "No birth time given — the children palace (Hour pillar) can't be read; add a time to unlock it.";
+  else {
+    const childStar = male ? roles.guan : roles.shi;
+    const childScore = s.score[childStar];
+    const childType = tenGod(r.dayMaster, CANGGAN[r.hour[1]][0]);
+    const CHILD_T = { zh:{ 比肩:"独立自主", 劫财:"个性强、花销较大", 食神:"聪慧有福、乖巧", 伤官:"聪明有才、略叛逆", 正财:"务实孝顺", 偏财:"能干大方", 正官:"守规矩、有出息", 七杀:"刚烈有为、需引导", 正印:"孝顺好学", 偏印:"内向早慧" },
+      en:{ 比肩:"independent", 劫财:"strong-willed, spendy", 食神:"bright and easy", 伤官:"talented, a bit rebellious", 正财:"grounded and filial", 偏财:"capable and generous", 正官:"well-behaved, promising", 七杀:"fierce, needs guidance", 正印:"filial and studious", 偏印:"introverted, precocious" } };
+    const hourClash = cRels.some(x => x.type === "chong" && x.members.includes("hour"));
+    const hourHarm = cRels.some(x => (x.type === "liuhe" || x.type === "sanhe" || x.type === "banhe") && x.members.includes("hour"));
+    children = (childScore > avg) ? (zh ? "子女星得力,子女缘旺、多有出息,晚年得子女之助。" : "A strong child star — capable children and a good bond; their support later on.")
+      : (childScore < avg * 0.6) ? (zh ? "子女星偏弱,子女缘稍淡或晚得,重质不重量,更需用心陪伴。" : "A light child star — fewer or later children; quality over quantity, and presence matters.")
+      : (zh ? "子女星平和,亲子关系不疏不黏、各自安好。" : "A moderate child star — an easy, balanced bond.");
+    children += hourClash ? (zh ? " 时柱逢冲,与子女聚少离多或多为其操心,子女个性独立多变。" : " Hour pillar clashed — distance or worry over children; independent, changeable kids.")
+      : hourHarm ? (zh ? " 时柱逢合,子女孝顺贴心、晚景有靠。" : " Hour pillar in harmony — affectionate children and support in later years.") : "";
+    children += zh ? ` 时柱本气为「${TEN_GOD_FULL.zh[childType]}」,子女多${CHILD_T.zh[childType]}。` : ` The hour pillar's core is the ${TEN_GOD_FULL.en[childType]} — children tend to be ${CHILD_T.en[childType]}.`;
+  }
+  const DIR = { zh:{ wood:"东方及东南", fire:"南方", earth:"本地与中土之地", metal:"西方及西北", water:"北方" }, en:{ wood:"East / SE", fire:"South", earth:"local / central regions", metal:"West / NW", water:"North" } };
+  const COLEL = { zh:{ wood:"青绿", fire:"红紫", earth:"黄棕", metal:"白·金属色", water:"黑蓝" }, en:{ wood:"green", fire:"red / purple", earth:"yellow / brown", metal:"white / metallic", water:"black / blue" } };
+  let direction = zh ? `地利取用神 <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_CHAR[ys.element]}</b>,宜往 <b>${DIR.zh[ys.element]}</b> 求发展——那方水土最补你,读书、创业、定居都可优先考虑。` : `Your useful element is <b style="color:${ELEM_COLOR[ys.element]}">${ELEM_TXT.en[ys.element]}</b>, so favor the <b>${DIR.en[ys.element]}</b> — that region feeds you; weigh it for study, ventures or settling.`;
+  direction += (has("yima") || ymClash) ? (zh ? " 命带驿马或根基逢动,离乡背井、异地发展反而顺,越走越旺。" : " With a Traveling Horse / moving roots, you fare better away from home — go far.")
+    : (zh ? " 根基安稳,守土深耕、在熟地稳扎稳打亦佳。" : " Settled roots — you also thrive putting down deep local roots.");
+  direction += zh ? ` 幸运色偏 <b>${COLEL.zh[ys.element]}</b>,衣饰、居家可多用来补运。` : ` Lucky tones lean <b>${COLEL.en[ys.element]}</b> — use them in dress and home.`;
   const out = [
     [zh ? "📜 总览" : "📜 Overview", lead],
     [zh ? "💼 事业" : "💼 Career", career],
     [zh ? "💰 财运" : "💰 Wealth", wealth],
     [zh ? "❤️ 感情" : "❤️ Love", love],
+    [zh ? "👪 家庭" : "👪 Family", family],
+    [zh ? "🧒 子女" : "🧒 Children", children],
+    [zh ? "🧭 发展方向" : "🧭 Direction", direction],
     [zh ? "🌿 健康" : "🌿 Health", health]
   ];
   if (luckLine) out.push([zh ? "⏳ 时运" : "⏳ Timing", luckLine]);

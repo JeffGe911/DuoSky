@@ -1533,18 +1533,58 @@ function synthReadings(r) {
   const caiFav = s.favor.indexOf(caiE) >= 0, caiAvo = s.avoid.indexOf(caiE) >= 0;
   const hasShiSheng = shiScore > avg * 0.7;
   const dominantCai = hasTG("正财") && hasTG("偏财") ? "both" : hasTG("正财") ? "zheng" : hasTG("偏财") ? "pian" : "none";
-  let wealth = (isStrong && caiScore > avg) ? (zh ? "身强又见财旺,担得起财——能聚财、越做越大的格局,宜主动进取、适度冒险。" : "Strong self with strong Wealth — you can hold money and grow it; go on the offensive and take measured risks.")
-    : (isWeak && caiScore > avg) ? (zh ? "财多身弱,富屋贫人:钱来得动却守不住、易为财奔忙——宜合伙借力、稳守落袋,先补身(靠朋友比劫、学历印星)再谈扩张,忌一人吞大盘。" : "Much wealth, weak self — money moves but slips away and wears you out; partner up, bank gains, and strengthen yourself (allies, credentials) before expanding; don't swallow it all alone.")
-    : (caiScore < avg * 0.7) ? (zh ? "财星偏轻,非大富大贵之路,但细水长流稳妥——靠一技之长与固定收入积累最实在,忌孤注一掷。" : "Light on Wealth — not the road to a fortune, but steady: a skilled trade and regular income compound best; avoid all-or-nothing bets.")
-    : (zh ? "财势中平,取之有道便守得住——不缺用度,大财靠机遇、稳财靠积累。" : "Moderate Wealth — earn it honestly and it holds; enough to live on, big money via opportunity, stable money via accumulation.");
-  wealth += hasShiSheng ? (zh ? " 命有食伤生财,财源有根、能自造财路,靠本事与作品持续进账。" : " With Output feeding Wealth, your income has a root — you generate your own money through skill and output.")
-    : (caiScore > avg ? (zh ? " 惜无食伤生财,财旺而源浅,进财偏靠机遇、祖荫或配偶,宜自建可持续的收入来源。" : " But no Output to feed it — wealth without a source leans on luck, family or spouse; build a sustainable income stream.") : "");
+  // 看财六诊:喜用 · 身能否任 · 官护 · 食伤生 · 天透地藏 · 财库
+  const wStems = [r.year[0], r.month[0]].concat(r.hour ? [r.hour[0]] : []);
+  const wBranches = [r.year[1], r.month[1], r.day[1]].concat(r.hour ? [r.hour[1]] : []);
+  const caiReveal = wStems.some(st => GAN_WX[st] === caiE);
+  const caiRooted = wBranches.some(b => CANGGAN[b].some(h => GAN_WX[h] === caiE));
+  const CAI_KU = { wood:"未", fire:"戌", earth:"辰", metal:"丑", water:"辰" };
+  const hasVault = wBranches.indexOf(CAI_KU[caiE]) >= 0;
+  const guanProtect = hasTG("正官") || hasTG("七杀");
+  const biHeavy = biScore > avg * 1.3 && caiScore < biScore && !(isWeak && caiScore > avg);
+  const monthHid = CANGGAN[r.month[1]];
+  const caiCommands = GAN_WX[monthHid[0]] === caiE;
+  const caiInMonth = monthHid.some(h => GAN_WX[h] === caiE);
+  const PB = { year: r.year[1], month: r.month[1], day: r.day[1] }; if (r.hour) PB.hour = r.hour[1];
+  const carriesCai = b => CANGGAN[b] && CANGGAN[b].some(h => GAN_WX[h] === caiE);
+  const brRels = computeRelations(natalPillars(r)).filter(x => x.scope === "branch");
+  const vaultClashed = hasVault && brRels.some(x => x.type === "chong" && x.members.some(m => PB[m] === CAI_KU[caiE]));
+  const caiClashed = brRels.some(x => x.type === "chong" && x.members.some(m => carriesCai(PB[m])) && !x.members.some(m => PB[m] === CAI_KU[caiE]));
+  const caiCombined = brRels.some(x => (x.type === "liuhe" || x.type === "sanhe" || x.type === "banhe" || x.type === "sanhui") && x.members.some(m => carriesCai(PB[m])));
+  // 1) 是否喜用
+  let wealth = caiFav ? (zh ? "财是你的喜用神——求财顺遂、财能养命,是可以往财上使劲的命。" : "Wealth is a useful element for you — money comes with ease and sustains you; a chart you can lean into for money.")
+    : caiAvo ? (zh ? "财是你的忌神——越纯逐利越耗身心,财宜靠专业与稳定收入,少碰投机与高杠杆。" : "Wealth is unfavorable for you — pure money-chasing drains you; earn through skill and steady income, avoid speculation and leverage.")
+    : (zh ? "财势中平,喜忌不偏,取之有道便守得住。" : "Wealth is neutral — neither boon nor burden; earn it honestly and it holds.");
+  // 2) 身能否任财(扛得住) + 3) 官护
+  wealth += (isStrong && caiScore > avg) ? (zh ? " 身强足以任此财旺,担得起、聚得住,宜主动进取、适度冒险。" : " A strong self carries this heavy Wealth — hold it and grow it; go on the offensive with measured risk.")
+    : (isWeak && caiScore > avg) ? (zh ? " 但身弱难任财旺——财多身弱、富屋贫人,扛不起这份财,宜先补身(靠比劫朋友、印星学历)再图扩张,合伙借力、稳守落袋,忌一人吞大盘。" : " But a weak self can't carry heavy Wealth (富屋贫人) — strengthen yourself first (allies, credentials), then expand; partner up, bank gains, don't swallow it all alone.")
+    : (caiScore < avg * 0.7) ? (zh ? " 财星偏轻,非大富大贵之路,但细水长流稳妥——靠一技之长与固定收入积累最实在。" : " Light on Wealth — not a fortune, but steady: a skilled trade and regular income compound best.")
+    : (zh ? " 身财相当,进退有余,取之有道守得住。" : " Self and Wealth balanced — room to move, and it holds.");
+  wealth += biHeavy ? (guanProtect ? (zh ? " 喜有官杀护财——官能制比劫,财不被夺,合伙分利亦有约束保障。" : " An Officer guards the Wealth — it reins in the peers, so your money isn't robbed and partnerships stay bounded.")
+    : (zh ? " 又比劫偏重而无官护——防「比劫夺财」:合伙易被分、钱借出难收、慎担保连带,亲兄弟也要明算账。" : " Heavy peers with no Officer to guard — beware 'peers robbing wealth': diluted partnerships, unrepaid loans, risky guarantees.")) : "";
+  // 4) 食伤生财(财源)
+  wealth += hasShiSheng ? (zh ? " 有食伤生财,财源有根、能自造财路,靠本事与作品持续进账。" : " Output feeds the Wealth — income has a source; you generate money through skill and output.")
+    : (caiScore > avg ? (zh ? " 惜无食伤生财,财旺而源浅,进财偏靠机遇、祖荫或配偶,宜自建可持续的收入来源。" : " But no Output feeds it — wealth without a source leans on luck, family or spouse; build a sustainable stream.") : "");
+  // 5) 天透地藏(透干 · 通根)
+  wealth += (caiReveal && caiRooted) ? (zh ? " 财星天透地藏(明透天干、又通根地支)——真财有根、财能到手,是财到实处的好格局。" : " The Wealth star is 天透地藏 — revealed in a stem and rooted in a branch: real, grounded wealth you can land.")
+    : (caiReveal && !caiRooted) ? (zh ? " 财透天干却不通根,财星虚露——机会看得见、抓不牢,宜务实落地,忌纸上富贵。" : " Wealth shows in a stem but is unrooted — visible yet slippery chances; stay practical, avoid paper fortunes.")
+    : (!caiReveal && caiRooted) ? (zh ? " 财藏地支而不透干——不张扬却有底子,靠积累细水长流。" : " Wealth sits hidden in the branches, unexposed — understated but with a foundation, grown by accumulation.")
+    : (zh ? " 财星既不透干也不通根,命中财不显——非以财为主的命,靠固定收入与专业立身更稳。" : " Wealth is neither revealed nor rooted — not a wealth-driven chart; salary and profession anchor you better.");
+  // 6) 财库
+  wealth += hasVault ? (zh ? ` 命带 ${CAI_KU[caiE]} 为财库——有入库藏财之象、攒得下守得住;逢冲开库(岁运引动)每有进项或大动。` : ` You carry the ${CAI_KU[caiE]} Wealth-vault — you can bank and hold money; when a clash 'opens' it in a luck year, inflows or big moves tend to come.`)
+    : (caiScore > avg ? (zh ? " 惟无财库收藏,财宜流通生息、不宜死守。" : " No Wealth-vault to store it, though — keep money circulating.") : "");
+  // 藏干层次:财是否当令(月令本气)
+  wealth += caiCommands ? (zh ? " 财得月令、当旺秉令(月支本气即为财)——财气最足、天生亲财,是财运的强根。" : " Wealth commands the month branch (its main hidden stem) — the strongest root there is; you're born close to money.")
+    : (caiInMonth ? (zh ? " 财藏于月令,得时得气,底子厚实。" : " Wealth hides in the month branch — in season, with a solid base.") : "");
+  // 关系:冲库开库 / 冲财动财 / 合财被牵
+  wealth += vaultClashed ? (zh ? " 且财库逢冲——开库之象:岁运一引动,常一朝进大财或大额进出,财在动中得。" : " And the Wealth-vault is clashed — an 'opened vault': when a luck year triggers it, large inflows or big money-moves tend to come.")
+    : caiClashed ? (zh ? " 财星所坐地支逢冲——主财动、进出大,机会与破耗并存,宜防因变故破财。" : " The branch holding your Wealth is clashed — money moves, big ins and outs; opportunity and loss both, so guard against sudden drains.")
+    : "";
+  wealth += caiCombined ? (zh ? " 财逢合——财易被牵动或与人共财(合作、合资、共同持有),可借力生财,但留意财权分散、亲兄弟明算账。" : " Wealth sits in a combination — money gets tied to others (partnership, joint holdings): leverage it, but watch diluted control.") : "";
+  // 正偏财赚钱方式
   if (dominantCai === "pian") wealth += zh ? " 以偏财为主:偏动财、生意财、投资与异地财旺,起伏大、来去快,宜见好就收、落袋为安。" : " Windfall Wealth leads — business, investment and out-of-town money; volatile and fast, so lock in gains.";
   else if (dominantCai === "zheng") wealth += zh ? " 以正财为主:靠固定收入、薪资与专业稳健积累,踏实理财、忌高风险博弈。" : " Proper Wealth leads — salary, profession and steady accumulation; manage it conservatively.";
   else if (dominantCai === "both") wealth += zh ? " 正偏财并见:稳定收入与活络财路兼备、来源多元,宜正财打底、偏财添彩。" : " Both Proper and Windfall Wealth — diverse income; let salary anchor it and ventures add upside.";
-  if (biScore > avg * 1.3 && caiScore < biScore && !(isWeak && caiScore > avg)) wealth += zh ? " 比劫偏重,防「比劫夺财」——合伙易被分、钱财借出难收、防担保连带,亲兄弟也要明算账。" : " Heavy Peers risk 'robbing wealth' — partnerships get diluted, loans go unrepaid; watch guarantees, keep accounts clear even with family.";
-  wealth += caiFav ? (zh ? " 总的说,财为你的喜用——求财顺遂、财能养命,是可以往财上使劲的命。" : " Overall Wealth is a useful element for you — money comes with ease and sustains you; you can lean into it.")
-    : caiAvo ? (zh ? " 但财为忌神——越纯逐利越耗身心,宜靠专业与稳定收入,少碰投机与高杠杆。" : " But Wealth is unfavorable — pure money-chasing drains you; rely on skill and steady income, avoid speculation and leverage.") : "";
   if (has("lu")) wealth += zh ? " 命带禄神,衣禄不缺。" : " Prosperity star: a reliable livelihood.";
   if (has("yima")) wealth += zh ? " 驿马动财,财在走动、远方与变动中求。" : " Traveling Horse: money found through movement and travel.";
   const male = gender === "m";

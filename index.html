@@ -2586,7 +2586,14 @@ function compatResultDrawer(bEntry) {
     <div class="wnote">${zh ? "合婚仅供参考,真感情靠经营。" : "For reflection — real love is built, not read."}</div>`;
 }
 let westObserver = null;
-function setupWestBg() { document.body.classList.remove("west"); }
+function setupWestBg() {
+  if (westObserver) { westObserver.disconnect(); westObserver = null; }
+  document.body.classList.remove("west");
+  const el = $("west-scene");
+  if (!el || !("IntersectionObserver" in window)) return;
+  westObserver = new IntersectionObserver(es => es.forEach(e => document.body.classList.toggle("west", e.isIntersecting)), { rootMargin: "-42% 0px -42% 0px" });
+  westObserver.observe(el);
+}
 function renderCard(r, inp) {
   const T = UI[lang];
   const yStem = r.year[0], yBranch = r.year[1];
@@ -2707,43 +2714,36 @@ function renderCard(r, inp) {
       <div class="pair">${subLine}</div>
       ${hq}
     </div>
+    ${navbar}
     ${opening}
     ${hint}
+    <div class="pillars" id="sec-bazi">
+      ${tile("year", r.year, false)}
+      ${tile("month", r.month, false)}
+      ${tile("day", r.day, true)}
+      ${hourTile}
+    </div>
+    <div class="pillars-note">${T.hiddenNote}</div>
+    <div class="elements" id="sec-elem">${pills}</div>
+    <div class="elements-note">${elemNoteTxt}</div>
     <div class="cta-row">
       <span class="cta cta-primary clk" role="button" tabindex="0" data-t="reading">${lang === "zh" ? "综合解读 ✦" : "Life Reading ✦"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日运势 運" : "Today · BaZi 運"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="fortunecurve">${lang === "zh" ? "运势曲线 📈" : "Fortune Curve 📈"}</span>
     </div>
-    <div class="tabbar">
-      <span class="tab tab-on clk" role="button" tabindex="0" data-tab="bazi">${lang === "zh" ? "八字命盘" : "BaZi"}</span>
-      ${wheel ? `<span class="tab clk" role="button" tabindex="0" data-tab="west">${lang === "zh" ? "西方星盘" : "Chart"}</span>` : ""}
+    <div class="detail-bar">
+      <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
+      <span class="dbtn clk" role="button" tabindex="0" data-t="relations">${T.btnRel}</span>
+      <span class="dbtn clk" role="button" tabindex="0" data-t="luck">${T.btnLuck}</span>
     </div>
-    <div class="tabpane" id="pane-bazi">
-      <div class="pillars">
-        ${tile("year", r.year, false)}
-        ${tile("month", r.month, false)}
-        ${tile("day", r.day, true)}
-        ${hourTile}
-      </div>
-      <div class="pillars-note">${T.hiddenNote}</div>
-      <div class="elements">${pills}</div>
-      <div class="elements-note">${elemNoteTxt}</div>
-      <div class="detail-bar">
-        <span class="dbtn clk" role="button" tabindex="0" data-t="tengods">${T.btnTenGods}</span>
-        <span class="dbtn clk" role="button" tabindex="0" data-t="relations">${T.btnRel}</span>
-        <span class="dbtn clk" role="button" tabindex="0" data-t="luck">${T.btnLuck}</span>
-      </div>
-      <div class="voice" style="border-top:1px solid var(--hairline);padding-top:14px">
-        <span class="label">${lang === "zh" ? "日主 · 本命" : "Day Master · your core"}</span><p>${dmVoice}</p></div>
-      <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
-      <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
-      ${crossLine ? `<div class="voice"><span class="label gold">${lang === "zh" ? "东西合参 · 核心" : "East × West · core"}</span><p>${crossLine}</p></div>` : ""}
-    </div>
-    ${wheel ? `<div class="tabpane hidden" id="pane-west">
-      <div class="voice"><span class="label">${T.west}</span><p>${WEST_LINE[lang][sign]}</p></div>
-      ${western}
-    </div>` : ""}
+    <div class="voice" style="border-top:1px solid var(--hairline);padding-top:14px">
+      <span class="label">${lang === "zh" ? "日主 · 本命" : "Day Master · your core"}</span><p>${dmVoice}</p></div>
+    <div class="voice"><span class="label">${T.west}</span><p>${WEST_LINE[lang][sign]}</p></div>
+    <div class="agree"><span class="label">${T.agree}</span><p>${ac.agree}</p></div>
+    <div class="clash"><span class="label">${T.clash}</span><p>${ac.clash}</p></div>
+    ${crossLine ? `<div class="voice"><span class="label gold">${lang === "zh" ? "东西合参 · 核心" : "East × West · core"}</span><p>${crossLine}</p></div>` : ""}
+    ${western}
     <div class="footer">
       <div class="meta">${born}${inp.tsDelta != null && !inp.notime ? (lang === "zh" ? ` · 真太阳时 ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta} 分` : ` · true solar ${inp.tsDelta >= 0 ? "+" : ""}${inp.tsDelta}m`) : ""}${inp.city ? " · " + esc(inp.city) : ""}${inp.cityNote ? `<br><span class="cityblurb">${esc(inp.cityNote)}</span>` : ""}<br>${T.disclaimer}</div>
     </div>`;

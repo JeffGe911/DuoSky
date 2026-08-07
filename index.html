@@ -383,6 +383,7 @@
   .cta:hover{filter:brightness(1.06)} .cta-sec:hover{filter:none;background:rgba(217,185,108,.16);border-color:var(--gold)}
   .cta-lead{margin:16px 0 0} .cta-lead .cta-primary{display:block;width:100%;font-size:15px;padding:15px 0;letter-spacing:.12em}
   .cta-sub{margin-top:8px} .cta-sub .cta{font-size:12.5px;padding:10px 8px;font-weight:600}
+  .cta-match{background:rgba(217,185,108,.2);border-color:var(--gold)} .cta-match:hover{background:rgba(217,185,108,.3)}
   .cta:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   .gz .clk{border-bottom:1px dotted rgba(217,185,108,.4);padding-bottom:1px}
   .gz .clk:hover{border-bottom-color:var(--gold)}
@@ -705,7 +706,8 @@
 <div class="cardnav hidden" id="cardnav">
   <button class="back" id="btn-back"><span class="i-en">← Another</span><span class="i-zh">← 再排一盘</span></button>
   <button class="back" id="btn-save"><span class="i-en">★ Save</span><span class="i-zh">★ 存名册</span></button>
-  <button class="back" id="btn-share"><span class="i-en">🔗 Share</span><span class="i-zh">🔗 分享</span></button>
+  <button class="back" id="btn-share"><span class="i-en">🔗 Link</span><span class="i-zh">🔗 链接</span></button>
+  <button class="back" id="btn-card"><span class="i-en">🎴 Card</span><span class="i-zh">🎴 分享卡</span></button>
   <button class="back" id="btn-print"><span class="i-en">🖨 Print</span><span class="i-zh">🖨 打印</span></button>
 </div>
 <button id="totop" class="totop hidden" aria-label="back to top">↑</button>
@@ -2250,6 +2252,60 @@ function shareLink() {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(payload).then(done, () => prompt(lang === "zh" ? "复制分享:" : "Copy to share:", payload));
   else prompt(lang === "zh" ? "复制分享:" : "Copy to share:", payload);
 }
+function wrapCanvasText(g, text, x, y, maxW, lh) {
+  const byWord = /\s/.test(text);
+  const toks = byWord ? text.split(" ") : Array.from(text);
+  const sep = byWord ? " " : "";
+  let line = "", yy = y;
+  for (const tk of toks) {
+    const test = line ? line + sep + tk : tk;
+    if (g.measureText(test).width > maxW && line) { g.fillText(line, x, yy); line = tk; yy += lh; }
+    else line = test;
+  }
+  if (line) g.fillText(line, x, yy);
+  return yy + lh;
+}
+function shareCardImage() {
+  if (!lastChart) return;
+  const r = lastChart.r, inp = lastChart.inp, zh = lang === "zh", stg = computeStrength(r), pt = computePattern(r);
+  const W = 1080, H = 1440, cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const g = cv.getContext("2d");
+  const grad = g.createLinearGradient(0, 0, 0, H); grad.addColorStop(0, "#3a1d16"); grad.addColorStop(.5, "#241110"); grad.addColorStop(1, "#0c0708");
+  g.fillStyle = grad; g.fillRect(0, 0, W, H);
+  g.strokeStyle = "rgba(217,185,108,.5)"; g.lineWidth = 3; g.strokeRect(40, 40, W - 80, H - 80);
+  const gold = "#D9B96C", soft = "#C3C9DB", muted = "#96A0B8", serif = "'Songti SC','STSong',Georgia,serif";
+  g.textAlign = "center";
+  g.fillStyle = muted; g.font = "30px " + serif; g.fillText(zh ? "双 星 · 八字 × 星座" : "DuoSky · BaZi x Zodiac", W / 2, 128);
+  if (inp.name) { g.fillStyle = gold; g.font = "600 42px " + serif; g.fillText(inp.name, W / 2, 192); }
+  g.fillStyle = "#ECEEF8"; g.font = "600 60px " + serif;
+  g.fillText(zh ? `${MATERIAL.zh[r.dayMaster]} · ${ROLE.zh[r.sign]}` : `The ${MATERIAL.en[r.dayMaster]} ${ROLE.en[r.sign]}`, W / 2, 288);
+  const P = [r.year, r.month, r.day, r.hour], labels = zh ? ["年", "月", "日", "时"] : ["Yr", "Mo", "Dy", "Hr"], gap = W / 5;
+  P.forEach((gz, i) => {
+    const x = gap * (i + 1);
+    g.fillStyle = muted; g.font = "28px " + serif; g.fillText(labels[i], x, 430);
+    if (gz) { g.font = "700 92px " + serif; g.fillStyle = STEM_COLOR[gz[0]]; g.fillText(gz[0], x, 535); g.fillStyle = STEM_COLOR[ZHI_MAIN[gz[1]]]; g.fillText(gz[1], x, 640); }
+    else { g.fillStyle = muted; g.font = "700 92px " + serif; g.fillText("?", x, 590); }
+  });
+  g.fillStyle = gold; g.font = "600 40px " + serif;
+  g.fillText(zh ? `日主 ${r.dayMaster}${ELEM_CHAR[stg.dmElement]} · ${PATTERN[pt.key].zh[0]} · ${STG.zh[stg.level]}` : `${MATERIAL.en[r.dayMaster]} DM · ${PATTERN[pt.key].en[0]} · ${STG.en[stg.level]}`, W / 2, 748);
+  g.fillStyle = soft; g.font = "34px " + serif;
+  const favC = stg.favor.map(e => ELEM_CHAR[e]).join(""), favE = stg.favor.map(e => ELEM_TXT.en[e]).join("·");
+  let liney = 806;
+  g.fillText(zh ? `喜用 ${favC}` : `favor ${favE}`, W / 2, liney); liney += 66;
+  if (lastWheel) { g.fillStyle = "#B7C3E0"; g.font = "34px " + serif; g.fillText(zh ? `☉${SIGN_TXT.zh[lastWheel.planets[0].sign]} ☽${SIGN_TXT.zh[lastWheel.planets[1].sign]}${lastWheel.haveAngles ? " ↑" + SIGN_TXT.zh[SIGNS[Math.floor(lastWheel.asc / 30)]] : ""}` : `Sun ${SIGN_TXT.en[lastWheel.planets[0].sign]} · Moon ${SIGN_TXT.en[lastWheel.planets[1].sign]}${lastWheel.haveAngles ? " · Asc " + SIGN_TXT.en[SIGNS[Math.floor(lastWheel.asc / 30)]] : ""}`, W / 2, liney); liney += 76; }
+  g.strokeStyle = "rgba(217,185,108,.28)"; g.lineWidth = 1; g.beginPath(); g.moveTo(160, liney - 30); g.lineTo(W - 160, liney - 30); g.stroke();
+  g.fillStyle = soft; g.font = "italic 34px " + serif;
+  wrapCanvasText(g, DM_LINE[lang][r.dayMaster], W / 2, liney + 24, W - 200, 50);
+  g.fillStyle = gold; g.font = "26px " + serif; g.fillText("jeffge911.github.io/DuoSky", W / 2, H - 96);
+  g.fillStyle = muted; g.font = "24px " + serif; g.fillText(zh ? "仅供自省与娱乐 · 非宿命,是天气" : "for reflection & entertainment", W / 2, H - 56);
+  cv.toBlob(blob => {
+    if (!blob) return;
+    const file = new File([blob], "duosky.png", { type: "image/png" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], title: zh ? "我的双星命盘" : "My DuoSky chart" }).catch(() => {});
+    else { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "duosky.png"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+  }, "image/png");
+}
+$("btn-card").onclick = shareCardImage;
 $("btn-share").onclick = shareLink;
 $("btn-print").onclick = () => window.print();
 $("totop").onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -3095,7 +3151,7 @@ function renderCard(r, inp) {
     </div>
     <div class="cta-row cta-sub">
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="today">${lang === "zh" ? "今日运势 運" : "Today · BaZi 運"}</span>
-      <span class="cta cta-sec clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
+      <span class="cta cta-sec cta-match clk" role="button" tabindex="0" data-t="match">${lang === "zh" ? "合盘 · 合婚 ⚭" : "Compatibility ⚭"}</span>
       <span class="cta cta-sec clk" role="button" tabindex="0" data-t="fortunecurve">${lang === "zh" ? "运势曲线 📈" : "Fortune Curve 📈"}</span>
     </div>
     <div class="detail-bar">
